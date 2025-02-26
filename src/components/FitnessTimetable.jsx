@@ -21,7 +21,7 @@ const FitnessTimetable = () => {
   // Filter options
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const centers = ['Bootle', 'Crosby', 'Meadows'];
-  const allLocations = [...new Set(allClasses.map(cls => cls.location))];
+  //const allLocations = [...new Set(allClasses.map(cls => cls.location))];
 
   // Class category definitions
   const classCategories = {
