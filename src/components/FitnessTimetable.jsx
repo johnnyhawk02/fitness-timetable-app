@@ -72,10 +72,10 @@ const FitnessTimetable = () => {
   });
 
   // Get locations specific to the selected center (if needed)
-  const centerLocations =
-    selectedCenter === 'all'
-      ? allLocations
-      : [...new Set(allClasses.filter(cls => cls.center === selectedCenter).map(cls => cls.location))];
+  // const centerLocations =
+  //   selectedCenter === 'all'
+  //     ? allLocations
+  //     : [...new Set(allClasses.filter(cls => cls.center === selectedCenter).map(cls => cls.location))];
 
   // Group classes by day for display
   const classesByDay = {};
