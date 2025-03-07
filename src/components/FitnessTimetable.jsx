@@ -96,6 +96,53 @@ const FitnessTimetable = () => {
     getStoredValue(STORAGE_KEYS.TIME_BLOCKS, defaultTimeBlocks)
   );
 
+  // Additional state for filter UI
+  const [expandedFilters, setExpandedFilters] = useState({
+    centers: false,
+    categories: false,
+    times: false
+  });
+
+  // Toggle filter sections
+  const toggleFilterSection = (section) => {
+    setExpandedFilters({
+      ...expandedFilters,
+      [section]: !expandedFilters[section]
+    });
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    // Reset centers to all selected
+    setSelectedCenters(centers.reduce((acc, center) => {
+      acc[center] = true;
+      return acc;
+    }, {}));
+    
+    // Reset category and time block
+    setSelectedCategory('');
+    setSelectedTimeBlock('');
+    
+    // Reset virtual classes to included
+    setIncludeVirtual(true);
+  };
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0;
+    
+    // Count centers that are not selected
+    const unselectedCenters = centers.filter(center => !selectedCenters[center]).length;
+    if (unselectedCenters > 0) count++;
+    
+    // Count other active filters
+    if (selectedCategory) count++;
+    if (selectedTimeBlock) count++;
+    if (!includeVirtual) count++;
+    
+    return count;
+  };
+
   // Save to localStorage when values change
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(selectedCenters));
@@ -377,159 +424,256 @@ const FitnessTimetable = () => {
           </div>
         </div>
 
-        <div className="mt-2 flex flex-wrap gap-1 items-center">
-          <span className="text-xs font-medium text-gray-700">Centre:</span>
-          <button
-            onClick={() => handleCenterChange('all')}
-            className={`px-2 py-0.5 rounded-full text-xs ${
-              Object.values(selectedCenters).every(selected => selected)
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            All
-          </button>
-          {centers.map(center => (
-            <button
-              key={center}
-              onClick={() => handleCenterChange(center)}
-              className={`px-2 py-0.5 rounded-full text-xs ${
-                selectedCenters[center]
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+        {/* Filters header with count and clear button */}
+        <div className="mt-3 flex justify-between items-center">
+          <h2 className="text-sm font-medium text-gray-700">
+            Filters
+            {getActiveFilterCount() > 0 && 
+              <span className="ml-2 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                {getActiveFilterCount()}
+              </span>
+            }
+          </h2>
+          {getActiveFilterCount() > 0 && (
+            <button 
+              onClick={clearAllFilters}
+              className="text-xs text-blue-600 hover:text-blue-800"
             >
-              {center}
+              Clear all
             </button>
-          ))}
+          )}
         </div>
 
-        <div className="mt-1 flex flex-wrap gap-1 items-center">
-          <span className="text-xs font-medium text-gray-700">Type:</span>
-          <button
-            key="all"
-            onClick={() => setSelectedCategory('')}
-            className={`px-2 py-0.5 rounded-full text-xs ${
-              selectedCategory === ''
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+        {/* Centers filter */}
+        <div className="mt-2 border-b pb-2">
+          <button 
+            onClick={() => toggleFilterSection('centers')}
+            className="w-full flex justify-between items-center text-left text-sm font-medium text-gray-700 hover:text-gray-900"
           >
-            All
-          </button>
-          {Object.entries(classCategories).map(([value, label]) => (
-            <button
-              key={value}
-              onClick={() => handleCategoryChange(value)}
-              className={`px-2 py-0.5 rounded-full text-xs ${
-                selectedCategory === value
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+            <span>
+              Centres
+              {!Object.values(selectedCenters).every(selected => selected) && 
+                <span className="ml-2 text-xs text-gray-500">
+                  ({centers.filter(c => selectedCenters[c]).length}/{centers.length})
+                </span>
+              }
+            </span>
+            <svg 
+              className={`w-4 h-4 transition-transform ${expandedFilters.centers ? 'transform rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24" 
+              xmlns="http://www.w3.org/2000/svg"
             >
-              {label.replace('Classes', '').trim()}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-1 flex flex-wrap gap-1 items-center relative">
-          <span className="text-xs font-medium text-gray-700">Time:</span>
-          <button
-            key="all-times"
-            onClick={() => setSelectedTimeBlock('')}
-            className={`px-2 py-0.5 rounded-full text-xs ${
-              selectedTimeBlock === ''
-                ? 'bg-orange-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Any Time
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
           </button>
-          {Object.entries(timeBlocks).map(([blockId, block]) => (
-            <button
-              key={blockId}
-              onClick={() => handleTimeBlockChange(blockId)}
-              className={`px-2 py-0.5 rounded-full text-xs flex items-center ${
-                selectedTimeBlock === blockId
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              <span>{formatHourToTimeString(block.start)} - {formatHourToTimeString(block.end)}</span>
-              <svg 
-                onClick={(e) => handleOpenTimePopup(e, blockId)} 
-                className="ml-1 w-3 h-3" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
-                xmlns="http://www.w3.org/2000/svg"
+          
+          {expandedFilters.centers && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              <button
+                onClick={() => handleCenterChange('all')}
+                className={`px-2 py-0.5 rounded-full text-xs ${
+                  Object.values(selectedCenters).every(selected => selected)
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-              </svg>
-            </button>
-          ))}
-
-          {isTimePopupOpen && editingTimeBlock && (
-            <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl p-4 z-50 border border-gray-200 w-72">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-sm font-medium">Edit Time Range</h3>
-                <button 
-                  onClick={() => {
-                    setIsTimePopupOpen(false);
-                    setEditingTimeBlock(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
+                All
+              </button>
+              {centers.map(center => (
+                <button
+                  key={center}
+                  onClick={() => handleCenterChange(center)}
+                  className={`px-2 py-0.5 rounded-full text-xs ${
+                    selectedCenters[center]
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  {center}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Class types filter */}
+        <div className="mt-2 border-b pb-2">
+          <button 
+            onClick={() => toggleFilterSection('categories')}
+            className="w-full flex justify-between items-center text-left text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            <span>
+              Class Type
+              {selectedCategory && <span className="ml-2 text-xs text-gray-500">({selectedCategory})</span>}
+            </span>
+            <svg 
+              className={`w-4 h-4 transition-transform ${expandedFilters.categories ? 'transform rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          
+          {expandedFilters.categories && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              <button
+                key="all"
+                onClick={() => handleCategoryChange('')}
+                className={`px-2 py-0.5 rounded-full text-xs ${
+                  selectedCategory === ''
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                All Types
+              </button>
+              {Object.entries(classCategories).map(([value, label]) => (
+                <button
+                  key={value}
+                  onClick={() => handleCategoryChange(value)}
+                  className={`px-2 py-0.5 rounded-full text-xs ${
+                    selectedCategory === value
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {label.replace('Classes', '').trim()}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Time filter */}
+        <div className="mt-2">
+          <button 
+            onClick={() => toggleFilterSection('times')}
+            className="w-full flex justify-between items-center text-left text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            <span>
+              Time
+              {selectedTimeBlock && (
+                <span className="ml-2 text-xs text-gray-500">
+                  ({formatHourToTimeString(timeBlocks[selectedTimeBlock].start)} - {formatHourToTimeString(timeBlocks[selectedTimeBlock].end)})
+                </span>
+              )}
+            </span>
+            <svg 
+              className={`w-4 h-4 transition-transform ${expandedFilters.times ? 'transform rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          
+          {expandedFilters.times && (
+            <div className="mt-2 flex flex-wrap gap-1 relative">
+              <button
+                key="all-times"
+                onClick={() => setSelectedTimeBlock('')}
+                className={`px-2 py-0.5 rounded-full text-xs ${
+                  selectedTimeBlock === ''
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Any Time
+              </button>
+              {Object.entries(timeBlocks).map(([blockId, block]) => (
+                <button
+                  key={blockId}
+                  onClick={() => handleTimeBlockChange(blockId)}
+                  className={`px-2 py-0.5 rounded-full text-xs flex items-center ${
+                    selectedTimeBlock === blockId
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <span>{formatHourToTimeString(block.start)} - {formatHourToTimeString(block.end)}</span>
+                  <svg 
+                    onClick={(e) => handleOpenTimePopup(e, blockId)} 
+                    className="ml-1 w-3 h-3" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                   </svg>
                 </button>
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs text-gray-700 mb-1">Start Time</label>
-                <div className="flex items-center">
-                  <input
-                    type="range"
-                    min="5"
-                    max="21"
-                    step="0.5"
-                    value={timeBlocks[editingTimeBlock].start}
-                    onChange={(e) => handleTimeRangeChange('start', parseFloat(e.target.value))}
-                    className="w-full mr-2"
-                  />
-                  <span className="text-xs font-medium whitespace-nowrap">
-                    {formatHourToTimeString(timeBlocks[editingTimeBlock].start)}
-                  </span>
+              ))}
+
+              {isTimePopupOpen && editingTimeBlock && (
+                <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl p-4 z-50 border border-gray-200 w-72">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-sm font-medium">Edit Time Range</h3>
+                    <button 
+                      onClick={() => {
+                        setIsTimePopupOpen(false);
+                        setEditingTimeBlock(null);
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <label className="block text-xs text-gray-700 mb-1">Start Time</label>
+                    <div className="flex items-center">
+                      <input
+                        type="range"
+                        min="5"
+                        max="21"
+                        step="0.5"
+                        value={timeBlocks[editingTimeBlock].start}
+                        onChange={(e) => handleTimeRangeChange('start', parseFloat(e.target.value))}
+                        className="w-full mr-2"
+                      />
+                      <span className="text-xs font-medium whitespace-nowrap">
+                        {formatHourToTimeString(timeBlocks[editingTimeBlock].start)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-700 mb-1">End Time</label>
+                    <div className="flex items-center">
+                      <input
+                        type="range"
+                        min={timeBlocks[editingTimeBlock].start + 0.5}
+                        max="22"
+                        step="0.5"
+                        value={timeBlocks[editingTimeBlock].end}
+                        onChange={(e) => handleTimeRangeChange('end', parseFloat(e.target.value))}
+                        className="w-full mr-2"
+                      />
+                      <span className="text-xs font-medium whitespace-nowrap">
+                        {formatHourToTimeString(timeBlocks[editingTimeBlock].end)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleApplyCustomTime}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 px-3 rounded"
+                    >
+                      Apply
+                    </button>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-xs text-gray-700 mb-1">End Time</label>
-                <div className="flex items-center">
-                  <input
-                    type="range"
-                    min={timeBlocks[editingTimeBlock].start + 0.5}
-                    max="22"
-                    step="0.5"
-                    value={timeBlocks[editingTimeBlock].end}
-                    onChange={(e) => handleTimeRangeChange('end', parseFloat(e.target.value))}
-                    className="w-full mr-2"
-                  />
-                  <span className="text-xs font-medium whitespace-nowrap">
-                    {formatHourToTimeString(timeBlocks[editingTimeBlock].end)}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="flex justify-end">
-                <button
-                  onClick={handleApplyCustomTime}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 px-3 rounded"
-                >
-                  Apply
-                </button>
-              </div>
+              )}
             </div>
           )}
         </div>
