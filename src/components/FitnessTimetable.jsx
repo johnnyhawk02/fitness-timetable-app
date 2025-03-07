@@ -944,7 +944,7 @@ const FitnessTimetable = () => {
                       : 'bg-teal-600'
                   } text-white font-semibold py-2 px-4 text-sm`}
                 >
-                  {dayAbbreviations[day]}
+                  {day}
                 </div>
                 <div className="divide-y divide-gray-200">
                   {classesByDay[day].length === 0 ? (
