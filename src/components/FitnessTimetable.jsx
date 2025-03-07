@@ -5,6 +5,7 @@ import meadowsClasses from '../data/meadowsData';
 import nethertonClasses from '../data/nethertonData';
 import litherlandClasses from '../data/litherlandData';
 import dunesClasses from '../data/dunesData';
+import classDescriptions from '../data/classDescriptions';
 
 // Local storage keys
 const STORAGE_KEYS = {
@@ -40,7 +41,7 @@ const CENTER_ABBREVIATIONS = {
   'Meadows': 'MDW',
   'Netherton': 'NAC',
   'Litherland': 'LSP',
-  'Dunes': 'DUNES'
+  'Dunes': 'DSW'
 };
 
 const FitnessTimetable = () => {
@@ -62,6 +63,15 @@ const FitnessTimetable = () => {
 
   // Filter options
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const dayAbbreviations = {
+    'Monday': 'Mo',
+    'Tuesday': 'Tu',
+    'Wednesday': 'We',
+    'Thursday': 'Th',
+    'Friday': 'Fr',
+    'Saturday': 'Sa',
+    'Sunday': 'Su'
+  };
   const centers = ['Bootle', 'Crosby', 'Meadows', 'Netherton', 'Litherland', 'Dunes'];
   //const allLocations = [...new Set(allClasses.map(cls => cls.location))];
 
@@ -112,6 +122,11 @@ const FitnessTimetable = () => {
     }, {}))
   );
 
+  // Add state for class description modal
+  const [showDescription, setShowDescription] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedClassDetails, setSelectedClassDetails] = useState(null);
+
   // Toggle all filters visibility
   const toggleFilters = () => {
     setFiltersExpanded(!filtersExpanded);
@@ -153,6 +168,13 @@ const FitnessTimetable = () => {
           newSelectedDays[key] = (key === day);
         });
       } else {
+        // Check if this is the last selected day and prevent deselection
+        const selectedCount = Object.values(newSelectedDays).filter(Boolean).length;
+        if (selectedCount === 1 && newSelectedDays[day]) {
+          // Don't allow deselecting the last day
+          return;
+        }
+        
         // Otherwise toggle the clicked day (add or remove)
         newSelectedDays[day] = !newSelectedDays[day];
       }
@@ -495,6 +517,13 @@ const FitnessTimetable = () => {
           newSelectedCenters[key] = (key === center);
         });
       } else {
+        // Check if this is the last selected center and prevent deselection
+        const selectedCount = Object.values(newSelectedCenters).filter(Boolean).length;
+        if (selectedCount === 1 && newSelectedCenters[center]) {
+          // Don't allow deselecting the last center
+          return;
+        }
+        
         // Otherwise toggle the clicked center (add or remove)
         newSelectedCenters[center] = !newSelectedCenters[center];
       }
@@ -576,6 +605,82 @@ const FitnessTimetable = () => {
     
     classesByDay[day] = dayClasses;
   });
+
+  // Function to handle showing class description
+  const handleShowDescription = (cls) => {
+    setSelectedClass(cls.activity);
+    setSelectedClassDetails({
+      day: cls.day,
+      time: cls.time,
+      location: cls.location,
+      center: cls.center
+    });
+    setShowDescription(true);
+  };
+  
+  // Function to close the description modal
+  const handleCloseDescription = () => {
+    setShowDescription(false);
+    setSelectedClass(null);
+    setSelectedClassDetails(null);
+  };
+  
+  // Function to get class description with fuzzy matching
+  const getClassDescription = (activity) => {
+    if (!activity) return "No description available.";
+    
+    // The classDescriptions file is a direct object, not an array
+    const descriptions = classDescriptions;
+    
+    // Check for exact match first
+    if (descriptions[activity]) {
+      return descriptions[activity];
+    }
+    
+    // If no exact match, try to find the closest match
+    const activityLower = activity.toLowerCase().trim();
+    
+    // First check if the activity is contained within any description key
+    const containsMatch = Object.keys(descriptions).find(key => 
+      activityLower.includes(key.toLowerCase()) || key.toLowerCase().includes(activityLower)
+    );
+    
+    if (containsMatch) {
+      return descriptions[containsMatch];
+    }
+    
+    // Try to find the closest match by comparing words
+    const activityWords = activityLower.split(/\s+/);
+    
+    // Score each description key by how many words match
+    const scoredMatches = Object.keys(descriptions).map(key => {
+      const keyLower = key.toLowerCase();
+      const keyWords = keyLower.split(/\s+/);
+      
+      // Count matching words
+      let matchScore = 0;
+      activityWords.forEach(word => {
+        if (word.length <= 2) return; // Skip very short words
+        
+        if (keyWords.some(keyWord => keyWord.includes(word) || word.includes(keyWord))) {
+          matchScore++;
+        }
+      });
+      
+      return { key, score: matchScore };
+    });
+    
+    // Sort by score (highest first)
+    scoredMatches.sort((a, b) => b.score - a.score);
+    
+    // If we have a match with a score > 0, use it
+    if (scoredMatches.length > 0 && scoredMatches[0].score > 0) {
+      return descriptions[scoredMatches[0].key];
+    }
+    
+    // No good match found
+    return `No description available for "${activity}".`;
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 p-4">
@@ -669,7 +774,7 @@ const FitnessTimetable = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {day.slice(0, 3)}
+                    {dayAbbreviations[day]}
                   </button>
                 ))}
               </div>
@@ -726,7 +831,7 @@ const FitnessTimetable = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {division.label}: {division.start}:00 - {division.end}:00
+                    {division.start}:00 - {division.end}:00
                   </button>
                 ))}
               </div>
@@ -752,6 +857,69 @@ const FitnessTimetable = () => {
         )}
       </div>
 
+      {/* Class description modal */}
+      {showDescription && selectedClass && selectedClassDetails && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={handleCloseDescription}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[80vh] overflow-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-800">{selectedClass}</h3>
+                <button 
+                  onClick={handleCloseDescription}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-4">
+              {/* Class details */}
+              <div className="mb-4 bg-gray-50 p-3 rounded-md">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span className="text-gray-700">{selectedClassDetails.day}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span className="text-gray-700">{selectedClassDetails.time}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span className="text-gray-700">{selectedClassDetails.location}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    <span className="text-gray-700">{selectedClassDetails.center}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Class description */}
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Description:</h4>
+              <p className="text-gray-600">{getClassDescription(selectedClass)}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Timetable content */}
       <div className="mt-4 flex-1 overflow-auto bg-white rounded-lg shadow-md">
         <div className="grid grid-cols-1 gap-4 p-4">
@@ -776,7 +944,7 @@ const FitnessTimetable = () => {
                       : 'bg-teal-600'
                   } text-white font-semibold py-2 px-4 text-sm`}
                 >
-                  {day}
+                  {dayAbbreviations[day]}
                 </div>
                 <div className="divide-y divide-gray-200">
                   {classesByDay[day].length === 0 ? (
@@ -793,6 +961,16 @@ const FitnessTimetable = () => {
                                 V
                               </span>
                             )}
+                            {/* Info icon */}
+                            <button 
+                              onClick={() => handleShowDescription(cls)}
+                              className="ml-1.5 text-gray-400 hover:text-blue-500 focus:outline-none"
+                              aria-label={`Show information about ${cls.activity}`}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                              </svg>
+                            </button>
                           </div>
                           <div className="text-xs text-gray-500">{cls.location}</div>
                         </div>
