@@ -718,12 +718,19 @@ const FitnessTimetable = () => {
                   ) : (
                     classesByDay[day].map((cls, idx) => (
                       <div key={`${day}-${idx}`} className="flex items-start p-3 hover:bg-gray-50">
-                        <div className="w-24 font-medium text-gray-700 text-xs pt-0.5">{cls.time}</div>
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">{cls.activity}</div>
+                        <div className="w-28 font-medium text-gray-700 text-xs pt-0.5 text-left pr-4">{cls.time}</div>
+                        <div className="flex-1 text-left">
+                          <div className="font-medium text-sm flex items-center">
+                            {cls.activity}
+                            {cls.virtual && (
+                              <span className="ml-1.5 px-1.5 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
+                                V
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-gray-500">{cls.location}</div>
                         </div>
-                        <div className="flex items-center space-x-1">
+                        <div className="w-20 flex justify-end">
                           <span
                             className={`px-1.5 py-0.5 text-xs font-medium rounded ${
                               cls.center === 'Bootle'
@@ -741,11 +748,6 @@ const FitnessTimetable = () => {
                           >
                             {cls.center}
                           </span>
-                          {cls.virtual && (
-                            <span className="px-1.5 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
-                              V
-                            </span>
-                          )}
                         </div>
                       </div>
                     ))
@@ -757,10 +759,15 @@ const FitnessTimetable = () => {
         </div>
       </div>
 
-      <div className="mt-2 text-xs text-gray-500">
-        <p>Bootle: Mon-Fri 7:00am-9:30pm • Crosby: Mon-Fri 6:30am-10:00pm</p>
-        <p>Meadows: Mon-Fri 6:30am-10:00pm • Sat-Sun 8:00am-5:00pm</p>
-        <p>Book: www.activeseftonfitness.co.uk</p>
+      <div className="mt-2 text-xs text-gray-500 text-center">
+        <a 
+          href="https://www.activeseftonfitness.co.uk" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          Active Sefton Fitness
+        </a>
       </div>
     </div>
   );
