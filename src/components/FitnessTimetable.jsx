@@ -39,10 +39,8 @@ const FitnessTimetable = () => {
 
   // Default time blocks configuration
   const defaultTimeBlocks = {
-    'early-morning': { label: 'Early Morning', start: 6.5, end: 9 },
-    'morning': { label: 'Morning', start: 9, end: 12 },
-    'afternoon': { label: 'Afternoon', start: 12, end: 17 },
-    'evening': { label: 'Evening', start: 17, end: 22 }
+    'morning': { label: 'Morning', start: 6, end: 12 },
+    'afternoon-evening': { label: 'Afternoon/Evening', start: 12, end: 22 }
   };
 
   // Filter options
@@ -83,13 +81,49 @@ const FitnessTimetable = () => {
   const [timeBlocks, setTimeBlocks] = useState(() => 
     getStoredValue(STORAGE_KEYS.TIME_BLOCKS, defaultTimeBlocks)
   );
+  const [timeSliderValues, setTimeSliderValues] = useState(() => 
+    getStoredValue('fitness_time_dividers', [10, 14])
+  );
 
   // Additional state for filter UI
-  const [expandedFilters, setExpandedFilters] = useState({
-    centers: false,
-    categories: false,
-    times: false
-  });
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [selectedDays, setSelectedDays] = useState(() => 
+    getStoredValue('fitness_selected_days', days.reduce((acc, day) => {
+      acc[day] = true;
+      return acc;
+    }, {}))
+  );
+
+  // Toggle all filters visibility
+  const toggleFilters = () => {
+    setFiltersExpanded(!filtersExpanded);
+  };
+
+  // Save selected days to localStorage
+  useEffect(() => {
+    localStorage.setItem('fitness_selected_days', JSON.stringify(selectedDays));
+  }, [selectedDays]);
+
+  // Handle day selection toggling
+  const handleDayChange = (day) => {
+    // If it's the "all" option
+    if (day === 'all') {
+      const allSelected = Object.values(selectedDays).every(selected => selected);
+      const daysUpdate = {};
+      
+      // Toggle between all selected and none selected
+      days.forEach(d => {
+        daysUpdate[d] = !allSelected;
+      });
+      
+      setSelectedDays(daysUpdate);
+    } else {
+      setSelectedDays({
+        ...selectedDays,
+        [day]: !selectedDays[day]
+      });
+    }
+  };
 
   // Determine category for a given activity - IMPORTANT: Define this BEFORE it's used
   const getClassCategory = useCallback((activity) => {
@@ -231,9 +265,9 @@ const FitnessTimetable = () => {
 
   // Toggle filter sections
   const toggleFilterSection = (section) => {
-    setExpandedFilters({
-      ...expandedFilters,
-      [section]: !expandedFilters[section]
+    setFiltersExpanded({
+      ...filtersExpanded,
+      [section]: !filtersExpanded[section]
     });
   };
 
@@ -245,12 +279,21 @@ const FitnessTimetable = () => {
       return acc;
     }, {}));
     
+    // Reset days to all selected
+    setSelectedDays(days.reduce((acc, day) => {
+      acc[day] = true;
+      return acc;
+    }, {}));
+    
     // Reset category and time block
     setSelectedCategory('');
     setSelectedTimeBlock('');
     
     // Reset virtual classes to included
     setIncludeVirtual(true);
+    
+    // Reset time blocks to defaults to avoid key mismatches
+    setTimeBlocks(defaultTimeBlocks);
   };
 
   // Get active filter count
@@ -260,6 +303,10 @@ const FitnessTimetable = () => {
     // Count centers that are not selected
     const unselectedCenters = centers.filter(center => !selectedCenters[center]).length;
     if (unselectedCenters > 0) count++;
+    
+    // Count days that are not selected
+    const unselectedDays = days.filter(day => !selectedDays[day]).length;
+    if (unselectedDays > 0) count++;
     
     // Count other active filters
     if (selectedCategory) count++;
@@ -289,6 +336,17 @@ const FitnessTimetable = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.TIME_BLOCKS, JSON.stringify(timeBlocks));
   }, [timeBlocks]);
+
+  // Add reset for time blocks to handle potential localStorage conflicts
+  useEffect(() => {
+    // Reset time blocks to default on component load to avoid key mismatches
+    setTimeBlocks(defaultTimeBlocks);
+  }, []);
+
+  // Save time slider values to localStorage
+  useEffect(() => {
+    localStorage.setItem('fitness_time_dividers', JSON.stringify(timeSliderValues));
+  }, [timeSliderValues]);
 
   // Time conversion utilities
   const convertTimeToHours = (timeString) => {
@@ -379,17 +437,41 @@ const FitnessTimetable = () => {
     }
   };
 
+  // Handle slider change
+  const handleSliderChange = (index, value) => {
+    const newValues = [...timeSliderValues];
+    
+    // Ensure values don't cross each other and stay in bounds
+    if (index === 0) {
+      // First divider can't go past second divider minus buffer
+      value = Math.min(value, timeSliderValues[1] - 0.5);
+      value = Math.max(value, 6); // Min bound
+    } else {
+      // Second divider can't go before first divider plus buffer
+      value = Math.max(value, timeSliderValues[0] + 0.5);
+      value = Math.min(value, 22); // Max bound
+    }
+    
+    newValues[index] = value;
+    setTimeSliderValues(newValues);
+  };
+
   // Filter classes based on selected filters
   const filteredClasses = allClasses.filter(cls => {
     // Center filter
     const anyCenterSelected = Object.values(selectedCenters).some(selected => selected);
     if (anyCenterSelected && !selectedCenters[cls.center]) return false;
 
-    // Time block filter
+    // Day filter
+    if (!selectedDays[cls.day]) return false;
+
+    // Time filter
     if (selectedTimeBlock) {
       const classStartHour = convertTimeToHours(cls.time);
-      const { start, end } = timeBlocks[selectedTimeBlock];
-      if (classStartHour < start || classStartHour >= end) return false;
+      
+      if (selectedTimeBlock === 'morning' && classStartHour >= timeSliderValues[0]) return false;
+      if (selectedTimeBlock === 'midday' && (classStartHour < timeSliderValues[0] || classStartHour >= timeSliderValues[1])) return false;
+      if (selectedTimeBlock === 'afternoon-evening' && classStartHour < timeSliderValues[1]) return false;
     }
 
     // If no other filters are active, include the class
@@ -408,10 +490,19 @@ const FitnessTimetable = () => {
   //     ? allLocations
   //     : [...new Set(allClasses.filter(cls => cls.center === selectedCenter).map(cls => cls.location))];
 
-  // Group classes by day for display
+  // Group classes by day for display and sort by time
   const classesByDay = {};
   days.forEach(day => {
-    classesByDay[day] = filteredClasses.filter(cls => cls.day === day);
+    const dayClasses = filteredClasses.filter(cls => cls.day === day);
+    
+    // Sort classes by time
+    dayClasses.sort((a, b) => {
+      const timeA = convertTimeToHours(a.time);
+      const timeB = convertTimeToHours(b.time);
+      return timeA - timeB;
+    });
+    
+    classesByDay[day] = dayClasses;
   });
 
   return (
@@ -419,55 +510,18 @@ const FitnessTimetable = () => {
       <div className="bg-white rounded-lg shadow-md p-3 mb-4">
         <div className="flex justify-between items-center">
           <h1 className="text-xl font-bold text-gray-800">Active Sefton Fitness</h1>
-          <div className="flex space-x-2 items-center">
-            <label 
-              className="flex items-center space-x-1.5 cursor-pointer text-xs py-1 px-2 rounded bg-gray-100 hover:bg-gray-200"
-              onClick={() => setIncludeVirtual(!includeVirtual)}
-            >
-              <span>Include Virtual</span>
-              <div className={`w-4 h-4 flex items-center justify-center border ${includeVirtual ? 'bg-purple-600 border-purple-700' : 'bg-white border-gray-400'}`}>
-                {includeVirtual && <span className="text-white text-xs font-bold">✓</span>}
-              </div>
-            </label>
-          </div>
-        </div>
-
-        {/* Filters header with count and clear button */}
-        <div className="mt-3 flex justify-between items-center">
-          <h2 className="text-sm font-medium text-gray-700">
-            Filters
+          <button 
+            onClick={toggleFilters}
+            className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            <span className="mr-1">Filters</span>
             {getActiveFilterCount() > 0 && 
-              <span className="ml-2 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+              <span className="ml-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                 {getActiveFilterCount()}
               </span>
             }
-          </h2>
-          {getActiveFilterCount() > 0 && (
-            <button 
-              onClick={clearAllFilters}
-              className="text-xs text-blue-600 hover:text-blue-800"
-            >
-              Clear all
-            </button>
-          )}
-        </div>
-
-        {/* Centers filter */}
-        <div className="mt-2 border-b pb-2">
-          <button 
-            onClick={() => toggleFilterSection('centers')}
-            className="w-full flex justify-between items-center text-left text-sm font-medium text-gray-700 hover:text-gray-900"
-          >
-            <span>
-              Centres
-              {!Object.values(selectedCenters).every(selected => selected) && 
-                <span className="ml-2 text-xs text-gray-500">
-                  ({centers.filter(c => selectedCenters[c]).length}/{centers.length})
-                </span>
-              }
-            </span>
             <svg 
-              className={`w-4 h-4 transition-transform ${expandedFilters.centers ? 'transform rotate-180' : ''}`}
+              className={`w-4 h-4 ml-1 transition-transform ${filtersExpanded ? 'transform rotate-180' : ''}`}
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24" 
@@ -476,215 +530,244 @@ const FitnessTimetable = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
-          
-          {expandedFilters.centers && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              <button
-                onClick={() => handleCenterChange('all')}
-                className={`px-2 py-0.5 rounded-full text-xs ${
-                  Object.values(selectedCenters).every(selected => selected)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                All
-              </button>
-              {centers.map(center => (
+        </div>
+
+        {filtersExpanded && (
+          <div className="mt-3">
+            {/* Centers filter */}
+            <div className="border-b pb-2 mb-2">
+              <div className="text-xs font-medium text-gray-700 mb-1">Centres</div>
+              <div className="flex flex-wrap gap-1">
                 <button
-                  key={center}
-                  onClick={() => handleCenterChange(center)}
+                  onClick={() => handleCenterChange('all')}
                   className={`px-2 py-0.5 rounded-full text-xs ${
-                    selectedCenters[center]
+                    Object.values(selectedCenters).every(selected => selected)
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   }`}
                 >
-                  {center}
+                  All
                 </button>
-              ))}
+                {centers.map(center => (
+                  <button
+                    key={center}
+                    onClick={() => handleCenterChange(center)}
+                    className={`px-2 py-0.5 rounded-full text-xs ${
+                      selectedCenters[center]
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {center}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Class types filter */}
-        <div className="mt-2 border-b pb-2">
-          <button 
-            onClick={() => toggleFilterSection('categories')}
-            className="w-full flex justify-between items-center text-left text-sm font-medium text-gray-700 hover:text-gray-900"
-          >
-            <span>
-              Class Type
-              {selectedCategory && <span className="ml-2 text-xs text-gray-500">({selectedCategory})</span>}
-            </span>
-            <svg 
-              className={`w-4 h-4 transition-transform ${expandedFilters.categories ? 'transform rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          
-          {expandedFilters.categories && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              <button
-                key="all"
-                onClick={() => handleCategoryChange('')}
-                className={`px-2 py-0.5 rounded-full text-xs ${
-                  selectedCategory === ''
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                All Types
-              </button>
-              {Object.entries(classCategories).map(([value, label]) => (
+            {/* Days filter */}
+            <div className="border-b pb-2 mb-2">
+              <div className="text-xs font-medium text-gray-700 mb-1">Days</div>
+              <div className="flex flex-wrap gap-1">
                 <button
-                  key={value}
-                  onClick={() => handleCategoryChange(value)}
+                  onClick={() => handleDayChange('all')}
                   className={`px-2 py-0.5 rounded-full text-xs ${
-                    selectedCategory === value
+                    Object.values(selectedDays).every(selected => selected)
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  All
+                </button>
+                {days.map(day => (
+                  <button
+                    key={day}
+                    onClick={() => handleDayChange(day)}
+                    className={`px-2 py-0.5 rounded-full text-xs ${
+                      selectedDays[day]
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {day.slice(0, 3)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Class types filter */}
+            <div className="border-b pb-2 mb-2">
+              <div className="text-xs font-medium text-gray-700 mb-1">Class Type</div>
+              <div className="flex flex-wrap gap-1">
+                <button
+                  key="all-categories"
+                  onClick={() => handleCategoryChange('')}
+                  className={`px-2 py-0.5 rounded-full text-xs ${
+                    selectedCategory === ''
                       ? 'bg-green-600 text-white'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   }`}
                 >
-                  {label.replace('Classes', '').trim()}
+                  All Types
                 </button>
-              ))}
+                {Object.entries(classCategories).map(([value, label]) => (
+                  <button
+                    key={value}
+                    onClick={() => handleCategoryChange(value)}
+                    className={`px-2 py-0.5 rounded-full text-xs ${
+                      selectedCategory === value
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {label.replace('Classes', '').trim()}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Time filter */}
-        <div className="mt-2">
-          <button 
-            onClick={() => toggleFilterSection('times')}
-            className="w-full flex justify-between items-center text-left text-sm font-medium text-gray-700 hover:text-gray-900"
-          >
-            <span>
-              Time
-              {selectedTimeBlock && (
-                <span className="ml-2 text-xs text-gray-500">
-                  ({formatHourToTimeString(timeBlocks[selectedTimeBlock].start)} - {formatHourToTimeString(timeBlocks[selectedTimeBlock].end)})
-                </span>
-              )}
-            </span>
-            <svg 
-              className={`w-4 h-4 transition-transform ${expandedFilters.times ? 'transform rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          
-          {expandedFilters.times && (
-            <div className="mt-2 flex flex-wrap gap-1 relative">
-              <button
-                key="all-times"
-                onClick={() => setSelectedTimeBlock('')}
-                className={`px-2 py-0.5 rounded-full text-xs ${
-                  selectedTimeBlock === ''
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Any Time
-              </button>
-              {Object.entries(timeBlocks).map(([blockId, block]) => (
+            {/* Time filter */}
+            <div className="border-b pb-2 mb-2">
+              <div className="text-xs font-medium text-gray-700 mb-1">Time</div>
+              <div className="flex flex-wrap gap-1 mb-3">
                 <button
-                  key={blockId}
-                  onClick={() => handleTimeBlockChange(blockId)}
-                  className={`px-2 py-0.5 rounded-full text-xs flex items-center ${
-                    selectedTimeBlock === blockId
+                  key="all-times"
+                  onClick={() => setSelectedTimeBlock('')}
+                  className={`px-2 py-0.5 rounded-full text-xs ${
+                    selectedTimeBlock === ''
                       ? 'bg-orange-600 text-white'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   }`}
                 >
-                  <span>{formatHourToTimeString(block.start)} - {formatHourToTimeString(block.end)}</span>
-                  <svg 
-                    onClick={(e) => handleOpenTimePopup(e, blockId)} 
-                    className="ml-1 w-3 h-3" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24" 
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                  </svg>
+                  Any Time
                 </button>
-              ))}
-
-              {isTimePopupOpen && editingTimeBlock && (
-                <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl p-4 z-50 border border-gray-200 w-72">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-sm font-medium">Edit Time Range</h3>
-                    <button 
-                      onClick={() => {
-                        setIsTimePopupOpen(false);
-                        setEditingTimeBlock(null);
-                      }}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                      </svg>
-                    </button>
-                  </div>
-                  
-                  <div className="mb-3">
-                    <label className="block text-xs text-gray-700 mb-1">Start Time</label>
-                    <div className="flex items-center">
-                      <input
-                        type="range"
-                        min="5"
-                        max="21"
-                        step="0.5"
-                        value={timeBlocks[editingTimeBlock].start}
-                        onChange={(e) => handleTimeRangeChange('start', parseFloat(e.target.value))}
-                        className="w-full mr-2"
-                      />
-                      <span className="text-xs font-medium whitespace-nowrap">
-                        {formatHourToTimeString(timeBlocks[editingTimeBlock].start)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label className="block text-xs text-gray-700 mb-1">End Time</label>
-                    <div className="flex items-center">
-                      <input
-                        type="range"
-                        min={timeBlocks[editingTimeBlock].start + 0.5}
-                        max="22"
-                        step="0.5"
-                        value={timeBlocks[editingTimeBlock].end}
-                        onChange={(e) => handleTimeRangeChange('end', parseFloat(e.target.value))}
-                        className="w-full mr-2"
-                      />
-                      <span className="text-xs font-medium whitespace-nowrap">
-                        {formatHourToTimeString(timeBlocks[editingTimeBlock].end)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <button
-                      onClick={handleApplyCustomTime}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 px-3 rounded"
-                    >
-                      Apply
-                    </button>
-                  </div>
+                <button
+                  key="morning"
+                  onClick={() => setSelectedTimeBlock('morning')}
+                  className={`px-2 py-0.5 rounded-full text-xs ${
+                    selectedTimeBlock === 'morning'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Early: 6:00 AM - {formatHourToTimeString(timeSliderValues[0])}
+                </button>
+                <button
+                  key="midday"
+                  onClick={() => setSelectedTimeBlock('midday')}
+                  className={`px-2 py-0.5 rounded-full text-xs ${
+                    selectedTimeBlock === 'midday'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Midday: {formatHourToTimeString(timeSliderValues[0])} - {formatHourToTimeString(timeSliderValues[1])}
+                </button>
+                <button
+                  key="afternoon-evening"
+                  onClick={() => setSelectedTimeBlock('afternoon-evening')}
+                  className={`px-2 py-0.5 rounded-full text-xs ${
+                    selectedTimeBlock === 'afternoon-evening'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Later: {formatHourToTimeString(timeSliderValues[1])} - 10:00 PM
+                </button>
+              </div>
+              
+              {/* Time slider */}
+              <div className="px-1">
+                <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
+                  <span>6:00 AM</span>
+                  <span className="font-medium text-gray-700">{formatHourToTimeString(timeSliderValues[0])}</span>
+                  <span className="font-medium text-gray-700">{formatHourToTimeString(timeSliderValues[1])}</span>
+                  <span>10:00 PM</span>
                 </div>
-              )}
+                <div className="relative w-full h-10 flex items-center">
+                  {/* Background track */}
+                  <div className="absolute w-full h-1 bg-gray-300 rounded"></div>
+                  
+                  {/* First divider slider */}
+                  <input
+                    type="range"
+                    min="6"
+                    max="22"
+                    step="0.5"
+                    value={timeSliderValues[0]}
+                    onChange={(e) => handleSliderChange(0, parseFloat(e.target.value))}
+                    className="absolute w-full h-8 opacity-0 cursor-pointer z-10"
+                  />
+                  
+                  {/* Second divider slider */}
+                  <input
+                    type="range"
+                    min="6"
+                    max="22"
+                    step="0.5"
+                    value={timeSliderValues[1]}
+                    onChange={(e) => handleSliderChange(1, parseFloat(e.target.value))}
+                    className="absolute w-full h-8 opacity-0 cursor-pointer z-20"
+                  />
+                  
+                  {/* Colored sections */}
+                  <div 
+                    className="absolute h-1 bg-orange-200 rounded-l" 
+                    style={{ 
+                      left: '0%', 
+                      width: `${((timeSliderValues[0] - 6) / 16) * 100}%` 
+                    }}
+                  ></div>
+                  <div 
+                    className="absolute h-1 bg-orange-300" 
+                    style={{ 
+                      left: `${((timeSliderValues[0] - 6) / 16) * 100}%`, 
+                      width: `${((timeSliderValues[1] - timeSliderValues[0]) / 16) * 100}%` 
+                    }}
+                  ></div>
+                  <div 
+                    className="absolute h-1 bg-orange-400 rounded-r" 
+                    style={{ 
+                      left: `${((timeSliderValues[1] - 6) / 16) * 100}%`, 
+                      width: `${((22 - timeSliderValues[1]) / 16) * 100}%` 
+                    }}
+                  ></div>
+                  
+                  {/* First divider thumb */}
+                  <div 
+                    className="absolute w-5 h-5 bg-orange-600 rounded-full border-2 border-white shadow z-30" 
+                    style={{ 
+                      left: `${((timeSliderValues[0] - 6) / 16) * 100}%`, 
+                      transform: 'translateX(-50%)' 
+                    }}
+                  ></div>
+                  
+                  {/* Second divider thumb */}
+                  <div 
+                    className="absolute w-5 h-5 bg-orange-600 rounded-full border-2 border-white shadow z-30" 
+                    style={{ 
+                      left: `${((timeSliderValues[1] - 6) / 16) * 100}%`, 
+                      transform: 'translateX(-50%)' 
+                    }}
+                  ></div>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
+
+            {/* Virtual classes filter */}
+            <div>
+              <div className="text-xs font-medium text-gray-700 mb-1">Class Format</div>
+              <label 
+                className="flex items-center space-x-1.5 cursor-pointer text-xs py-1 px-2 rounded bg-gray-100 hover:bg-gray-200 inline-block"
+                onClick={() => setIncludeVirtual(!includeVirtual)}
+              >
+                <span>Include Virtual</span>
+                <div className={`w-4 h-4 flex items-center justify-center border ${includeVirtual ? 'bg-purple-600 border-purple-700' : 'bg-white border-gray-400'}`}>
+                  {includeVirtual && <span className="text-white text-xs font-bold">✓</span>}
+                </div>
+              </label>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-auto">
