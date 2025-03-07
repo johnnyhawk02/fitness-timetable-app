@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import bootleClasses from '../data/bootleData';
 import crosbyClasses from '../data/crosbyData';
 import meadowsClasses from '../data/meadowsData';
@@ -27,36 +27,15 @@ const getStoredValue = (key, defaultValue) => {
 };
 
 const FitnessTimetable = () => {
-  // Combine all classes
-  const allClasses = [...bootleClasses, ...crosbyClasses, ...meadowsClasses, ...nethertonClasses, ...litherlandClasses, ...dunesClasses];
-
-  // Check for uncategorized activities and log them
-  useEffect(() => {
-    const uncategorized = new Set();
-    const categoryCounts = {
-      'spinning': 0,
-      'cardio': 0,
-      'strength': 0,
-      'mind-body': 0,
-      'core': 0,
-      'other': 0
-    };
-    
-    allClasses.forEach(cls => {
-      const category = getClassCategory(cls.activity);
-      categoryCounts[category]++;
-      
-      if (category === 'other' && cls.activity !== 'No Classes') {
-        uncategorized.add(cls.activity);
-      }
-    });
-    
-    if (uncategorized.size > 0) {
-      console.warn('Uncategorized activities found:', Array.from(uncategorized));
-    }
-    
-    console.info('Category distribution:', categoryCounts);
-  }, []);
+  // Combine all classes using useMemo to maintain reference stability
+  const allClasses = useMemo(() => [
+    ...bootleClasses, 
+    ...crosbyClasses, 
+    ...meadowsClasses, 
+    ...nethertonClasses, 
+    ...litherlandClasses, 
+    ...dunesClasses
+  ], []);  // Empty dependency array means this only runs once
 
   // Default time blocks configuration
   const defaultTimeBlocks = {
@@ -76,6 +55,15 @@ const FitnessTimetable = () => {
     acc[center] = true;
     return acc;
   }, {});
+
+  // Class category definitions
+  const classCategories = {
+    cardio: 'Cardio',
+    strength: 'Strength',
+    'mind-body': 'Mind & Body',
+    core: 'Core',
+    spinning: 'Spinning'
+  };
 
   // State hooks with localStorage integration
   const [selectedCenters, setSelectedCenters] = useState(() => 
@@ -103,100 +91,8 @@ const FitnessTimetable = () => {
     times: false
   });
 
-  // Toggle filter sections
-  const toggleFilterSection = (section) => {
-    setExpandedFilters({
-      ...expandedFilters,
-      [section]: !expandedFilters[section]
-    });
-  };
-
-  // Clear all filters
-  const clearAllFilters = () => {
-    // Reset centers to all selected
-    setSelectedCenters(centers.reduce((acc, center) => {
-      acc[center] = true;
-      return acc;
-    }, {}));
-    
-    // Reset category and time block
-    setSelectedCategory('');
-    setSelectedTimeBlock('');
-    
-    // Reset virtual classes to included
-    setIncludeVirtual(true);
-  };
-
-  // Get active filter count
-  const getActiveFilterCount = () => {
-    let count = 0;
-    
-    // Count centers that are not selected
-    const unselectedCenters = centers.filter(center => !selectedCenters[center]).length;
-    if (unselectedCenters > 0) count++;
-    
-    // Count other active filters
-    if (selectedCategory) count++;
-    if (selectedTimeBlock) count++;
-    if (!includeVirtual) count++;
-    
-    return count;
-  };
-
-  // Save to localStorage when values change
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(selectedCenters));
-  }, [selectedCenters]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SELECTED_CATEGORY, JSON.stringify(selectedCategory));
-  }, [selectedCategory]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.INCLUDE_VIRTUAL, JSON.stringify(includeVirtual));
-  }, [includeVirtual]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCK, JSON.stringify(selectedTimeBlock));
-  }, [selectedTimeBlock]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.TIME_BLOCKS, JSON.stringify(timeBlocks));
-  }, [timeBlocks]);
-
-  // Class category definitions
-  const classCategories = {
-    cardio: 'Cardio',
-    strength: 'Strength',
-    'mind-body': 'Mind & Body',
-    core: 'Core',
-    spinning: 'Spinning'
-  };
-
-  // Time conversion utilities
-  const convertTimeToHours = (timeString) => {
-    try {
-      // Handle different separator formats: "09:00 - 10:00" or "09:00-10:00"
-      const separator = timeString.includes(' - ') ? ' - ' : '-';
-      const startTime = timeString.split(separator)[0];
-      const [hour, minute] = startTime.split(':').map(Number);
-      return hour + (minute / 60);
-    } catch (error) {
-      console.warn(`Error parsing time: ${timeString}`, error);
-      return 0; // Default to midnight if parsing fails
-    }
-  };
-
-  const formatHourToTimeString = (hour) => {
-    const wholeHour = Math.floor(hour);
-    const minutes = Math.round((hour - wholeHour) * 60);
-    const period = wholeHour >= 12 ? 'PM' : 'AM';
-    const hour12 = wholeHour % 12 || 12;
-    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
-
-  // Determine category for a given activity
-  const getClassCategory = (activity) => {
+  // Determine category for a given activity - IMPORTANT: Define this BEFORE it's used
+  const getClassCategory = useCallback((activity) => {
     if (!activity) return 'other';
     
     const activityLower = activity.toLowerCase();
@@ -302,6 +198,118 @@ const FitnessTimetable = () => {
     // For classes that don't match any category
     console.log('Uncategorized activity:', activity);
     return 'other';
+  }, []);
+
+  // AFTER getClassCategory is defined, now we can use it
+  // Check for uncategorized activities and log them
+  useEffect(() => {
+    const uncategorized = new Set();
+    const categoryCounts = {
+      'spinning': 0,
+      'cardio': 0,
+      'strength': 0,
+      'mind-body': 0,
+      'core': 0,
+      'other': 0
+    };
+    
+    allClasses.forEach(cls => {
+      const category = getClassCategory(cls.activity);
+      categoryCounts[category]++;
+      
+      if (category === 'other' && cls.activity !== 'No Classes') {
+        uncategorized.add(cls.activity);
+      }
+    });
+    
+    if (uncategorized.size > 0) {
+      console.warn('Uncategorized activities found:', Array.from(uncategorized));
+    }
+    
+    console.info('Category distribution:', categoryCounts);
+  }, [allClasses, getClassCategory]);
+
+  // Toggle filter sections
+  const toggleFilterSection = (section) => {
+    setExpandedFilters({
+      ...expandedFilters,
+      [section]: !expandedFilters[section]
+    });
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    // Reset centers to all selected
+    setSelectedCenters(centers.reduce((acc, center) => {
+      acc[center] = true;
+      return acc;
+    }, {}));
+    
+    // Reset category and time block
+    setSelectedCategory('');
+    setSelectedTimeBlock('');
+    
+    // Reset virtual classes to included
+    setIncludeVirtual(true);
+  };
+
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    let count = 0;
+    
+    // Count centers that are not selected
+    const unselectedCenters = centers.filter(center => !selectedCenters[center]).length;
+    if (unselectedCenters > 0) count++;
+    
+    // Count other active filters
+    if (selectedCategory) count++;
+    if (selectedTimeBlock) count++;
+    if (!includeVirtual) count++;
+    
+    return count;
+  };
+
+  // Save to localStorage when values change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(selectedCenters));
+  }, [selectedCenters]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SELECTED_CATEGORY, JSON.stringify(selectedCategory));
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.INCLUDE_VIRTUAL, JSON.stringify(includeVirtual));
+  }, [includeVirtual]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCK, JSON.stringify(selectedTimeBlock));
+  }, [selectedTimeBlock]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.TIME_BLOCKS, JSON.stringify(timeBlocks));
+  }, [timeBlocks]);
+
+  // Time conversion utilities
+  const convertTimeToHours = (timeString) => {
+    try {
+      // Handle different separator formats: "09:00 - 10:00" or "09:00-10:00"
+      const separator = timeString.includes(' - ') ? ' - ' : '-';
+      const startTime = timeString.split(separator)[0];
+      const [hour, minute] = startTime.split(':').map(Number);
+      return hour + (minute / 60);
+    } catch (error) {
+      console.warn(`Error parsing time: ${timeString}`, error);
+      return 0; // Default to midnight if parsing fails
+    }
+  };
+
+  const formatHourToTimeString = (hour) => {
+    const wholeHour = Math.floor(hour);
+    const minutes = Math.round((hour - wholeHour) * 60);
+    const period = wholeHour >= 12 ? 'PM' : 'AM';
+    const hour12 = wholeHour % 12 || 12;
+    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
   // Handle category filter selection
