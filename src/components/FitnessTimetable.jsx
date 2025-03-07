@@ -11,7 +11,7 @@ const STORAGE_KEYS = {
   SELECTED_CENTERS: 'fitness_selected_centers',
   SELECTED_CATEGORY: 'fitness_selected_category',
   INCLUDE_VIRTUAL: 'fitness_include_virtual',
-  SELECTED_TIME_BLOCK: 'fitness_selected_time_block',
+  SELECTED_TIME_BLOCKS: 'fitness_selected_time_blocks',
   TIME_BLOCKS: 'fitness_time_blocks'
 };
 
@@ -24,6 +24,23 @@ const getStoredValue = (key, defaultValue) => {
     console.warn(`Error loading from localStorage: ${key}`, error);
     return defaultValue;
   }
+};
+
+// Instead of 4 time divisions, simplify to just 3
+const TIME_DIVISIONS = {
+  morning: { label: 'Morning', start: 6, end: 12 },
+  afternoon: { label: 'Afternoon', start: 12, end: 17 },
+  evening: { label: 'Evening', start: 17, end: 22 }
+};
+
+// Add a mapping for center name abbreviations
+const CENTER_ABBREVIATIONS = {
+  'Bootle': 'BTL',
+  'Crosby': 'CLAC',
+  'Meadows': 'MDW',
+  'Netherton': 'NAC',
+  'Litherland': 'LSP',
+  'Dunes': 'DUNES'
 };
 
 const FitnessTimetable = () => {
@@ -73,16 +90,17 @@ const FitnessTimetable = () => {
   const [includeVirtual, setIncludeVirtual] = useState(() => 
     getStoredValue(STORAGE_KEYS.INCLUDE_VIRTUAL, true)
   );
-  const [selectedTimeBlock, setSelectedTimeBlock] = useState(() => 
-    getStoredValue(STORAGE_KEYS.SELECTED_TIME_BLOCK, '')
+  const [selectedTimeBlocks, setSelectedTimeBlocks] = useState(() => 
+    getStoredValue(STORAGE_KEYS.SELECTED_TIME_BLOCKS, {
+      morning: false,
+      afternoon: false,
+      evening: false
+    })
   );
   const [isTimePopupOpen, setIsTimePopupOpen] = useState(false);
   const [editingTimeBlock, setEditingTimeBlock] = useState(null);
   const [timeBlocks, setTimeBlocks] = useState(() => 
     getStoredValue(STORAGE_KEYS.TIME_BLOCKS, defaultTimeBlocks)
-  );
-  const [timeSliderValues, setTimeSliderValues] = useState(() => 
-    getStoredValue('fitness_time_dividers', [10, 14])
   );
 
   // Additional state for filter UI
@@ -106,22 +124,42 @@ const FitnessTimetable = () => {
 
   // Handle day selection toggling
   const handleDayChange = (day) => {
+    const newSelectedDays = { ...selectedDays };
+    
     // If it's the "all" option
     if (day === 'all') {
-      const allSelected = Object.values(selectedDays).every(selected => selected);
-      const daysUpdate = {};
+      const allSelected = Object.values(newSelectedDays).every(selected => selected);
       
-      // Toggle between all selected and none selected
-      days.forEach(d => {
-        daysUpdate[d] = !allSelected;
-      });
+      // Only toggle if not all are selected
+      if (!allSelected) {
+        Object.keys(newSelectedDays).forEach(key => {
+          newSelectedDays[key] = true;
+        });
+        
+        // Update state and localStorage
+        setSelectedDays(newSelectedDays);
+        localStorage.setItem('fitness_selected_days', JSON.stringify(newSelectedDays));
+      }
+      // If all are already selected, do nothing
+    } 
+    // Handle regular day selection
+    else {
+      // Check if all days are currently selected
+      const allSelected = Object.values(newSelectedDays).every(selected => selected);
       
-      setSelectedDays(daysUpdate);
-    } else {
-      setSelectedDays({
-        ...selectedDays,
-        [day]: !selectedDays[day]
-      });
+      if (allSelected) {
+        // If all are selected, clear all and only select the clicked one
+        Object.keys(newSelectedDays).forEach(key => {
+          newSelectedDays[key] = (key === day);
+        });
+      } else {
+        // Otherwise toggle the clicked day (add or remove)
+        newSelectedDays[day] = !newSelectedDays[day];
+      }
+      
+      // Update state and localStorage
+      setSelectedDays(newSelectedDays);
+      localStorage.setItem('fitness_selected_days', JSON.stringify(newSelectedDays));
     }
   };
 
@@ -285,9 +323,15 @@ const FitnessTimetable = () => {
       return acc;
     }, {}));
     
-    // Reset category and time block
+    // Reset category 
     setSelectedCategory('');
-    setSelectedTimeBlock('');
+    
+    // Reset time blocks
+    setSelectedTimeBlocks({
+      morning: false,
+      afternoon: false,
+      evening: false
+    });
     
     // Reset virtual classes to included
     setIncludeVirtual(true);
@@ -308,9 +352,12 @@ const FitnessTimetable = () => {
     const unselectedDays = days.filter(day => !selectedDays[day]).length;
     if (unselectedDays > 0) count++;
     
+    // Count time blocks
+    const activeTimeBlocks = Object.values(selectedTimeBlocks).filter(selected => selected).length;
+    if (activeTimeBlocks > 0) count++;
+    
     // Count other active filters
     if (selectedCategory) count++;
-    if (selectedTimeBlock) count++;
     if (!includeVirtual) count++;
     
     return count;
@@ -330,8 +377,8 @@ const FitnessTimetable = () => {
   }, [includeVirtual]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCK, JSON.stringify(selectedTimeBlock));
-  }, [selectedTimeBlock]);
+    localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCKS, JSON.stringify(selectedTimeBlocks));
+  }, [selectedTimeBlocks]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.TIME_BLOCKS, JSON.stringify(timeBlocks));
@@ -342,11 +389,6 @@ const FitnessTimetable = () => {
     // Reset time blocks to default on component load to avoid key mismatches
     setTimeBlocks(defaultTimeBlocks);
   }, []);
-
-  // Save time slider values to localStorage
-  useEffect(() => {
-    localStorage.setItem('fitness_time_dividers', JSON.stringify(timeSliderValues));
-  }, [timeSliderValues]);
 
   // Time conversion utilities
   const convertTimeToHours = (timeString) => {
@@ -377,7 +419,10 @@ const FitnessTimetable = () => {
 
   // Handle time block selection
   const handleTimeBlockChange = (blockId) => {
-    setSelectedTimeBlock(selectedTimeBlock === blockId ? '' : blockId);
+    setSelectedTimeBlocks({
+      ...selectedTimeBlocks,
+      [blockId]: !selectedTimeBlocks[blockId]
+    });
   };
 
   // Handle opening the time popup for a specific time block
@@ -395,8 +440,11 @@ const FitnessTimetable = () => {
         ...timeBlocks,
         [editingTimeBlock]: updatedBlock
       });
-      if (selectedTimeBlock !== editingTimeBlock) {
-        setSelectedTimeBlock(editingTimeBlock);
+      if (selectedTimeBlocks[editingTimeBlock] !== true) {
+        setSelectedTimeBlocks({
+          ...selectedTimeBlocks,
+          [editingTimeBlock]: true
+        });
       }
     }
     setIsTimePopupOpen(false);
@@ -418,71 +466,95 @@ const FitnessTimetable = () => {
 
   // Handle center selection toggling
   const handleCenterChange = (center) => {
-    // Check if at least one center will remain selected
+    const newSelectedCenters = { ...selectedCenters };
+    
+    // Handle the "All" button click
     if (center === 'all') {
-      const allSelected = Object.values(selectedCenters).every(selected => selected);
-      const centersUpdate = {};
+      const allSelected = Object.values(newSelectedCenters).every(selected => selected);
       
-      // Toggle between all selected and none selected
-      centers.forEach(c => {
-        centersUpdate[c] = !allSelected;
-      });
+      // Only toggle if not all are selected
+      if (!allSelected) {
+        Object.keys(newSelectedCenters).forEach(key => {
+          newSelectedCenters[key] = true;
+        });
+        
+        // Update state and localStorage
+        setSelectedCenters(newSelectedCenters);
+        localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(newSelectedCenters));
+      }
+      // If all are already selected, do nothing
+    } 
+    // Handle regular center selection
+    else {
+      // Check if all centers are currently selected
+      const allSelected = Object.values(newSelectedCenters).every(selected => selected);
       
-      setSelectedCenters(centersUpdate);
-    } else {
-      setSelectedCenters({
-        ...selectedCenters,
-        [center]: !selectedCenters[center]
-      });
+      if (allSelected) {
+        // If all are selected, clear all and only select the clicked one
+        Object.keys(newSelectedCenters).forEach(key => {
+          newSelectedCenters[key] = (key === center);
+        });
+      } else {
+        // Otherwise toggle the clicked center (add or remove)
+        newSelectedCenters[center] = !newSelectedCenters[center];
+      }
+      
+      // Update state and localStorage
+      setSelectedCenters(newSelectedCenters);
+      localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(newSelectedCenters));
     }
   };
 
-  // Handle slider change
-  const handleSliderChange = (index, value) => {
-    const newValues = [...timeSliderValues];
+  // Update time division selection to allow multiple selections
+  const handleTimeDivisionChange = (division) => {
+    const newSelectedTimeBlocks = { ...selectedTimeBlocks };
+    newSelectedTimeBlocks[division] = !selectedTimeBlocks[division];
     
-    // Ensure values don't cross each other and stay in bounds
-    if (index === 0) {
-      // First divider can't go past second divider minus buffer
-      value = Math.min(value, timeSliderValues[1] - 0.5);
-      value = Math.max(value, 6); // Min bound
-    } else {
-      // Second divider can't go before first divider plus buffer
-      value = Math.max(value, timeSliderValues[0] + 0.5);
-      value = Math.min(value, 22); // Max bound
-    }
-    
-    newValues[index] = value;
-    setTimeSliderValues(newValues);
+    setSelectedTimeBlocks(newSelectedTimeBlocks);
+    localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCKS, JSON.stringify(newSelectedTimeBlocks));
   };
 
   // Filter classes based on selected filters
-  const filteredClasses = allClasses.filter(cls => {
-    // Center filter
-    const anyCenterSelected = Object.values(selectedCenters).some(selected => selected);
-    if (anyCenterSelected && !selectedCenters[cls.center]) return false;
+  const filteredClasses = useMemo(() => {
+    const anyTimeBlockSelected = Object.values(selectedTimeBlocks).some(selected => selected);
+    
+    return allClasses.filter(cls => {
+      // Center filter
+      const anyCenterSelected = Object.values(selectedCenters).some(selected => selected);
+      if (anyCenterSelected && !selectedCenters[cls.center]) return false;
 
-    // Day filter
-    if (!selectedDays[cls.day]) return false;
+      // Day filter
+      if (!selectedDays[cls.day]) return false;
 
-    // Time filter
-    if (selectedTimeBlock) {
-      const classStartHour = convertTimeToHours(cls.time);
-      
-      if (selectedTimeBlock === 'morning' && classStartHour >= timeSliderValues[0]) return false;
-      if (selectedTimeBlock === 'midday' && (classStartHour < timeSliderValues[0] || classStartHour >= timeSliderValues[1])) return false;
-      if (selectedTimeBlock === 'afternoon-evening' && classStartHour < timeSliderValues[1]) return false;
-    }
+      // Get the class category
+      const category = getClassCategory(cls.activity);
 
-    // If no other filters are active, include the class
-    if (!selectedCategory && includeVirtual) return true;
+      // Time filter - pass if no time blocks are selected or if the class time matches any selected block
+      if (anyTimeBlockSelected) {
+        const classStartHour = convertTimeToHours(cls.time);
+        const matchesAnySelectedTimeBlock = Object.entries(selectedTimeBlocks).some(([division, isSelected]) => {
+          if (!isSelected) return false;
+          const timeDivision = TIME_DIVISIONS[division];
+          return classStartHour >= timeDivision.start && classStartHour < timeDivision.end;
+        });
+        
+        if (!matchesAnySelectedTimeBlock) return false;
+      }
 
-    const category = getClassCategory(cls.activity);
-    const categoryMatch = !selectedCategory || selectedCategory === category;
-    const virtualMatch = includeVirtual || !cls.virtual;
+      // Category filter
+      if (selectedCategory && category !== selectedCategory) {
+        return false;
+      }
 
-    return categoryMatch && virtualMatch;
-  });
+      // Virtual filter
+      if (!includeVirtual && cls.virtual) {
+        return false;
+      }
+
+      // If we passed all filters, include the class
+      return true;
+    });
+  }, [allClasses, selectedCenters, selectedDays, selectedTimeBlocks, selectedCategory, includeVirtual, getClassCategory]);
 
   // Get locations specific to the selected center (if needed)
   // const centerLocations =
@@ -507,21 +579,23 @@ const FitnessTimetable = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 p-4">
-      <div className="bg-white rounded-lg shadow-md p-3 mb-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-800">Active Sefton Fitness</h1>
+      {/* Header and main filter toggle */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        {/* App header */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-3 flex justify-between items-center">
+          <h1 className="text-xl font-bold text-white">Active Sefton Fitness</h1>
           <button 
             onClick={toggleFilters}
-            className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+            className="flex items-center text-sm font-medium text-white bg-white/20 hover:bg-white/30 transition-colors rounded-full px-3 py-1"
           >
             <span className="mr-1">Filters</span>
             {getActiveFilterCount() > 0 && 
-              <span className="ml-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+              <span className="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                 {getActiveFilterCount()}
               </span>
             }
             <svg 
-              className={`w-4 h-4 ml-1 transition-transform ${filtersExpanded ? 'transform rotate-180' : ''}`}
+              className={`w-4 h-4 ml-1 transition-transform duration-200 ${filtersExpanded ? 'transform rotate-180' : ''}`}
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24" 
@@ -532,18 +606,22 @@ const FitnessTimetable = () => {
           </button>
         </div>
 
+        {/* Filter panel */}
         {filtersExpanded && (
-          <div className="mt-3">
+          <div className="divide-y divide-gray-200">
             {/* Centers filter */}
-            <div className="border-b pb-2 mb-2">
-              <div className="text-xs font-medium text-gray-700 mb-1">Centres</div>
-              <div className="flex flex-wrap gap-1">
+            <div className="p-4">
+              <div className="flex items-center mb-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
+                <div className="text-sm font-medium text-gray-700">Centers</div>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 <button
                   onClick={() => handleCenterChange('all')}
-                  className={`px-2 py-0.5 rounded-full text-xs ${
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                     Object.values(selectedCenters).every(selected => selected)
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   All
@@ -552,28 +630,31 @@ const FitnessTimetable = () => {
                   <button
                     key={center}
                     onClick={() => handleCenterChange(center)}
-                    className={`px-2 py-0.5 rounded-full text-xs ${
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                       selectedCenters[center]
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {center}
+                    {CENTER_ABBREVIATIONS[center] || center}
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Days filter */}
-            <div className="border-b pb-2 mb-2">
-              <div className="text-xs font-medium text-gray-700 mb-1">Days</div>
-              <div className="flex flex-wrap gap-1">
+            <div className="p-4">
+              <div className="flex items-center mb-2">
+                <div className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></div>
+                <div className="text-sm font-medium text-gray-700">Days</div>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 <button
                   onClick={() => handleDayChange('all')}
-                  className={`px-2 py-0.5 rounded-full text-xs ${
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                     Object.values(selectedDays).every(selected => selected)
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   All
@@ -582,10 +663,10 @@ const FitnessTimetable = () => {
                   <button
                     key={day}
                     onClick={() => handleDayChange(day)}
-                    className={`px-2 py-0.5 rounded-full text-xs ${
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                       selectedDays[day]
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
                     {day.slice(0, 3)}
@@ -595,16 +676,19 @@ const FitnessTimetable = () => {
             </div>
 
             {/* Class types filter */}
-            <div className="border-b pb-2 mb-2">
-              <div className="text-xs font-medium text-gray-700 mb-1">Class Type</div>
-              <div className="flex flex-wrap gap-1">
+            <div className="p-4">
+              <div className="flex items-center mb-2">
+                <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
+                <div className="text-sm font-medium text-gray-700">Class Type</div>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 <button
                   key="all-categories"
                   onClick={() => handleCategoryChange('')}
-                  className={`px-2 py-0.5 rounded-full text-xs ${
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                     selectedCategory === ''
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-green-600 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   All Types
@@ -613,10 +697,10 @@ const FitnessTimetable = () => {
                   <button
                     key={value}
                     onClick={() => handleCategoryChange(value)}
-                    className={`px-2 py-0.5 rounded-full text-xs ${
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                       selectedCategory === value
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        ? 'bg-green-600 text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
                     {label.replace('Classes', '').trim()}
@@ -626,156 +710,55 @@ const FitnessTimetable = () => {
             </div>
 
             {/* Time filter */}
-            <div className="border-b pb-2 mb-2">
-              <div className="text-xs font-medium text-gray-700 mb-1">Time</div>
-              <div className="flex flex-wrap gap-1 mb-3">
-                <button
-                  key="all-times"
-                  onClick={() => setSelectedTimeBlock('')}
-                  className={`px-2 py-0.5 rounded-full text-xs ${
-                    selectedTimeBlock === ''
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Any Time
-                </button>
-                <button
-                  key="morning"
-                  onClick={() => setSelectedTimeBlock('morning')}
-                  className={`px-2 py-0.5 rounded-full text-xs ${
-                    selectedTimeBlock === 'morning'
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Early: 6:00 AM - {formatHourToTimeString(timeSliderValues[0])}
-                </button>
-                <button
-                  key="midday"
-                  onClick={() => setSelectedTimeBlock('midday')}
-                  className={`px-2 py-0.5 rounded-full text-xs ${
-                    selectedTimeBlock === 'midday'
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Midday: {formatHourToTimeString(timeSliderValues[0])} - {formatHourToTimeString(timeSliderValues[1])}
-                </button>
-                <button
-                  key="afternoon-evening"
-                  onClick={() => setSelectedTimeBlock('afternoon-evening')}
-                  className={`px-2 py-0.5 rounded-full text-xs ${
-                    selectedTimeBlock === 'afternoon-evening'
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Later: {formatHourToTimeString(timeSliderValues[1])} - 10:00 PM
-                </button>
+            <div className="p-4">
+              <div className="flex items-center mb-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                <div className="text-sm font-medium text-gray-700">Time of Day</div>
               </div>
-              
-              {/* Time slider */}
-              <div className="px-1">
-                <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
-                  <span>6:00 AM</span>
-                  <span className="font-medium text-gray-700">{formatHourToTimeString(timeSliderValues[0])}</span>
-                  <span className="font-medium text-gray-700">{formatHourToTimeString(timeSliderValues[1])}</span>
-                  <span>10:00 PM</span>
-                </div>
-                <div className="relative w-full h-10 flex items-center">
-                  {/* Background track */}
-                  <div className="absolute w-full h-1 bg-gray-300 rounded"></div>
-                  
-                  {/* First divider slider */}
-                  <input
-                    type="range"
-                    min="6"
-                    max="22"
-                    step="0.5"
-                    value={timeSliderValues[0]}
-                    onChange={(e) => handleSliderChange(0, parseFloat(e.target.value))}
-                    className="absolute w-full h-8 opacity-0 cursor-pointer z-10"
-                  />
-                  
-                  {/* Second divider slider */}
-                  <input
-                    type="range"
-                    min="6"
-                    max="22"
-                    step="0.5"
-                    value={timeSliderValues[1]}
-                    onChange={(e) => handleSliderChange(1, parseFloat(e.target.value))}
-                    className="absolute w-full h-8 opacity-0 cursor-pointer z-20"
-                  />
-                  
-                  {/* Colored sections */}
-                  <div 
-                    className="absolute h-1 bg-orange-200 rounded-l" 
-                    style={{ 
-                      left: '0%', 
-                      width: `${((timeSliderValues[0] - 6) / 16) * 100}%` 
-                    }}
-                  ></div>
-                  <div 
-                    className="absolute h-1 bg-orange-300" 
-                    style={{ 
-                      left: `${((timeSliderValues[0] - 6) / 16) * 100}%`, 
-                      width: `${((timeSliderValues[1] - timeSliderValues[0]) / 16) * 100}%` 
-                    }}
-                  ></div>
-                  <div 
-                    className="absolute h-1 bg-orange-400 rounded-r" 
-                    style={{ 
-                      left: `${((timeSliderValues[1] - 6) / 16) * 100}%`, 
-                      width: `${((22 - timeSliderValues[1]) / 16) * 100}%` 
-                    }}
-                  ></div>
-                  
-                  {/* First divider thumb */}
-                  <div 
-                    className="absolute w-5 h-5 bg-orange-600 rounded-full border-2 border-white shadow z-30" 
-                    style={{ 
-                      left: `${((timeSliderValues[0] - 6) / 16) * 100}%`, 
-                      transform: 'translateX(-50%)' 
-                    }}
-                  ></div>
-                  
-                  {/* Second divider thumb */}
-                  <div 
-                    className="absolute w-5 h-5 bg-orange-600 rounded-full border-2 border-white shadow z-30" 
-                    style={{ 
-                      left: `${((timeSliderValues[1] - 6) / 16) * 100}%`, 
-                      transform: 'translateX(-50%)' 
-                    }}
-                  ></div>
-                </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {Object.entries(TIME_DIVISIONS).map(([key, division]) => (
+                  <button
+                    key={key}
+                    onClick={() => handleTimeDivisionChange(key)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      selectedTimeBlocks[key]
+                        ? 'bg-orange-500 text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {division.label}: {division.start}:00 - {division.end}:00
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Virtual classes filter */}
-            <div>
-              <div className="text-xs font-medium text-gray-700 mb-1">Class Format</div>
+            <div className="p-4">
+              <div className="flex items-center mb-2">
+                <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
+                <div className="text-sm font-medium text-gray-700">Class Format</div>
+              </div>
               <label 
-                className="flex items-center space-x-1.5 cursor-pointer text-xs py-1 px-2 rounded bg-gray-100 hover:bg-gray-200 inline-block"
+                className="inline-flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                 onClick={() => setIncludeVirtual(!includeVirtual)}
               >
-                <span>Include Virtual</span>
-                <div className={`w-4 h-4 flex items-center justify-center border ${includeVirtual ? 'bg-purple-600 border-purple-700' : 'bg-white border-gray-400'}`}>
-                  {includeVirtual && <span className="text-white text-xs font-bold">✓</span>}
+                <div className={`w-4 h-4 rounded-sm flex items-center justify-center ${includeVirtual ? 'bg-purple-600' : 'border border-gray-400 bg-white'}`}>
+                  {includeVirtual && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>}
                 </div>
+                <span className="text-sm text-gray-700">Include Virtual Classes</span>
               </label>
             </div>
           </div>
         )}
       </div>
 
-      <div className="flex-1 overflow-auto">
-        <div className="grid grid-cols-1 gap-4">
+      {/* Timetable content */}
+      <div className="mt-4 flex-1 overflow-auto bg-white rounded-lg shadow-md">
+        <div className="grid grid-cols-1 gap-4 p-4">
           {days.map(day => {
             if (classesByDay[day].length === 0) return null;
             return (
-              <div key={day} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div key={day} className="bg-white rounded-lg overflow-hidden border border-gray-200">
                 <div
                   className={`${
                     day === 'Monday'
@@ -791,7 +774,7 @@ const FitnessTimetable = () => {
                       : day === 'Saturday'
                       ? 'bg-indigo-600'
                       : 'bg-teal-600'
-                  } text-white font-semibold py-1 px-3 text-sm`}
+                  } text-white font-semibold py-2 px-4 text-sm`}
                 >
                   {day}
                 </div>
@@ -829,7 +812,7 @@ const FitnessTimetable = () => {
                                 : 'bg-indigo-100 text-indigo-800'
                             }`}
                           >
-                            {cls.center}
+                            {CENTER_ABBREVIATIONS[cls.center] || cls.center}
                           </span>
                         </div>
                       </div>
@@ -842,7 +825,8 @@ const FitnessTimetable = () => {
         </div>
       </div>
 
-      <div className="mt-2 text-xs text-gray-500 text-center">
+      {/* Footer */}
+      <div className="mt-4 text-xs text-center">
         <a 
           href="https://www.activeseftonfitness.co.uk" 
           target="_blank" 
