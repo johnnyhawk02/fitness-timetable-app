@@ -30,6 +30,34 @@ const FitnessTimetable = () => {
   // Combine all classes
   const allClasses = [...bootleClasses, ...crosbyClasses, ...meadowsClasses, ...nethertonClasses, ...litherlandClasses, ...dunesClasses];
 
+  // Check for uncategorized activities and log them
+  useEffect(() => {
+    const uncategorized = new Set();
+    const categoryCounts = {
+      'spinning': 0,
+      'cardio': 0,
+      'strength': 0,
+      'mind-body': 0,
+      'core': 0,
+      'other': 0
+    };
+    
+    allClasses.forEach(cls => {
+      const category = getClassCategory(cls.activity);
+      categoryCounts[category]++;
+      
+      if (category === 'other' && cls.activity !== 'No Classes') {
+        uncategorized.add(cls.activity);
+      }
+    });
+    
+    if (uncategorized.size > 0) {
+      console.warn('Uncategorized activities found:', Array.from(uncategorized));
+    }
+    
+    console.info('Category distribution:', categoryCounts);
+  }, []);
+
   // Default time blocks configuration
   const defaultTimeBlocks = {
     'early-morning': { label: 'Early Morning', start: 6.5, end: 9 },
@@ -122,16 +150,110 @@ const FitnessTimetable = () => {
 
   // Determine category for a given activity
   const getClassCategory = (activity) => {
-    if (activity.includes('Spinning') || activity.includes('RPM') || activity.includes('Sprint') || activity.includes('TRIP'))
+    if (!activity) return 'other';
+    
+    const activityLower = activity.toLowerCase();
+    
+    // Skip placeholder entries
+    if (activityLower.includes('no classes') || 
+        activityLower === 'none' || 
+        activityLower === '-') 
+      return 'other';
+
+    // Spinning category
+    if (activityLower.includes('spinning') || 
+        activityLower.includes('rpm') || 
+        activityLower.includes('sprint') || 
+        activityLower.includes('trip') ||
+        activityLower.includes('cycle') ||
+        activityLower.includes('spin'))
       return 'spinning';
-    if (activity.includes('Cardio') || activity.includes('Attack') || activity.includes('Combat') || activity.includes('Zumba') || activity.includes('Konga'))
+    
+    // Cardio category
+    if (activityLower.includes('cardio') || 
+        activityLower.includes('attack') || 
+        activityLower.includes('combat') || 
+        activityLower.includes('zumba') || 
+        activityLower.includes('konga') ||
+        activityLower.includes('dance') ||
+        activityLower.includes('aerodance') ||
+        activityLower.includes('aerotone') ||
+        activityLower.includes('fitsteps') ||
+        activityLower.includes('step') ||
+        activityLower.includes('aqua') ||
+        activityLower.includes('boxing') ||
+        activityLower.includes('boxercise') ||
+        activityLower.includes('kickboxing') ||
+        activityLower.includes('baby ballet'))
       return 'cardio';
-    if (activity.includes('Tone') || activity.includes('Conditioning') || activity.includes('Circuit') || activity.includes('Kettlebell') || activity.includes('Strength') || activity.includes('Synergy') || activity.includes('Bootcamp') || activity.includes('HIIT') || activity.includes('Bodypump'))
+    
+    // Strength category
+    if (activityLower.includes('tone') || 
+        activityLower.includes('conditioning') || 
+        activityLower.includes('circuit') || 
+        activityLower.includes('kettlebell') || 
+        activityLower.includes('strength') || 
+        activityLower.includes('synergy') || 
+        activityLower.includes('bootcamp') || 
+        activityLower.includes('hiit') || 
+        activityLower.includes('bodypump') ||
+        activityLower.includes('grit') ||
+        activityLower.includes('sculpt') ||
+        activityLower.includes('pump') ||
+        activityLower.includes('chair based') ||
+        activityLower.includes('junior circuit') ||
+        activityLower.includes('low level circuit'))
       return 'strength';
-    if (activity.includes('Yoga') || activity.includes('Pilates') || activity.includes('Balance') || activity.includes('Relaxation') || activity.includes('Tai-Chi'))
+    
+    // Mind-body category
+    if (activityLower.includes('yoga') || 
+        activityLower.includes('pilates') || 
+        activityLower.includes('balance') || 
+        activityLower.includes('bodybalance') ||
+        activityLower.includes('relaxation') || 
+        activityLower.includes('tai chi') ||
+        activityLower.includes('tai-chi') ||
+        activityLower.includes('mobility') ||
+        activityLower.includes('barre') ||
+        activityLower.includes('ballet barre') ||
+        activityLower.includes('flow') ||
+        activityLower.includes('gentle flow') ||
+        activityLower.includes('vinyassa') ||
+        activityLower.includes('hatha') ||
+        activityLower.includes('yin'))
       return 'mind-body';
-    if (activity.includes('Core') || activity.includes('Abs') || activity.includes('Bums'))
+    
+    // Core category
+    if (activityLower.includes('core') || 
+        activityLower.includes('abs') || 
+        activityLower.includes('bums') ||
+        activityLower.includes('legs') ||
+        activityLower.includes('tums') ||
+        activityLower.includes('body sculpt'))
       return 'core';
+    
+    // On Demand classes - categorize based on most likely content
+    if (activityLower.includes('on demand')) {
+      // If there's additional info, try to categorize based on that
+      if (activityLower.includes('spin') || activityLower.includes('cycle'))
+        return 'spinning';
+      if (activityLower.includes('core') || activityLower.includes('abs'))
+        return 'core';
+      if (activityLower.includes('yoga') || activityLower.includes('pilates'))
+        return 'mind-body';
+      
+      // Generic on demand classes could be any type, default to 'other'
+      return 'other';
+    }
+    
+    // Special case for Les Mills classes without specific type
+    if (activityLower.includes('les mills') && !activityLower.includes('les mills on demand')) {
+      // Try to guess the type from the name format
+      return 'strength'; // Default to strength for generic Les Mills classes
+    }
+    
+    // For classes that don't match any category
+    console.log('Uncategorized activity:', activity);
     return 'other';
   };
 
