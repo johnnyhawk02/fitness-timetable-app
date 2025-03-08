@@ -792,9 +792,9 @@ const FitnessTimetable = () => {
   return (
     <div className="flex flex-col h-screen bg-[rgba(0,0,0,0.2)] p-4 overflow-hidden">
       {/* Filter section - constrain its height */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col max-h-[80vh]">
+      <div className="bg-white rounded-t-lg shadow-md overflow-hidden flex flex-col">
         {/* App bar with logo, filter buttons and count */}
-        <div className="bg-[rgb(0,130,188)] text-white p-3 rounded-t-lg flex flex-wrap justify-between items-center relative">
+        <div className="bg-[rgb(0,130,188)] text-white p-3 flex flex-wrap justify-between items-center relative">
           <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain" />
           
           {/* Tiny menu buttons */}
@@ -923,8 +923,8 @@ const FitnessTimetable = () => {
         </div>
       </div>
 
-      {/* Timetable content */}
-      <div className="mt-4 flex-1 overflow-hidden bg-white rounded-lg shadow-md">
+      {/* Timetable content - directly connected to app bar */}
+      <div className="flex-1 overflow-hidden bg-white rounded-b-lg shadow-md">
         <div className="h-full overflow-y-auto scrollbar-hide">
           <div className="grid grid-cols-1 gap-4 p-4">
             {days.map(day => {
