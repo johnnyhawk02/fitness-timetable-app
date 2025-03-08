@@ -961,25 +961,28 @@ const FitnessTimetable = () => {
                       <div key={`${day}-${idx}`} className="flex items-start p-3 hover:bg-gray-50">
                         <div className="w-28 font-medium text-gray-700 text-xs pt-0.5 text-left pr-4">{cls.time}</div>
                         <div className="flex-1 text-left">
-                          <div className="font-medium text-sm flex items-center">
+                          <div className="font-medium text-sm">
                             {cls.activity}
-                            {cls.virtual && (
-                              <span className="ml-1.5 px-1.5 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
-                                V
-                              </span>
-                            )}
-                            {/* Info icon */}
-                            <button 
-                              onClick={() => handleShowDescription(cls)}
-                              className="ml-1.5 text-gray-400 hover:text-blue-500 focus:outline-none"
-                              aria-label={`Show information about ${cls.activity}`}
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                              </svg>
-                            </button>
                           </div>
-                          <div className="text-xs text-gray-500">{cls.location}</div>
+                          <div className="flex items-center text-xs text-gray-500 mt-0.5">
+                            <span>{cls.location}</span>
+                            <div className="flex items-center ml-2">
+                              {cls.virtual && (
+                                <span className="mr-1 px-1.5 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
+                                  V
+                                </span>
+                              )}
+                              <button 
+                                onClick={() => handleShowDescription(cls)}
+                                className="text-gray-400 hover:text-blue-500 focus:outline-none"
+                                aria-label={`Show information about ${cls.activity}`}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         <div className="w-20 flex justify-end">
                           <span
