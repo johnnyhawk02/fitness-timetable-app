@@ -644,7 +644,7 @@ const FitnessTimetable = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 p-4">
+    <div className="flex flex-col h-screen bg-[rgba(0,0,0,0.2)] p-4">
       {/* Header and main filter toggle */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         {/* App header */}
@@ -678,7 +678,7 @@ const FitnessTimetable = () => {
             filtersExpanded ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="bg-[rgb(0,130,188)]/10">
+          <div className="bg-white">
             <div className="divide-y divide-[rgb(0,130,188)]/15">
               {/* Centers filter */}
               <div className="p-4">
@@ -691,8 +691,8 @@ const FitnessTimetable = () => {
                     onClick={() => handleCenterChange('all')}
                     className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                       Object.values(selectedCenters).every(selected => selected)
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
+                        ? 'bg-green-600 text-white shadow-sm'
+                        : 'bg-green-200 text-green-800 hover:bg-green-300'
                     }`}
                   >
                     All
@@ -703,8 +703,8 @@ const FitnessTimetable = () => {
                       onClick={() => handleCenterChange(center)}
                       className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                         selectedCenters[center]
-                          ? 'bg-blue-600 text-white shadow-sm'
-                          : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
+                          ? 'bg-green-600 text-white shadow-sm'
+                          : 'bg-green-200 text-green-800 hover:bg-green-300'
                       }`}
                     >
                       {CENTER_ABBREVIATIONS[center] || center}
@@ -726,8 +726,8 @@ const FitnessTimetable = () => {
                       onClick={() => handleDayChange(day)}
                       className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                         selectedDays[day]
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'bg-indigo-600/20 text-indigo-700 hover:bg-indigo-600/30'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'bg-blue-200 text-blue-800 hover:bg-blue-300'
                       }`}
                     >
                       {dayAbbreviations[day]}
@@ -748,8 +748,8 @@ const FitnessTimetable = () => {
                     onClick={() => handleCategoryChange('')}
                     className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors ${
                       selectedCategory === ''
-                        ? 'bg-green-600 text-white shadow-sm'
-                        : 'bg-green-600/20 text-green-700 hover:bg-green-600/30'
+                        ? 'bg-purple-600 text-white shadow-sm'
+                        : 'bg-purple-200 text-purple-800 hover:bg-purple-300'
                     }`}
                   >
                     All Types
@@ -760,8 +760,8 @@ const FitnessTimetable = () => {
                       onClick={() => handleCategoryChange(value)}
                       className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors ${
                         selectedCategory === value
-                          ? 'bg-green-600 text-white shadow-sm'
-                          : 'bg-green-600/20 text-green-700 hover:bg-green-600/30'
+                          ? 'bg-purple-600 text-white shadow-sm'
+                          : 'bg-purple-200 text-purple-800 hover:bg-purple-300'
                       }`}
                     >
                       {label.replace('Classes', '').trim()}
@@ -783,8 +783,8 @@ const FitnessTimetable = () => {
                       onClick={() => handleTimeDivisionChange(key)}
                       className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                         selectedTimeBlocks[key]
-                          ? 'bg-orange-500 text-white shadow-sm'
-                          : 'bg-orange-500/20 text-orange-700 hover:bg-orange-500/30'
+                          ? 'bg-orange-600 text-white shadow-sm'
+                          : 'bg-orange-200 text-orange-800 hover:bg-orange-300'
                       }`}
                     >
                       {division.start}:00 - {division.end}:00
@@ -800,7 +800,7 @@ const FitnessTimetable = () => {
                   <div className="text-sm font-medium text-gray-700">Class Format</div>
                 </div>
                 <div 
-                  className="flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 transition-colors w-fit"
+                  className="flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg bg-purple-200 hover:bg-purple-300 transition-colors w-fit"
                   onClick={() => setIncludeVirtual(!includeVirtual)}
                 >
                   <div className={`w-4 h-4 rounded-sm flex items-center justify-center ${includeVirtual ? 'bg-purple-600' : 'border-2 border-purple-600 bg-white'}`}>
@@ -814,26 +814,17 @@ const FitnessTimetable = () => {
               <div className="sticky bottom-0 bg-white">
                 <button 
                   onClick={toggleFilters}
-                  className="w-full bg-[rgb(0,130,188)] px-4 py-2 flex justify-between items-center hover:bg-[rgb(0,130,188)]/90 transition-colors"
+                  className="w-full flex justify-center items-center bg-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/90 transition-colors h-12"
                 >
-                  <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain invisible" />
-                  <div className="flex items-center text-sm font-medium text-white">
-                    <span className="mr-1">Close Filters</span>
-                    {getActiveFilterCount() > 0 && 
-                      <span className="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                        {getActiveFilterCount()}
-                      </span>
-                    }
-                    <svg 
-                      className="w-4 h-4 ml-1"
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24" 
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
-                    </svg>
-                  </div>
+                  <svg 
+                    className="w-6 h-6 text-white"
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
+                  </svg>
                 </button>
               </div>
             </div>
