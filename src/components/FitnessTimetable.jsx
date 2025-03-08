@@ -127,6 +127,9 @@ const FitnessTimetable = () => {
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedClassDetails, setSelectedClassDetails] = useState(null);
 
+  // Additional state for dropdown UIs
+  const [openDropdown, setOpenDropdown] = useState(null);
+
   // Toggle all filters visibility
   const toggleFilters = () => {
     console.log('Current filtersExpanded:', filtersExpanded);
@@ -732,6 +735,29 @@ const FitnessTimetable = () => {
     return `No description available for "${activity}".`;
   };
 
+  // Handle opening and closing dropdowns
+  const toggleDropdown = (dropdownName) => {
+    if (openDropdown === dropdownName) {
+      setOpenDropdown(null);
+    } else {
+      setOpenDropdown(dropdownName);
+    }
+  };
+
+  // Close all dropdowns when clicking elsewhere
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdown && !event.target.closest('.dropdown-container')) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openDropdown]);
+
   return (
     <div className="flex flex-col h-screen bg-[rgba(0,0,0,0.2)] p-4 overflow-hidden">
       {/* Filter section - constrain its height */}
@@ -811,184 +837,357 @@ const FitnessTimetable = () => {
           </div>
         </div>
 
-        {/* Filter panel - scrollable container */}
-        <div 
-          className={`overflow-hidden transition-all duration-300 ease-in-out flex-1 ${
-            filtersExpanded ? 'max-h-[calc(100%-140px)] opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div className="bg-white overflow-y-auto scrollbar-hide h-full">
-            <div className="divide-y divide-[rgb(0,130,188)]/15">
+        {/* Filter panel */}
+        <div className={`transition-all duration-300 ${filtersExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+          <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+            {/* Change from vertical to horizontal layout */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
               {/* Centers filter */}
-              <div className="p-4">
+              <div className="p-2">
                 <div className="flex items-center mb-2">
-                  <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                   <div className="text-sm font-medium text-gray-700">Centers</div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <button
-                    onClick={() => handleCenterChange('all')}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      Object.values(selectedCenters).every(selected => selected)
-                        ? 'bg-green-600 text-white shadow-sm'
-                        : 'bg-green-200 text-green-800 hover:bg-green-300'
-                    }`}
+                
+                {/* Centers dropdown */}
+                <div className="dropdown-container relative">
+                  <button 
+                    onClick={() => toggleDropdown('centers')}
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
                   >
-                    All
-                  </button>
-                  {centers.map(center => (
-                    <button
-                      key={center}
-                      onClick={() => handleCenterChange(center)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                        selectedCenters[center]
-                          ? 'bg-green-600 text-white shadow-sm'
-                          : 'bg-green-200 text-green-800 hover:bg-green-300'
-                      }`}
+                    <span className="text-sm text-gray-700">
+                      {Object.values(selectedCenters).every(selected => selected) 
+                        ? 'All Centers' 
+                        : `${Object.values(selectedCenters).filter(Boolean).length} Center${Object.values(selectedCenters).filter(Boolean).length !== 1 ? 's' : ''}`
+                      }
+                    </span>
+                    <svg 
+                      className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${openDropdown === 'centers' ? 'transform rotate-180' : ''}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
                     >
-                      {CENTER_ABBREVIATIONS[center] || center}
-                    </button>
-                  ))}
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {openDropdown === 'centers' && (
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-[250px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                      <div className="p-2">
+                        <div 
+                          className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                            Object.values(selectedCenters).every(selected => selected)
+                              ? 'bg-green-100 text-green-800'
+                              : 'hover:bg-gray-100 text-gray-700'
+                          }`}
+                          onClick={() => handleCenterChange('all')}
+                        >
+                          <input 
+                            type="checkbox" 
+                            className="form-checkbox h-4 w-4 mr-2 text-green-600 border-gray-300 rounded" 
+                            checked={Object.values(selectedCenters).every(selected => selected)}
+                            readOnly
+                          />
+                          <span>All Centers</span>
+                        </div>
+                        
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          {centers.map(center => (
+                            <div 
+                              key={center}
+                              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                                selectedCenters[center]
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'hover:bg-gray-100 text-gray-700'
+                              }`}
+                              onClick={() => handleCenterChange(center)}
+                            >
+                              <input 
+                                type="checkbox" 
+                                className="form-checkbox h-4 w-4 mr-2 text-green-600 border-gray-300 rounded" 
+                                checked={selectedCenters[center]}
+                                readOnly
+                              />
+                              <span>{center}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Days filter */}
-              <div className="p-4">
+              <div className="p-2">
                 <div className="flex items-center mb-2">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                   <div className="text-sm font-medium text-gray-700">Days</div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <button
-                    key="all-days"
-                    onClick={() => handleDayChange('all')}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      Object.values(selectedDays).every(selected => selected)
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'bg-blue-200 text-blue-800 hover:bg-blue-300'
-                    }`}
+                
+                {/* Days dropdown */}
+                <div className="dropdown-container relative">
+                  <button 
+                    onClick={() => toggleDropdown('days')}
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
                   >
-                    All
-                  </button>
-                  {days.map(day => (
-                    <button
-                      key={day}
-                      onClick={() => handleDayChange(day)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                        selectedDays[day]
-                          ? 'bg-blue-600 text-white shadow-sm'
-                          : 'bg-blue-200 text-blue-800 hover:bg-blue-300'
-                      }`}
+                    <span className="text-sm text-gray-700">
+                      {Object.values(selectedDays).every(selected => selected) 
+                        ? 'All Days' 
+                        : `${Object.values(selectedDays).filter(Boolean).length} Day${Object.values(selectedDays).filter(Boolean).length !== 1 ? 's' : ''}`
+                      }
+                    </span>
+                    <svg 
+                      className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${openDropdown === 'days' ? 'transform rotate-180' : ''}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
                     >
-                      {dayAbbreviations[day]}
-                    </button>
-                  ))}
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {openDropdown === 'days' && (
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-[250px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                      <div className="p-2">
+                        <div 
+                          className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                            Object.values(selectedDays).every(selected => selected)
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'hover:bg-gray-100 text-gray-700'
+                          }`}
+                          onClick={() => handleDayChange('all')}
+                        >
+                          <input 
+                            type="checkbox" 
+                            className="form-checkbox h-4 w-4 mr-2 text-blue-600 border-gray-300 rounded" 
+                            checked={Object.values(selectedDays).every(selected => selected)}
+                            readOnly
+                          />
+                          <span>All Days</span>
+                        </div>
+                        
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          {days.map(day => (
+                            <div 
+                              key={day}
+                              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                                selectedDays[day]
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'hover:bg-gray-100 text-gray-700'
+                              }`}
+                              onClick={() => handleDayChange(day)}
+                            >
+                              <input 
+                                type="checkbox" 
+                                className="form-checkbox h-4 w-4 mr-2 text-blue-600 border-gray-300 rounded" 
+                                checked={selectedDays[day]}
+                                readOnly
+                              />
+                              <span>{day}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Class types filter */}
-              <div className="p-4">
+              {/* Class Types filter */}
+              <div className="p-2">
                 <div className="flex items-center mb-2">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
-                  <div className="text-sm font-medium text-gray-700">Class Types</div>
+                  <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                  <div className="text-sm font-medium text-gray-700">Class Type</div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <button
-                    key="all-categories"
-                    onClick={() => handleCategoryChange('')}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      selectedCategory === ''
-                        ? 'bg-purple-600 text-white shadow-sm'
-                        : 'bg-purple-200 text-purple-800 hover:bg-purple-300'
-                    }`}
+                
+                {/* Class type dropdown */}
+                <div className="dropdown-container relative">
+                  <button 
+                    onClick={() => toggleDropdown('class-types')}
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
                   >
-                    All Types
-                  </button>
-                  {Object.entries(classCategories).map(([value, label]) => (
-                    <button
-                      key={value}
-                      onClick={() => handleCategoryChange(value)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                        selectedCategory === value
-                          ? 'bg-purple-600 text-white shadow-sm'
-                          : 'bg-purple-200 text-purple-800 hover:bg-purple-300'
-                      }`}
+                    <span className="text-sm text-gray-700">
+                      {selectedCategory === '' 
+                        ? 'All Types' 
+                        : Object.entries(classCategories).find(([value]) => value === selectedCategory)?.[1] || 'Unknown Type'
+                      }
+                    </span>
+                    <svg 
+                      className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${openDropdown === 'class-types' ? 'transform rotate-180' : ''}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
                     >
-                      {label.replace('Classes', '').trim()}
-                    </button>
-                  ))}
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {openDropdown === 'class-types' && (
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-[250px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                      <div className="p-2">
+                        <div 
+                          className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                            selectedCategory === ''
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'hover:bg-gray-100 text-gray-700'
+                          }`}
+                          onClick={() => handleCategoryChange('')}
+                        >
+                          <input 
+                            type="radio" 
+                            className="form-radio h-4 w-4 mr-2 text-purple-600 border-gray-300 rounded-full" 
+                            checked={selectedCategory === ''}
+                            readOnly
+                          />
+                          <span>All Types</span>
+                        </div>
+                        
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          {Object.entries(classCategories).map(([value, label]) => (
+                            <div 
+                              key={value}
+                              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                                selectedCategory === value
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : 'hover:bg-gray-100 text-gray-700'
+                              }`}
+                              onClick={() => handleCategoryChange(value)}
+                            >
+                              <input 
+                                type="radio" 
+                                className="form-radio h-4 w-4 mr-2 text-purple-600 border-gray-300 rounded-full" 
+                                checked={selectedCategory === value}
+                                readOnly
+                              />
+                              <span>{label.replace('Classes', '').trim()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Time filter */}
-              <div className="p-4">
+              <div className="p-2">
                 <div className="flex items-center mb-2">
                   <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
                   <div className="text-sm font-medium text-gray-700">Time of Day</div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <button
-                    key="any-time"
-                    onClick={() => handleTimeDivisionChange('any')}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      !Object.values(selectedTimeBlocks).some(selected => selected)
-                        ? 'bg-orange-600 text-white shadow-sm'
-                        : 'bg-orange-200 text-orange-800 hover:bg-orange-300'
-                    }`}
+                
+                {/* Time dropdown */}
+                <div className="dropdown-container relative">
+                  <button 
+                    onClick={() => toggleDropdown('time')}
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
                   >
-                    Any Time
-                  </button>
-                  {Object.entries(TIME_DIVISIONS).map(([key, division]) => (
-                    <button
-                      key={key}
-                      onClick={() => handleTimeDivisionChange(key)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                        selectedTimeBlocks[key]
-                          ? 'bg-orange-600 text-white shadow-sm'
-                          : 'bg-orange-200 text-orange-800 hover:bg-orange-300'
-                      }`}
+                    <span className="text-sm text-gray-700">
+                      {!Object.values(selectedTimeBlocks).some(selected => selected) 
+                        ? 'Any Time' 
+                        : Object.entries(selectedTimeBlocks)
+                            .filter(([_, isSelected]) => isSelected)
+                            .map(([key]) => TIME_DIVISIONS[key]?.label || key)
+                            .join(', ')
+                    }
+                    </span>
+                    <svg 
+                      className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${openDropdown === 'time' ? 'transform rotate-180' : ''}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
                     >
-                      {division.start}:00 - {division.end}:00
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Virtual classes filter */}
-              <div className="p-4">
-                <div className="flex items-center mb-2">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
-                  <div className="text-sm font-medium text-gray-700">Class Format</div>
-                </div>
-                <div 
-                  className="flex items-center space-x-2 cursor-pointer px-4 py-2 rounded-lg bg-purple-200 hover:bg-purple-300 transition-colors w-fit"
-                  onClick={() => setIncludeVirtual(!includeVirtual)}
-                >
-                  <div className={`w-4 h-4 rounded-sm flex items-center justify-center ${includeVirtual ? 'bg-purple-600' : 'border-2 border-purple-600 bg-white'}`}>
-                    {includeVirtual && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>}
-                  </div>
-                  <span className="text-sm text-purple-700">Include Virtual Classes</span>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {openDropdown === 'time' && (
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-[250px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                      <div className="p-2">
+                        <div 
+                          className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                            !Object.values(selectedTimeBlocks).some(selected => selected)
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'hover:bg-gray-100 text-gray-700'
+                          }`}
+                          onClick={() => handleTimeDivisionChange('any')}
+                        >
+                          <input 
+                            type="checkbox" 
+                            className="form-checkbox h-4 w-4 mr-2 text-orange-600 border-gray-300 rounded" 
+                            checked={!Object.values(selectedTimeBlocks).some(selected => selected)}
+                            readOnly
+                          />
+                          <span>Any Time</span>
+                        </div>
+                        
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          {Object.entries(TIME_DIVISIONS).map(([key, division]) => (
+                            <div 
+                              key={key}
+                              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                                selectedTimeBlocks[key]
+                                  ? 'bg-orange-100 text-orange-800'
+                                  : 'hover:bg-gray-100 text-gray-700'
+                              }`}
+                              onClick={() => handleTimeDivisionChange(key)}
+                            >
+                              <input 
+                                type="checkbox" 
+                                className="form-checkbox h-4 w-4 mr-2 text-orange-600 border-gray-300 rounded" 
+                                checked={selectedTimeBlocks[key]}
+                                readOnly
+                              />
+                              <span>{division.start}:00 - {division.end}:00</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Bottom close button - positioned at bottom */}
-          <div className="sticky bottom-0 bg-white">
-            <button 
-              onClick={toggleFilters}
-              className="w-full flex justify-center items-center bg-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/90 transition-colors h-12"
-            >
-              <svg 
-                className="w-6 h-6 text-white"
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
-                xmlns="http://www.w3.org/2000/svg"
+            
+            {/* Virtual classes toggle and Clear All button */}
+            <div className="flex justify-between items-center mt-4 px-4">
+              <div 
+                className="flex items-center space-x-2 cursor-pointer px-4 py-2 rounded-lg bg-purple-200 hover:bg-purple-300 transition-colors"
+                onClick={() => setIncludeVirtual(!includeVirtual)}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
-              </svg>
-            </button>
+                <div className={`w-4 h-4 rounded-sm flex items-center justify-center ${includeVirtual ? 'bg-purple-600' : 'border-2 border-purple-600 bg-white'}`}>
+                  {includeVirtual && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>}
+                </div>
+                <span className="text-sm text-purple-700">Include Virtual Classes</span>
+              </div>
+              
+              <button 
+                onClick={clearAllFilters}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                Clear All Filters
+              </button>
+            </div>
+            
+            {/* Close filters button */}
+            <div className="flex justify-center mt-4">
+              <button 
+                onClick={toggleFilters}
+                className="flex items-center justify-center px-4 py-2 bg-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/90 transition-colors text-white rounded-lg"
+              >
+                <svg 
+                  className="w-5 h-5 mr-1"
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24" 
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
+                </svg>
+                Close Filters
+              </button>
+            </div>
           </div>
         </div>
       </div>
