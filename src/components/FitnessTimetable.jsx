@@ -734,12 +734,12 @@ const FitnessTimetable = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[rgba(0,0,0,0.2)] p-4 overflow-hidden">
-      {/* Filter section */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Filter section - constrain its height */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col max-h-[80vh]">
         {/* Header and filter toggle */}
         <button 
           onClick={toggleFilters}
-          className="w-full bg-[rgb(0,130,188)] px-4 py-2 flex justify-between items-center hover:bg-[rgb(0,130,188)]/90 transition-colors"
+          className="w-full bg-[rgb(0,130,188)] px-4 py-2 flex justify-between items-center hover:bg-[rgb(0,130,188)]/90 transition-colors flex-shrink-0"
         >
           <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain" />
           <div className="flex items-center text-sm font-medium text-white">
@@ -765,56 +765,59 @@ const FitnessTimetable = () => {
           </div>
         </button>
 
-        {/* Mobile class count - only visible on small screens */}
-        <div className="mt-1 bg-white py-1 px-3 rounded-md text-xs text-center text-gray-600 sm:hidden shadow-sm">
-          Showing <span className="font-bold text-[rgb(0,130,188)]">{Object.values(classesByDay).reduce((sum, dayClasses) => sum + dayClasses.length, 0)}</span> classes
-        </div>
+        {/* Mobile class count and quick filters - fixed height items */}
+        <div className="flex-shrink-0">
+          {/* Mobile class count - only visible on small screens */}
+          <div className="mt-1 bg-white py-1 px-3 rounded-md text-xs text-center text-gray-600 sm:hidden shadow-sm">
+            Showing <span className="font-bold text-[rgb(0,130,188)]">{Object.values(classesByDay).reduce((sum, dayClasses) => sum + dayClasses.length, 0)}</span> classes
+          </div>
 
-        {/* Quick filters bar with reset button */}
-        <div className="mt-2 bg-white rounded-lg p-2 shadow-md">
-          <div className="flex items-center justify-between px-2 py-1">
-            <div className="flex items-center text-[rgb(0,130,188)]">
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-              </svg>
-              <span className="text-xs font-medium">Quick Filters:</span>
+          {/* Quick filters bar with reset button */}
+          <div className="mt-2 bg-white rounded-lg p-2 shadow-md">
+            <div className="flex items-center justify-between px-2 py-1">
+              <div className="flex items-center text-[rgb(0,130,188)]">
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                <span className="text-xs font-medium">Quick Filters:</span>
+              </div>
+              <button
+                onClick={clearAllFilters}
+                className="text-xs text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10 px-2 py-0.5 rounded transition-colors"
+              >
+                Reset All
+              </button>
             </div>
-            <button
-              onClick={clearAllFilters}
-              className="text-xs text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10 px-2 py-0.5 rounded transition-colors"
-            >
-              Reset All
-            </button>
-          </div>
-          <div className="flex gap-2 px-2 overflow-x-auto scrollbar-hide pb-1">
-            <button
-              onClick={() => applyQuickFilter('today')}
-              className="px-3 py-1 text-xs bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] rounded-full hover:bg-[rgb(0,130,188)]/20 transition-colors whitespace-nowrap"
-            >
-              Today's Classes
-            </button>
-            <button
-              onClick={() => applyQuickFilter('weekend')}
-              className="px-3 py-1 text-xs bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] rounded-full hover:bg-[rgb(0,130,188)]/20 transition-colors whitespace-nowrap"
-            >
-              Weekend Classes
-            </button>
-            <button
-              onClick={() => applyQuickFilter('evening')}
-              className="px-3 py-1 text-xs bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] rounded-full hover:bg-[rgb(0,130,188)]/20 transition-colors whitespace-nowrap"
-            >
-              Evening Classes
-            </button>
+            <div className="flex gap-2 px-2 overflow-x-auto scrollbar-hide pb-1">
+              <button
+                onClick={() => applyQuickFilter('today')}
+                className="px-3 py-1 text-xs bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] rounded-full hover:bg-[rgb(0,130,188)]/20 transition-colors whitespace-nowrap"
+              >
+                Today's Classes
+              </button>
+              <button
+                onClick={() => applyQuickFilter('weekend')}
+                className="px-3 py-1 text-xs bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] rounded-full hover:bg-[rgb(0,130,188)]/20 transition-colors whitespace-nowrap"
+              >
+                Weekend Classes
+              </button>
+              <button
+                onClick={() => applyQuickFilter('evening')}
+                className="px-3 py-1 text-xs bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] rounded-full hover:bg-[rgb(0,130,188)]/20 transition-colors whitespace-nowrap"
+              >
+                Evening Classes
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Filter panel */}
+        {/* Filter panel - scrollable container */}
         <div 
-          className={`overflow-hidden transition-all duration-300 ease-in-out ${
-            filtersExpanded ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'
+          className={`overflow-hidden transition-all duration-300 ease-in-out flex-1 ${
+            filtersExpanded ? 'max-h-[calc(100%-140px)] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="bg-white overflow-y-auto scrollbar-hide">
+          <div className="bg-white overflow-y-auto scrollbar-hide h-full">
             <div className="divide-y divide-[rgb(0,130,188)]/15">
               {/* Centers filter */}
               <div className="p-4">
@@ -970,7 +973,7 @@ const FitnessTimetable = () => {
             </div>
           </div>
 
-          {/* Bottom close button - styled to match top header */}
+          {/* Bottom close button - positioned at bottom */}
           <div className="sticky bottom-0 bg-white">
             <button 
               onClick={toggleFilters}
