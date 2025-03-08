@@ -688,8 +688,8 @@ const FitnessTimetable = () => {
       {/* Header and main filter toggle */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         {/* App header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-3 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-white">Active Sefton Fitness</h1>
+        <div className="bg-[rgb(0,130,188)] px-4 py-2 flex justify-between items-center">
+          <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain" />
           <button 
             onClick={toggleFilters}
             className="flex items-center text-sm font-medium text-white bg-white/20 hover:bg-white/30 transition-colors rounded-full px-3 py-1"
