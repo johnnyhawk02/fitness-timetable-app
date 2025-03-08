@@ -648,12 +648,12 @@ const FitnessTimetable = () => {
       {/* Header and main filter toggle */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         {/* App header */}
-        <div className="bg-[rgb(0,130,188)] px-4 py-2 flex justify-between items-center">
+        <button 
+          onClick={toggleFilters}
+          className="w-full bg-[rgb(0,130,188)] px-4 py-2 flex justify-between items-center hover:bg-[rgb(0,130,188)]/90 transition-colors"
+        >
           <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain" />
-          <button 
-            onClick={toggleFilters}
-            className="flex items-center text-sm font-medium text-white bg-white/20 hover:bg-white/30 transition-colors rounded-full px-3 py-1"
-          >
+          <div className="flex items-center text-sm font-medium text-white">
             <span className="mr-1">Filters</span>
             {getActiveFilterCount() > 0 && 
               <span className="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">
@@ -669,17 +669,17 @@ const FitnessTimetable = () => {
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
             </svg>
-          </button>
-        </div>
+          </div>
+        </button>
 
         {/* Filter panel wrapper - always present */}
         <div 
           className={`overflow-hidden transition-all duration-300 ease-in-out ${
-            filtersExpanded ? 'max-h-[80vh] opacity-100 border-t border-gray-200' : 'max-h-0 opacity-0 border-none'
+            filtersExpanded ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="bg-white">
-            <div className="divide-y divide-gray-200">
+          <div className="bg-[rgb(0,130,188)]/10">
+            <div className="divide-y divide-[rgb(0,130,188)]/15">
               {/* Centers filter */}
               <div className="p-4">
                 <div className="flex items-center mb-2">
@@ -692,7 +692,7 @@ const FitnessTimetable = () => {
                     className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                       Object.values(selectedCenters).every(selected => selected)
                         ? 'bg-blue-600 text-white shadow-sm'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
                     }`}
                   >
                     All
@@ -704,7 +704,7 @@ const FitnessTimetable = () => {
                       className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                         selectedCenters[center]
                           ? 'bg-blue-600 text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
                       }`}
                     >
                       {CENTER_ABBREVIATIONS[center] || center}
@@ -727,7 +727,7 @@ const FitnessTimetable = () => {
                       className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                         selectedDays[day]
                           ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          : 'bg-indigo-600/20 text-indigo-700 hover:bg-indigo-600/30'
                       }`}
                     >
                       {dayAbbreviations[day]}
@@ -742,14 +742,14 @@ const FitnessTimetable = () => {
                   <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
                   <div className="text-sm font-medium text-gray-700">Class Type</div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="mt-2 flex flex-wrap gap-1">
                   <button
                     key="all-categories"
                     onClick={() => handleCategoryChange('')}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                    className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors ${
                       selectedCategory === ''
                         ? 'bg-green-600 text-white shadow-sm'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-green-600/20 text-green-700 hover:bg-green-600/30'
                     }`}
                   >
                     All Types
@@ -758,10 +758,10 @@ const FitnessTimetable = () => {
                     <button
                       key={value}
                       onClick={() => handleCategoryChange(value)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors ${
                         selectedCategory === value
                           ? 'bg-green-600 text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          : 'bg-green-600/20 text-green-700 hover:bg-green-600/30'
                       }`}
                     >
                       {label.replace('Classes', '').trim()}
@@ -784,7 +784,7 @@ const FitnessTimetable = () => {
                       className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                         selectedTimeBlocks[key]
                           ? 'bg-orange-500 text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          : 'bg-orange-500/20 text-orange-700 hover:bg-orange-500/30'
                       }`}
                     >
                       {division.start}:00 - {division.end}:00
@@ -800,26 +800,40 @@ const FitnessTimetable = () => {
                   <div className="text-sm font-medium text-gray-700">Class Format</div>
                 </div>
                 <div 
-                  className="flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors w-fit"
+                  className="flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 transition-colors w-fit"
                   onClick={() => setIncludeVirtual(!includeVirtual)}
                 >
-                  <div className={`w-4 h-4 rounded-sm flex items-center justify-center ${includeVirtual ? 'bg-purple-600' : 'border border-gray-400 bg-white'}`}>
+                  <div className={`w-4 h-4 rounded-sm flex items-center justify-center ${includeVirtual ? 'bg-purple-600' : 'border-2 border-purple-600 bg-white'}`}>
                     {includeVirtual && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>}
                   </div>
-                  <span className="text-sm text-gray-700">Include Virtual Classes</span>
+                  <span className="text-sm text-purple-700">Include Virtual Classes</span>
                 </div>
               </div>
 
-              {/* Bottom close button */}
-              <div className="p-4 border-t border-gray-200">
+              {/* Bottom close button - styled to look like bottom half of header */}
+              <div className="sticky bottom-0 bg-white">
                 <button 
                   onClick={toggleFilters}
-                  className="w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors rounded-lg px-4 py-2"
+                  className="w-full bg-[rgb(0,130,188)] px-4 py-2 flex justify-between items-center hover:bg-[rgb(0,130,188)]/90 transition-colors"
                 >
-                  <span>Close Filters</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
-                  </svg>
+                  <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain invisible" />
+                  <div className="flex items-center text-sm font-medium text-white">
+                    <span className="mr-1">Close Filters</span>
+                    {getActiveFilterCount() > 0 && 
+                      <span className="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                        {getActiveFilterCount()}
+                      </span>
+                    }
+                    <svg 
+                      className="w-4 h-4 ml-1"
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24" 
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
+                    </svg>
+                  </div>
                 </button>
               </div>
             </div>
@@ -852,29 +866,29 @@ const FitnessTimetable = () => {
             </div>
             <div className="p-4">
               {/* Class details */}
-              <div className="mb-4 bg-gray-50 p-3 rounded-md">
+              <div className="mb-4 bg-[rgb(0,130,188)]/5 p-3 rounded-md">
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center">
-                    <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                     <span className="text-gray-700">{selectedClassDetails.day}</span>
                   </div>
                   <div className="flex items-center">
-                    <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <span className="text-gray-700">{selectedClassDetails.time}</span>
                   </div>
                   <div className="flex items-center">
-                    <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                     <span className="text-gray-700">{selectedClassDetails.location}</span>
                   </div>
                   <div className="flex items-center">
-                    <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     </svg>
                     <span className="text-gray-700">{selectedClassDetails.center}</span>
@@ -898,21 +912,7 @@ const FitnessTimetable = () => {
             return (
               <div key={day} className="bg-white rounded-lg overflow-hidden border border-gray-200">
                 <div
-                  className={`${
-                    day === 'Monday'
-                      ? 'bg-blue-600'
-                      : day === 'Tuesday'
-                      ? 'bg-green-600'
-                      : day === 'Wednesday'
-                      ? 'bg-purple-600'
-                      : day === 'Thursday'
-                      ? 'bg-orange-600'
-                      : day === 'Friday'
-                      ? 'bg-red-600'
-                      : day === 'Saturday'
-                      ? 'bg-indigo-600'
-                      : 'bg-teal-600'
-                  } text-white font-semibold py-2 px-4 text-sm`}
+                  className="bg-[rgb(0,130,188)] text-white font-semibold py-2 px-4 text-sm"
                 >
                   {day}
                 </div>
@@ -937,16 +937,16 @@ const FitnessTimetable = () => {
                             <span
                               className={`ml-2 w-fit px-1.5 py-0.5 text-xs font-medium rounded ${
                                 cls.center === 'Bootle'
-                                  ? 'bg-blue-100 text-blue-800'
+                                  ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
                                   : cls.center === 'Crosby'
-                                  ? 'bg-amber-100 text-amber-800'
+                                  ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
                                   : cls.center === 'Meadows'
-                                  ? 'bg-pink-100 text-pink-800'
+                                  ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
                                   : cls.center === 'Netherton'
-                                  ? 'bg-purple-100 text-purple-800'
+                                  ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
                                   : cls.center === 'Litherland'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-indigo-100 text-indigo-800'
+                                  ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
+                                  : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
                               }`}
                             >
                               {CENTER_ABBREVIATIONS[cls.center] || cls.center}
@@ -955,7 +955,7 @@ const FitnessTimetable = () => {
                           <div className="flex items-center text-xs text-gray-500 mt-0.5">
                             <span>{cls.location}</span>
                             {cls.virtual && (
-                              <span className="ml-2 px-1.5 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
+                              <span className="ml-2 px-1.5 py-0.5 text-xs font-medium rounded bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]">
                                 V
                               </span>
                             )}
