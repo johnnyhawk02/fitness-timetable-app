@@ -129,6 +129,7 @@ const FitnessTimetable = () => {
 
   // Toggle all filters visibility
   const toggleFilters = () => {
+    console.log('Current filtersExpanded:', filtersExpanded);
     setFiltersExpanded(!filtersExpanded);
   };
 
@@ -711,150 +712,156 @@ const FitnessTimetable = () => {
           </button>
         </div>
 
-        {/* Filter panel */}
-        {filtersExpanded && (
-          <div className="divide-y divide-gray-200">
-            {/* Centers filter */}
-            <div className="p-4">
-              <div className="flex items-center mb-2">
-                <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
-                <div className="text-sm font-medium text-gray-700">Centers</div>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => handleCenterChange('all')}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                    Object.values(selectedCenters).every(selected => selected)
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  All
-                </button>
-                {centers.map(center => (
+        {/* Filter panel wrapper - always present */}
+        <div 
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            filtersExpanded ? 'max-h-[80vh] opacity-100 border-t border-gray-200' : 'max-h-0 opacity-0 border-none'
+          }`}
+        >
+          <div className="bg-white">
+            <div className="divide-y divide-gray-200">
+              {/* Centers filter */}
+              <div className="p-4">
+                <div className="flex items-center mb-2">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
+                  <div className="text-sm font-medium text-gray-700">Centers</div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
                   <button
-                    key={center}
-                    onClick={() => handleCenterChange(center)}
+                    onClick={() => handleCenterChange('all')}
                     className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                      selectedCenters[center]
+                      Object.values(selectedCenters).every(selected => selected)
                         ? 'bg-blue-600 text-white shadow-sm'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {CENTER_ABBREVIATIONS[center] || center}
+                    All
                   </button>
-                ))}
+                  {centers.map(center => (
+                    <button
+                      key={center}
+                      onClick={() => handleCenterChange(center)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                        selectedCenters[center]
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {CENTER_ABBREVIATIONS[center] || center}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Days filter */}
-            <div className="p-4">
-              <div className="flex items-center mb-2">
-                <div className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></div>
-                <div className="text-sm font-medium text-gray-700">Days</div>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => handleDayChange('all')}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                    Object.values(selectedDays).every(selected => selected)
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  All
-                </button>
-                {days.map(day => (
+              {/* Days filter */}
+              <div className="p-4">
+                <div className="flex items-center mb-2">
+                  <div className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></div>
+                  <div className="text-sm font-medium text-gray-700">Days</div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
                   <button
-                    key={day}
-                    onClick={() => handleDayChange(day)}
+                    onClick={() => handleDayChange('all')}
                     className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                      selectedDays[day]
+                      Object.values(selectedDays).every(selected => selected)
                         ? 'bg-indigo-600 text-white shadow-sm'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {dayAbbreviations[day]}
+                    All
                   </button>
-                ))}
+                  {days.map(day => (
+                    <button
+                      key={day}
+                      onClick={() => handleDayChange(day)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                        selectedDays[day]
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {dayAbbreviations[day]}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Class types filter */}
-            <div className="p-4">
-              <div className="flex items-center mb-2">
-                <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
-                <div className="text-sm font-medium text-gray-700">Class Type</div>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <button
-                  key="all-categories"
-                  onClick={() => handleCategoryChange('')}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                    selectedCategory === ''
-                      ? 'bg-green-600 text-white shadow-sm'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  All Types
-                </button>
-                {Object.entries(classCategories).map(([value, label]) => (
+              {/* Class types filter */}
+              <div className="p-4">
+                <div className="flex items-center mb-2">
+                  <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
+                  <div className="text-sm font-medium text-gray-700">Class Type</div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
                   <button
-                    key={value}
-                    onClick={() => handleCategoryChange(value)}
+                    key="all-categories"
+                    onClick={() => handleCategoryChange('')}
                     className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                      selectedCategory === value
+                      selectedCategory === ''
                         ? 'bg-green-600 text-white shadow-sm'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {label.replace('Classes', '').trim()}
+                    All Types
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Time filter */}
-            <div className="p-4">
-              <div className="flex items-center mb-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                <div className="text-sm font-medium text-gray-700">Time of Day</div>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {Object.entries(TIME_DIVISIONS).map(([key, division]) => (
-                  <button
-                    key={key}
-                    onClick={() => handleTimeDivisionChange(key)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                      selectedTimeBlocks[key]
-                        ? 'bg-orange-500 text-white shadow-sm'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {division.start}:00 - {division.end}:00
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Virtual classes filter */}
-            <div className="p-4">
-              <div className="flex items-center mb-2">
-                <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
-                <div className="text-sm font-medium text-gray-700">Class Format</div>
-              </div>
-              <label 
-                className="inline-flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                onClick={() => setIncludeVirtual(!includeVirtual)}
-              >
-                <div className={`w-4 h-4 rounded-sm flex items-center justify-center ${includeVirtual ? 'bg-purple-600' : 'border border-gray-400 bg-white'}`}>
-                  {includeVirtual && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>}
+                  {Object.entries(classCategories).map(([value, label]) => (
+                    <button
+                      key={value}
+                      onClick={() => handleCategoryChange(value)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                        selectedCategory === value
+                          ? 'bg-green-600 text-white shadow-sm'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {label.replace('Classes', '').trim()}
+                    </button>
+                  ))}
                 </div>
-                <span className="text-sm text-gray-700">Include Virtual Classes</span>
-              </label>
+              </div>
+
+              {/* Time filter */}
+              <div className="p-4">
+                <div className="flex items-center mb-2">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                  <div className="text-sm font-medium text-gray-700">Time of Day</div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {Object.entries(TIME_DIVISIONS).map(([key, division]) => (
+                    <button
+                      key={key}
+                      onClick={() => handleTimeDivisionChange(key)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                        selectedTimeBlocks[key]
+                          ? 'bg-orange-500 text-white shadow-sm'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {division.start}:00 - {division.end}:00
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Virtual classes filter */}
+              <div className="p-4">
+                <div className="flex items-center mb-2">
+                  <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
+                  <div className="text-sm font-medium text-gray-700">Class Format</div>
+                </div>
+                <label 
+                  className="inline-flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                  onClick={() => setIncludeVirtual(!includeVirtual)}
+                >
+                  <div className={`w-4 h-4 rounded-sm flex items-center justify-center ${includeVirtual ? 'bg-purple-600' : 'border border-gray-400 bg-white'}`}>
+                    {includeVirtual && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>}
+                  </div>
+                  <span className="text-sm text-gray-700">Include Virtual Classes</span>
+                </label>
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Class description modal */}
