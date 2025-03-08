@@ -966,25 +966,14 @@ const FitnessTimetable = () => {
                           </div>
                           <div className="flex items-center text-xs text-gray-500 mt-0.5">
                             <span>{cls.location}</span>
-                            <div className="flex items-center ml-2">
-                              {cls.virtual && (
-                                <span className="mr-1 px-1.5 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
-                                  V
-                                </span>
-                              )}
-                              <button 
-                                onClick={() => handleShowDescription(cls)}
-                                className="text-gray-400 hover:text-blue-500 focus:outline-none"
-                                aria-label={`Show information about ${cls.activity}`}
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                              </button>
-                            </div>
+                            {cls.virtual && (
+                              <span className="ml-2 px-1.5 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
+                                V
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <div className="w-20 flex justify-end">
+                        <div className="w-20 flex flex-col items-end">
                           <span
                             className={`px-1.5 py-0.5 text-xs font-medium rounded ${
                               cls.center === 'Bootle'
@@ -1002,6 +991,15 @@ const FitnessTimetable = () => {
                           >
                             {CENTER_ABBREVIATIONS[cls.center] || cls.center}
                           </span>
+                          <button 
+                            onClick={() => handleShowDescription(cls)}
+                            className="text-gray-400 hover:text-blue-500 focus:outline-none mt-1"
+                            aria-label={`Show information about ${cls.activity}`}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                          </button>
                         </div>
                       </div>
                     ))
