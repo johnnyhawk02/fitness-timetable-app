@@ -138,12 +138,41 @@ const FitnessTimetable = () => {
     localStorage.setItem('fitness_selected_days', JSON.stringify(selectedDays));
   }, [selectedDays]);
 
-  // Handle day selection toggling
+  // Handle day selection toggling with improved logic
   const handleDayChange = (day) => {
-    setSelectedDays({
-      ...selectedDays,
-      [day]: !selectedDays[day]
-    });
+    const newSelectedDays = { ...selectedDays };
+    
+    // Special handling for "All" button
+    if (day === 'all') {
+      // Check if all days are currently selected
+      const allSelected = Object.values(newSelectedDays).every(selected => selected);
+      
+      // Toggle all days
+      const newValue = !allSelected;
+      Object.keys(newSelectedDays).forEach(key => {
+        newSelectedDays[key] = newValue;
+      });
+      
+      // Always ensure at least one day is selected
+      if (!newValue) {
+        // If toggling off, select Monday as default
+        newSelectedDays['Monday'] = true;
+      }
+    } 
+    // Individual day selection
+    else {
+      // Toggle the clicked day
+      newSelectedDays[day] = !newSelectedDays[day];
+      
+      // Ensure at least one day is always selected
+      const anySelected = Object.values(newSelectedDays).some(selected => selected);
+      if (!anySelected) {
+        // If none are selected, reselect the one that was just deselected
+        newSelectedDays[day] = true;
+      }
+    }
+    
+    setSelectedDays(newSelectedDays);
   };
 
   // Determine category for a given activity - IMPORTANT: Define this BEFORE it's used
@@ -292,35 +321,77 @@ const FitnessTimetable = () => {
     });
   };
 
-  // Clear all filters
+  // Simplified clear all filters function
   const clearAllFilters = () => {
     // Reset centers to all selected
-    setSelectedCenters(centers.reduce((acc, center) => {
+    const resetCenters = centers.reduce((acc, center) => {
       acc[center] = true;
       return acc;
-    }, {}));
+    }, {});
     
     // Reset days to all selected
-    setSelectedDays(days.reduce((acc, day) => {
+    const resetDays = days.reduce((acc, day) => {
       acc[day] = true;
       return acc;
-    }, {}));
+    }, {});
     
-    // Reset category 
-    setSelectedCategory('');
-    
-    // Reset time blocks
-    setSelectedTimeBlocks({
+    // Reset time blocks to none selected (any time)
+    const resetTimeBlocks = {
       morning: false,
       afternoon: false,
       evening: false
-    });
+    };
     
-    // Reset virtual classes to included
+    // Update all states
+    setSelectedCenters(resetCenters);
+    setSelectedDays(resetDays);
+    setSelectedTimeBlocks(resetTimeBlocks);
+    setSelectedCategory('');
     setIncludeVirtual(true);
     
-    // Reset time blocks to defaults to avoid key mismatches
-    setTimeBlocks(defaultTimeBlocks);
+    // Update localStorage
+    localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(resetCenters));
+    localStorage.setItem('fitness_selected_days', JSON.stringify(resetDays));
+    localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCKS, JSON.stringify(resetTimeBlocks));
+    localStorage.setItem(STORAGE_KEYS.SELECTED_CATEGORY, '');
+    localStorage.setItem(STORAGE_KEYS.INCLUDE_VIRTUAL, JSON.stringify(true));
+  };
+
+  // Quick filter presets
+  const applyQuickFilter = (preset) => {
+    switch(preset) {
+      case 'today': {
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+        const resetDays = days.reduce((acc, day) => {
+          acc[day] = day === today;
+          return acc;
+        }, {});
+        setSelectedDays(resetDays);
+        localStorage.setItem('fitness_selected_days', JSON.stringify(resetDays));
+        break;
+      }
+      case 'weekend': {
+        const resetDays = days.reduce((acc, day) => {
+          acc[day] = day === 'Saturday' || day === 'Sunday';
+          return acc;
+        }, {});
+        setSelectedDays(resetDays);
+        localStorage.setItem('fitness_selected_days', JSON.stringify(resetDays));
+        break;
+      }
+      case 'evening': {
+        const resetTimeBlocks = {
+          morning: false,
+          afternoon: false,
+          evening: true
+        };
+        setSelectedTimeBlocks(resetTimeBlocks);
+        localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCKS, JSON.stringify(resetTimeBlocks));
+        break;
+      }
+      default:
+        break;
+    }
   };
 
   // Get active filter count
@@ -395,9 +466,18 @@ const FitnessTimetable = () => {
     return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
-  // Handle category filter selection
+  // Handle category change - simplified
   const handleCategoryChange = (category) => {
-    setSelectedCategory(selectedCategory === category ? '' : category);
+    // If clicking the currently selected category or the "All Types" button when no category is selected,
+    // clear the selection (meaning "all categories")
+    if (selectedCategory === category) {
+      setSelectedCategory('');
+      localStorage.setItem(STORAGE_KEYS.SELECTED_CATEGORY, '');
+    } else {
+      // Otherwise, select the clicked category
+      setSelectedCategory(category);
+      localStorage.setItem(STORAGE_KEYS.SELECTED_CATEGORY, category);
+    }
   };
 
   // Handle time block selection
@@ -447,104 +527,111 @@ const FitnessTimetable = () => {
     }
   };
 
-  // Handle center selection toggling
+  // Handle center selection toggling - simplified and more intuitive
   const handleCenterChange = (center) => {
     const newSelectedCenters = { ...selectedCenters };
     
-    // Handle the "All" button click
+    // Special handling for "All" button
     if (center === 'all') {
-      const allSelected = Object.values(newSelectedCenters).every(selected => selected);
-      
-      // Only toggle if not all are selected
-      if (!allSelected) {
-        Object.keys(newSelectedCenters).forEach(key => {
-          newSelectedCenters[key] = true;
-        });
-        
-        // Update state and localStorage
-        setSelectedCenters(newSelectedCenters);
-        localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(newSelectedCenters));
-      }
-      // If all are already selected, do nothing
-    } 
-    // Handle regular center selection
-    else {
       // Check if all centers are currently selected
       const allSelected = Object.values(newSelectedCenters).every(selected => selected);
       
-      if (allSelected) {
-        // If all are selected, clear all and only select the clicked one
-        Object.keys(newSelectedCenters).forEach(key => {
-          newSelectedCenters[key] = (key === center);
-        });
-      } else {
-        // Check if this is the last selected center and prevent deselection
-        const selectedCount = Object.values(newSelectedCenters).filter(Boolean).length;
-        if (selectedCount === 1 && newSelectedCenters[center]) {
-          // Don't allow deselecting the last center
-          return;
-        }
-        
-        // Otherwise toggle the clicked center (add or remove)
-        newSelectedCenters[center] = !newSelectedCenters[center];
-      }
+      // Toggle all centers: If all selected, deselect all. If not all selected, select all.
+      const newValue = !allSelected;
+      Object.keys(newSelectedCenters).forEach(key => {
+        newSelectedCenters[key] = newValue;
+      });
+    } 
+    // Handling for individual center selection
+    else {
+      // Toggle the clicked center
+      newSelectedCenters[center] = !newSelectedCenters[center];
       
-      // Update state and localStorage
-      setSelectedCenters(newSelectedCenters);
-      localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(newSelectedCenters));
+      // Always ensure at least one center is selected
+      const anySelected = Object.values(newSelectedCenters).some(selected => selected);
+      if (!anySelected) {
+        // If none are selected, reselect the one that was just deselected
+        newSelectedCenters[center] = true;
+      }
     }
+    
+    // Update state and localStorage
+    setSelectedCenters(newSelectedCenters);
+    localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(newSelectedCenters));
   };
 
-  // Update time division selection to allow multiple selections
+  // Simplify the time division selection logic
   const handleTimeDivisionChange = (division) => {
     const newSelectedTimeBlocks = { ...selectedTimeBlocks };
-    newSelectedTimeBlocks[division] = !selectedTimeBlocks[division];
+    
+    // Special handling for "any" time option
+    if (division === 'any') {
+      // Check if any time blocks are currently selected
+      const anySelected = Object.values(newSelectedTimeBlocks).some(selected => selected);
+      
+      // If any are selected, deselect all (meaning "any time")
+      // If none are selected, this is already the "any time" state
+      if (anySelected) {
+        Object.keys(newSelectedTimeBlocks).forEach(key => {
+          newSelectedTimeBlocks[key] = false;
+        });
+      }
+    } 
+    // Regular time block selection
+    else {
+      // Toggle the clicked time block
+      newSelectedTimeBlocks[division] = !newSelectedTimeBlocks[division];
+    }
     
     setSelectedTimeBlocks(newSelectedTimeBlocks);
     localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCKS, JSON.stringify(newSelectedTimeBlocks));
   };
 
-  // Filter classes based on selected filters
+  // Simplified filter classes logic
   const filteredClasses = useMemo(() => {
-    const anyTimeBlockSelected = Object.values(selectedTimeBlocks).some(selected => selected);
-    
     return allClasses.filter(cls => {
-      // Center filter
-      const anyCenterSelected = Object.values(selectedCenters).some(selected => selected);
-      if (anyCenterSelected && !selectedCenters[cls.center]) return false;
+      // Center filter - class center must be selected
+      if (!selectedCenters[cls.center]) return false;
 
-      // Day filter
+      // Day filter - class day must be selected
       if (!selectedDays[cls.day]) return false;
 
-      // Get the class category
-      const category = getClassCategory(cls.activity);
-
-      // Time filter - pass if no time blocks are selected or if the class time matches any selected block
+      // Time filter - only apply if any time block is selected
+      const anyTimeBlockSelected = Object.values(selectedTimeBlocks).some(selected => selected);
       if (anyTimeBlockSelected) {
         const classStartHour = convertTimeToHours(cls.time);
-        const matchesAnySelectedTimeBlock = Object.entries(selectedTimeBlocks).some(([division, isSelected]) => {
+        // Check if the class time falls within any of the selected time blocks
+        const timeMatch = Object.entries(selectedTimeBlocks).some(([division, isSelected]) => {
           if (!isSelected) return false;
-          const timeDivision = TIME_DIVISIONS[division];
-          return classStartHour >= timeDivision.start && classStartHour < timeDivision.end;
+          const { start, end } = TIME_DIVISIONS[division];
+          return classStartHour >= start && classStartHour < end;
         });
         
-        if (!matchesAnySelectedTimeBlock) return false;
+        if (!timeMatch) return false;
       }
 
-      // Category filter
-      if (selectedCategory && category !== selectedCategory) {
-        return false;
+      // Category filter - only apply if a category is selected
+      if (selectedCategory) {
+        const category = getClassCategory(cls.activity);
+        if (category !== selectedCategory) return false;
       }
 
-      // Virtual filter
-      if (!includeVirtual && cls.virtual) {
-        return false;
-      }
+      // Virtual filter - exclude virtual classes if not included
+      if (!includeVirtual && cls.virtual) return false;
 
-      // If we passed all filters, include the class
+      // If we pass all filters, include the class
       return true;
     });
-  }, [allClasses, selectedCenters, selectedDays, selectedTimeBlocks, selectedCategory, includeVirtual, getClassCategory]);
+  }, [
+    allClasses, 
+    selectedCenters, 
+    selectedDays, 
+    selectedTimeBlocks, 
+    selectedCategory, 
+    includeVirtual, 
+    getClassCategory, 
+    convertTimeToHours
+  ]);
 
   // Get locations specific to the selected center (if needed)
   // const centerLocations =
@@ -574,9 +661,11 @@ const FitnessTimetable = () => {
       day: cls.day,
       time: cls.time,
       location: cls.location,
-      center: cls.center
+      center: cls.center,
+      virtual: cls.virtual
     });
     setShowDescription(true);
+    console.log('Showing description for:', cls.activity);
   };
   
   // Function to close the description modal
@@ -660,6 +749,10 @@ const FitnessTimetable = () => {
                 {getActiveFilterCount()}
               </span>
             }
+            <span className="mx-2 text-xs opacity-80 hidden sm:inline-block">|</span>
+            <span className="text-xs opacity-90 hidden sm:inline-block">
+              Showing <span className="font-bold">{Object.values(classesByDay).reduce((sum, dayClasses) => sum + dayClasses.length, 0)}</span> classes
+            </span>
             <svg 
               className={`w-4 h-4 ml-1 transition-transform duration-200 ${filtersExpanded ? 'transform rotate-180' : ''}`}
               fill="none" 
@@ -671,6 +764,49 @@ const FitnessTimetable = () => {
             </svg>
           </div>
         </button>
+
+        {/* Mobile class count - only visible on small screens */}
+        <div className="mt-1 bg-white py-1 px-3 rounded-md text-xs text-center text-gray-600 sm:hidden shadow-sm">
+          Showing <span className="font-bold text-[rgb(0,130,188)]">{Object.values(classesByDay).reduce((sum, dayClasses) => sum + dayClasses.length, 0)}</span> classes
+        </div>
+
+        {/* Quick filters bar with reset button */}
+        <div className="mt-2 bg-white rounded-lg p-2 shadow-md">
+          <div className="flex items-center justify-between px-2 py-1">
+            <div className="flex items-center text-[rgb(0,130,188)]">
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              <span className="text-xs font-medium">Quick Filters:</span>
+            </div>
+            <button
+              onClick={clearAllFilters}
+              className="text-xs text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10 px-2 py-0.5 rounded transition-colors"
+            >
+              Reset All
+            </button>
+          </div>
+          <div className="flex gap-2 px-2 overflow-x-auto scrollbar-hide pb-1">
+            <button
+              onClick={() => applyQuickFilter('today')}
+              className="px-3 py-1 text-xs bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] rounded-full hover:bg-[rgb(0,130,188)]/20 transition-colors whitespace-nowrap"
+            >
+              Today's Classes
+            </button>
+            <button
+              onClick={() => applyQuickFilter('weekend')}
+              className="px-3 py-1 text-xs bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] rounded-full hover:bg-[rgb(0,130,188)]/20 transition-colors whitespace-nowrap"
+            >
+              Weekend Classes
+            </button>
+            <button
+              onClick={() => applyQuickFilter('evening')}
+              className="px-3 py-1 text-xs bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] rounded-full hover:bg-[rgb(0,130,188)]/20 transition-colors whitespace-nowrap"
+            >
+              Evening Classes
+            </button>
+          </div>
+        </div>
 
         {/* Filter panel */}
         <div 
@@ -720,6 +856,17 @@ const FitnessTimetable = () => {
                   <div className="text-sm font-medium text-gray-700">Days</div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    key="all-days"
+                    onClick={() => handleDayChange('all')}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      Object.values(selectedDays).every(selected => selected)
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'bg-blue-200 text-blue-800 hover:bg-blue-300'
+                    }`}
+                  >
+                    All
+                  </button>
                   {days.map(day => (
                     <button
                       key={day}
@@ -777,6 +924,17 @@ const FitnessTimetable = () => {
                   <div className="text-sm font-medium text-gray-700">Time of Day</div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    key="any-time"
+                    onClick={() => handleTimeDivisionChange('any')}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      !Object.values(selectedTimeBlocks).some(selected => selected)
+                        ? 'bg-orange-600 text-white shadow-sm'
+                        : 'bg-orange-200 text-orange-800 hover:bg-orange-300'
+                    }`}
+                  >
+                    Any Time
+                  </button>
                   {Object.entries(TIME_DIVISIONS).map(([key, division]) => (
                     <button
                       key={key}
@@ -850,7 +1008,7 @@ const FitnessTimetable = () => {
                       classesByDay[day].map((cls, idx) => (
                         <div 
                           key={`${day}-${idx}`} 
-                          className="flex items-start p-3 hover:bg-gray-50 cursor-pointer"
+                          className="flex items-start p-3 hover:bg-gray-50 cursor-pointer transition-colors group"
                           onClick={() => handleShowDescription(cls)}
                         >
                           <div className="w-28 flex flex-col text-left pr-4">
@@ -858,8 +1016,17 @@ const FitnessTimetable = () => {
                           </div>
                           <div className="flex-1 text-left">
                             <div className="flex items-start justify-between">
-                              <div className="font-medium text-sm">
+                              <div className="font-medium text-sm flex items-center">
                                 {cls.activity}
+                                <svg 
+                                  className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)] opacity-0 group-hover:opacity-100 transition-opacity" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24" 
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
                               </div>
                               <span
                                 className="ml-2 w-fit px-1.5 py-0.5 text-xs font-medium rounded bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]"
@@ -867,6 +1034,13 @@ const FitnessTimetable = () => {
                                 {CENTER_ABBREVIATIONS[cls.center] || cls.center}
                               </span>
                             </div>
+                            {cls.virtual && (
+                              <div className="mt-1">
+                                <span className="text-xs text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 px-1.5 py-0.5 rounded">
+                                  Virtual
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))
@@ -882,11 +1056,11 @@ const FitnessTimetable = () => {
       {/* Class description modal */}
       {showDescription && selectedClass && selectedClassDetails && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn"
           onClick={handleCloseDescription}
         >
           <div 
-            className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[80vh] overflow-hidden"
+            className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden animate-slideUp"
             onClick={e => e.stopPropagation()}
           >
             <div className="overflow-y-auto scrollbar-hide max-h-[80vh]">
@@ -894,7 +1068,7 @@ const FitnessTimetable = () => {
                 <h3 className="font-semibold text-lg">{selectedClass}</h3>
                 <button 
                   onClick={handleCloseDescription}
-                  className="text-white hover:text-gray-200"
+                  className="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white/10"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -902,7 +1076,7 @@ const FitnessTimetable = () => {
                 </button>
               </div>
               <div className="p-4">
-                <div className="mb-4">
+                <div className="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
                       <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -924,8 +1098,17 @@ const FitnessTimetable = () => {
                     </svg>
                     <span className="text-sm text-gray-700">{selectedClassDetails.center} - {selectedClassDetails.location}</span>
                   </div>
+                  {selectedClassDetails.virtual && (
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                      </svg>
+                      <span className="text-sm text-gray-700">Virtual Class</span>
+                    </div>
+                  )}
                 </div>
                 <div className="prose prose-sm max-w-none text-gray-700">
+                  <h4 className="font-medium text-[rgb(0,130,188)] mb-2">Class Description</h4>
                   {getClassDescription(selectedClass) ? (
                     <div dangerouslySetInnerHTML={{ __html: getClassDescription(selectedClass) }} />
                   ) : (
