@@ -785,99 +785,87 @@ const FitnessTimetable = () => {
     <div className="flex flex-col h-screen bg-[rgba(0,0,0,0.2)] p-4 overflow-hidden">
       {/* Filter section - constrain its height */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col max-h-[80vh]">
-        {/* Timetable header */}
-        <div className="bg-[rgb(0,130,188)] text-white p-4 rounded-t-lg flex justify-between items-center">
-          <h1 className="text-xl font-bold">Fitness Timetable</h1>
-          <div className="flex items-center space-x-2">
-            {/* Filter count badge */}
-            <span className="bg-white/20 px-2 py-1 rounded-md text-xs font-medium">
-              {getActiveFilterCount()} filters active
-            </span>
-            
-            {/* Clear all button */}
-            <button 
-              onClick={clearAllFilters}
-              className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded-md transition-colors"
-            >
-              Clear All
-            </button>
-          </div>
-        </div>
-
-        {/* App bar with filter buttons */}
-        <div className="bg-white border-b px-4 py-2 flex justify-center items-center shadow-sm relative">
-          <div className="flex items-center">
-            {/* Tiny menu buttons */}
-            <div className="flex space-x-3">
-              {/* Centers button */}
-              <div className="relative">
-                <button 
-                  id="centers-btn"
-                  onClick={() => toggleDropdown('centers')}
-                  className="w-9 h-9 flex items-center justify-center rounded-full bg-green-500 hover:bg-green-600 transition-colors"
-                  title="Filter by Centers"
-                >
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </button>
-              </div>
-              
-              {/* Days button */}
-              <div className="relative">
-                <button 
-                  id="days-btn"
-                  onClick={() => toggleDropdown('days')}
-                  className="w-9 h-9 flex items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600 transition-colors"
-                  title="Filter by Days"
-                >
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </button>
-              </div>
-              
-              {/* Class Types button */}
-              <div className="relative">
-                <button 
-                  id="class-types-btn"
-                  onClick={() => toggleDropdown('class-types')}
-                  className="w-9 h-9 flex items-center justify-center rounded-full bg-purple-500 hover:bg-purple-600 transition-colors"
-                  title="Filter by Class Types"
-                >
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
-                  </svg>
-                </button>
-              </div>
-              
-              {/* Time button */}
-              <div className="relative">
-                <button 
-                  id="time-btn"
-                  onClick={() => toggleDropdown('time')}
-                  className="w-9 h-9 flex items-center justify-center rounded-full bg-orange-500 hover:bg-orange-600 transition-colors"
-                  title="Filter by Time of Day"
-                >
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </button>
-              </div>
-              
-              {/* Virtual Classes button */}
+        {/* App bar with logo, filter buttons and count */}
+        <div className="bg-[rgb(0,130,188)] text-white p-3 rounded-t-lg flex justify-between items-center">
+          <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain" />
+          
+          {/* Tiny menu buttons */}
+          <div className="flex space-x-3">
+            {/* Centers button */}
+            <div className="relative">
               <button 
-                onClick={() => setIncludeVirtual(!includeVirtual)}
-                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                  includeVirtual ? 'bg-purple-500 hover:bg-purple-600' : 'bg-gray-400 hover:bg-gray-500'
-                }`}
-                title="Toggle Virtual Classes"
+                id="centers-btn"
+                onClick={() => toggleDropdown('centers')}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-green-500 hover:bg-green-600 transition-colors"
+                title="Filter by Centers"
               >
                 <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </button>
             </div>
+            
+            {/* Days button */}
+            <div className="relative">
+              <button 
+                id="days-btn"
+                onClick={() => toggleDropdown('days')}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600 transition-colors"
+                title="Filter by Days"
+              >
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Class Types button */}
+            <div className="relative">
+              <button 
+                id="class-types-btn"
+                onClick={() => toggleDropdown('class-types')}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-purple-500 hover:bg-purple-600 transition-colors"
+                title="Filter by Class Types"
+              >
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Time button */}
+            <div className="relative">
+              <button 
+                id="time-btn"
+                onClick={() => toggleDropdown('time')}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-orange-500 hover:bg-orange-600 transition-colors"
+                title="Filter by Time of Day"
+              >
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Virtual Classes button */}
+            <button 
+              onClick={() => setIncludeVirtual(!includeVirtual)}
+              className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+                includeVirtual ? 'bg-purple-500 hover:bg-purple-600' : 'bg-gray-400 hover:bg-gray-500'
+              }`}
+              title="Toggle Virtual Classes"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="flex items-center">
+            {/* Filter count badge */}
+            <span className="bg-white/20 px-2 py-1 rounded-md text-xs font-medium">
+              {getActiveFilterCount()} active
+            </span>
           </div>
         </div>
       </div>
@@ -1029,7 +1017,7 @@ const FitnessTimetable = () => {
       <div className="dropdown-container">
         {/* Centers dropdown */}
         {openDropdown === 'centers' && (
-          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '9rem', left: '0.5rem'}}>
+          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '5rem', left: '11rem'}}>
             <div className="p-2">
               <div 
                 className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
@@ -1075,7 +1063,7 @@ const FitnessTimetable = () => {
         
         {/* Days dropdown */}
         {openDropdown === 'days' && (
-          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '9rem', left: '3.5rem'}}>
+          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '5rem', left: '14rem'}}>
             <div className="p-2">
               <div 
                 className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
@@ -1121,7 +1109,7 @@ const FitnessTimetable = () => {
         
         {/* Class type dropdown */}
         {openDropdown === 'class-types' && (
-          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '9rem', left: '6.5rem'}}>
+          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '5rem', left: '17rem'}}>
             <div className="p-2">
               <div 
                 className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
@@ -1167,7 +1155,7 @@ const FitnessTimetable = () => {
         
         {/* Time dropdown */}
         {openDropdown === 'time' && (
-          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '9rem', left: '9.5rem'}}>
+          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '5rem', left: '20rem'}}>
             <div className="p-2">
               <div 
                 className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
