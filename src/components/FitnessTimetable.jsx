@@ -954,11 +954,8 @@ const FitnessTimetable = () => {
                       <div key={`${day}-${idx}`} className="flex items-start p-3 hover:bg-gray-50">
                         <div className="w-28 font-medium text-gray-700 text-xs pt-0.5 text-left pr-4">{cls.time}</div>
                         <div className="flex-1 text-left">
-                          <div className="font-medium text-sm">
+                          <div className="font-medium text-sm flex items-center">
                             {cls.activity}
-                          </div>
-                          <div className="flex items-center text-xs text-gray-500">
-                            {cls.location}
                             {cls.virtual && (
                               <span className="ml-1.5 px-1.5 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
                                 V
@@ -975,6 +972,7 @@ const FitnessTimetable = () => {
                               </svg>
                             </button>
                           </div>
+                          <div className="text-xs text-gray-500">{cls.location}</div>
                         </div>
                         <div className="w-20 flex justify-end">
                           <span
