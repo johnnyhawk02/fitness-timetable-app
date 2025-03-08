@@ -140,50 +140,10 @@ const FitnessTimetable = () => {
 
   // Handle day selection toggling
   const handleDayChange = (day) => {
-    const newSelectedDays = { ...selectedDays };
-    
-    // If it's the "all" option
-    if (day === 'all') {
-      const allSelected = Object.values(newSelectedDays).every(selected => selected);
-      
-      // Only toggle if not all are selected
-      if (!allSelected) {
-        Object.keys(newSelectedDays).forEach(key => {
-          newSelectedDays[key] = true;
-        });
-        
-        // Update state and localStorage
-        setSelectedDays(newSelectedDays);
-        localStorage.setItem('fitness_selected_days', JSON.stringify(newSelectedDays));
-      }
-      // If all are already selected, do nothing
-    } 
-    // Handle regular day selection
-    else {
-      // Check if all days are currently selected
-      const allSelected = Object.values(newSelectedDays).every(selected => selected);
-      
-      if (allSelected) {
-        // If all are selected, clear all and only select the clicked one
-        Object.keys(newSelectedDays).forEach(key => {
-          newSelectedDays[key] = (key === day);
-        });
-      } else {
-        // Check if this is the last selected day and prevent deselection
-        const selectedCount = Object.values(newSelectedDays).filter(Boolean).length;
-        if (selectedCount === 1 && newSelectedDays[day]) {
-          // Don't allow deselecting the last day
-          return;
-        }
-        
-        // Otherwise toggle the clicked day (add or remove)
-        newSelectedDays[day] = !newSelectedDays[day];
-      }
-      
-      // Update state and localStorage
-      setSelectedDays(newSelectedDays);
-      localStorage.setItem('fitness_selected_days', JSON.stringify(newSelectedDays));
-    }
+    setSelectedDays({
+      ...selectedDays,
+      [day]: !selectedDays[day]
+    });
   };
 
   // Determine category for a given activity - IMPORTANT: Define this BEFORE it's used
@@ -760,16 +720,6 @@ const FitnessTimetable = () => {
                   <div className="text-sm font-medium text-gray-700">Days</div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1">
-                  <button
-                    onClick={() => handleDayChange('all')}
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
-                      Object.values(selectedDays).every(selected => selected)
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    All
-                  </button>
                   {days.map(day => (
                     <button
                       key={day}
