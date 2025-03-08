@@ -645,9 +645,9 @@ const FitnessTimetable = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[rgba(0,0,0,0.2)] p-4 overflow-hidden">
-      {/* Header and main filter toggle */}
+      {/* Filter section */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        {/* App header */}
+        {/* Header and filter toggle */}
         <button 
           onClick={toggleFilters}
           className="w-full bg-[rgb(0,130,188)] px-4 py-2 flex justify-between items-center hover:bg-[rgb(0,130,188)]/90 transition-colors"
@@ -672,7 +672,7 @@ const FitnessTimetable = () => {
           </div>
         </button>
 
-        {/* Filter panel wrapper - hide scrollbar but keep functionality */}
+        {/* Filter panel */}
         <div 
           className={`overflow-hidden transition-all duration-300 ease-in-out ${
             filtersExpanded ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'
@@ -683,13 +683,13 @@ const FitnessTimetable = () => {
               {/* Centers filter */}
               <div className="p-4">
                 <div className="flex items-center mb-2">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
+                  <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
                   <div className="text-sm font-medium text-gray-700">Centers</div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-2 flex flex-wrap gap-2">
                   <button
                     onClick={() => handleCenterChange('all')}
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                       Object.values(selectedCenters).every(selected => selected)
                         ? 'bg-green-600 text-white shadow-sm'
                         : 'bg-green-200 text-green-800 hover:bg-green-300'
@@ -701,7 +701,7 @@ const FitnessTimetable = () => {
                     <button
                       key={center}
                       onClick={() => handleCenterChange(center)}
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                         selectedCenters[center]
                           ? 'bg-green-600 text-white shadow-sm'
                           : 'bg-green-200 text-green-800 hover:bg-green-300'
@@ -716,15 +716,15 @@ const FitnessTimetable = () => {
               {/* Days filter */}
               <div className="p-4">
                 <div className="flex items-center mb-2">
-                  <div className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></div>
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
                   <div className="text-sm font-medium text-gray-700">Days</div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {days.map(day => (
                     <button
                       key={day}
                       onClick={() => handleDayChange(day)}
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                         selectedDays[day]
                           ? 'bg-blue-600 text-white shadow-sm'
                           : 'bg-blue-200 text-blue-800 hover:bg-blue-300'
@@ -739,14 +739,14 @@ const FitnessTimetable = () => {
               {/* Class types filter */}
               <div className="p-4">
                 <div className="flex items-center mb-2">
-                  <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
-                  <div className="text-sm font-medium text-gray-700">Class Type</div>
+                  <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
+                  <div className="text-sm font-medium text-gray-700">Class Types</div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-2 flex flex-wrap gap-2">
                   <button
                     key="all-categories"
                     onClick={() => handleCategoryChange('')}
-                    className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                       selectedCategory === ''
                         ? 'bg-purple-600 text-white shadow-sm'
                         : 'bg-purple-200 text-purple-800 hover:bg-purple-300'
@@ -758,7 +758,7 @@ const FitnessTimetable = () => {
                     <button
                       key={value}
                       onClick={() => handleCategoryChange(value)}
-                      className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                         selectedCategory === value
                           ? 'bg-purple-600 text-white shadow-sm'
                           : 'bg-purple-200 text-purple-800 hover:bg-purple-300'
@@ -776,12 +776,12 @@ const FitnessTimetable = () => {
                   <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
                   <div className="text-sm font-medium text-gray-700">Time of Day</div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {Object.entries(TIME_DIVISIONS).map(([key, division]) => (
                     <button
                       key={key}
                       onClick={() => handleTimeDivisionChange(key)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                         selectedTimeBlocks[key]
                           ? 'bg-orange-600 text-white shadow-sm'
                           : 'bg-orange-200 text-orange-800 hover:bg-orange-300'
@@ -800,7 +800,7 @@ const FitnessTimetable = () => {
                   <div className="text-sm font-medium text-gray-700">Class Format</div>
                 </div>
                 <div 
-                  className="flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg bg-purple-200 hover:bg-purple-300 transition-colors w-fit"
+                  className="flex items-center space-x-2 cursor-pointer px-4 py-2 rounded-lg bg-purple-200 hover:bg-purple-300 transition-colors w-fit"
                   onClick={() => setIncludeVirtual(!includeVirtual)}
                 >
                   <div className={`w-4 h-4 rounded-sm flex items-center justify-center ${includeVirtual ? 'bg-purple-600' : 'border-2 border-purple-600 bg-white'}`}>
@@ -809,30 +809,30 @@ const FitnessTimetable = () => {
                   <span className="text-sm text-purple-700">Include Virtual Classes</span>
                 </div>
               </div>
-
-              {/* Bottom close button - styled to look like bottom half of header */}
-              <div className="sticky bottom-0 bg-white">
-                <button 
-                  onClick={toggleFilters}
-                  className="w-full flex justify-center items-center bg-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/90 transition-colors h-12"
-                >
-                  <svg 
-                    className="w-6 h-6 text-white"
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24" 
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
-                  </svg>
-                </button>
-              </div>
             </div>
+          </div>
+
+          {/* Bottom close button - styled to match top header */}
+          <div className="sticky bottom-0 bg-white">
+            <button 
+              onClick={toggleFilters}
+              className="w-full flex justify-center items-center bg-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/90 transition-colors h-12"
+            >
+              <svg 
+                className="w-6 h-6 text-white"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Timetable content - hide scrollbar but keep functionality */}
+      {/* Timetable content */}
       <div className="mt-4 flex-1 overflow-hidden bg-white rounded-lg shadow-md">
         <div className="h-full overflow-y-auto scrollbar-hide">
           <div className="grid grid-cols-1 gap-4 p-4">
@@ -840,9 +840,7 @@ const FitnessTimetable = () => {
               if (classesByDay[day].length === 0) return null;
               return (
                 <div key={day} className="bg-white rounded-lg overflow-hidden border border-gray-200">
-                  <div
-                    className="bg-[rgb(0,130,188)] text-white font-semibold py-2 px-4 text-sm"
-                  >
+                  <div className="bg-[rgb(0,130,188)] text-white font-semibold py-2 px-4 text-sm">
                     {day}
                   </div>
                   <div className="divide-y divide-gray-200">
@@ -864,30 +862,10 @@ const FitnessTimetable = () => {
                                 {cls.activity}
                               </div>
                               <span
-                                className={`ml-2 w-fit px-1.5 py-0.5 text-xs font-medium rounded ${
-                                  cls.center === 'Bootle'
-                                    ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                                    : cls.center === 'Crosby'
-                                    ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                                    : cls.center === 'Meadows'
-                                    ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                                    : cls.center === 'Netherton'
-                                    ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                                    : cls.center === 'Litherland'
-                                    ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                                    : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                                }`}
+                                className="ml-2 w-fit px-1.5 py-0.5 text-xs font-medium rounded bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]"
                               >
                                 {CENTER_ABBREVIATIONS[cls.center] || cls.center}
                               </span>
-                            </div>
-                            <div className="flex items-center text-xs text-gray-500 mt-0.5">
-                              <span>{cls.location}</span>
-                              {cls.virtual && (
-                                <span className="ml-2 px-1.5 py-0.5 text-xs font-medium rounded bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]">
-                                  V
-                                </span>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -901,13 +879,72 @@ const FitnessTimetable = () => {
         </div>
       </div>
 
+      {/* Class description modal */}
+      {showDescription && selectedClass && selectedClassDetails && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={handleCloseDescription}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[80vh] overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="overflow-y-auto scrollbar-hide max-h-[80vh]">
+              <div className="sticky top-0 bg-[rgb(0,130,188)] text-white py-3 px-4 flex justify-between items-center">
+                <h3 className="font-semibold text-lg">{selectedClass}</h3>
+                <button 
+                  onClick={handleCloseDescription}
+                  className="text-white hover:text-gray-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+              <div className="p-4">
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                      <span className="text-sm text-gray-700">{selectedClassDetails.day}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      <span className="text-sm text-gray-700">{selectedClassDetails.time}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center mb-2">
+                    <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span className="text-sm text-gray-700">{selectedClassDetails.center} - {selectedClassDetails.location}</span>
+                  </div>
+                </div>
+                <div className="prose prose-sm max-w-none text-gray-700">
+                  {getClassDescription(selectedClass) ? (
+                    <div dangerouslySetInnerHTML={{ __html: getClassDescription(selectedClass) }} />
+                  ) : (
+                    <p>No description available for this class.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
-      <div className="mt-4 text-xs text-center">
+      <div className="mt-4 text-xs text-center text-white">
         <a 
           href="https://www.activeseftonfitness.co.uk" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-blue-600 hover:text-blue-800 hover:underline"
+          className="text-white hover:text-blue-200 hover:underline"
         >
           Active Sefton Fitness
         </a>
