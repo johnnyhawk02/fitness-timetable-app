@@ -644,7 +644,7 @@ const FitnessTimetable = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[rgba(0,0,0,0.2)] p-4">
+    <div className="flex flex-col h-screen bg-[rgba(0,0,0,0.2)] p-4 overflow-hidden">
       {/* Header and main filter toggle */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         {/* App header */}
@@ -672,13 +672,13 @@ const FitnessTimetable = () => {
           </div>
         </button>
 
-        {/* Filter panel wrapper - always present */}
+        {/* Filter panel wrapper - hide scrollbar but keep functionality */}
         <div 
           className={`overflow-hidden transition-all duration-300 ease-in-out ${
             filtersExpanded ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="bg-white">
+          <div className="bg-white overflow-y-auto scrollbar-hide">
             <div className="divide-y divide-[rgb(0,130,188)]/15">
               {/* Centers filter */}
               <div className="p-4">
@@ -832,133 +832,72 @@ const FitnessTimetable = () => {
         </div>
       </div>
 
-      {/* Class description modal */}
-      {showDescription && selectedClass && selectedClassDetails && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={handleCloseDescription}
-        >
-          <div 
-            className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[80vh] overflow-auto"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">{selectedClass}</h3>
-                <button 
-                  onClick={handleCloseDescription}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div className="p-4">
-              {/* Class details */}
-              <div className="mb-4 bg-[rgb(0,130,188)]/5 p-3 rounded-md">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    <span className="text-gray-700">{selectedClassDetails.day}</span>
+      {/* Timetable content - hide scrollbar but keep functionality */}
+      <div className="mt-4 flex-1 overflow-hidden bg-white rounded-lg shadow-md">
+        <div className="h-full overflow-y-auto scrollbar-hide">
+          <div className="grid grid-cols-1 gap-4 p-4">
+            {days.map(day => {
+              if (classesByDay[day].length === 0) return null;
+              return (
+                <div key={day} className="bg-white rounded-lg overflow-hidden border border-gray-200">
+                  <div
+                    className="bg-[rgb(0,130,188)] text-white font-semibold py-2 px-4 text-sm"
+                  >
+                    {day}
                   </div>
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span className="text-gray-700">{selectedClassDetails.time}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span className="text-gray-700">{selectedClassDetails.location}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 text-[rgb(0,130,188)] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-                    <span className="text-gray-700">{selectedClassDetails.center}</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Class description */}
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Description:</h4>
-              <p className="text-gray-600">{getClassDescription(selectedClass)}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Timetable content */}
-      <div className="mt-4 flex-1 overflow-auto bg-white rounded-lg shadow-md">
-        <div className="grid grid-cols-1 gap-4 p-4">
-          {days.map(day => {
-            if (classesByDay[day].length === 0) return null;
-            return (
-              <div key={day} className="bg-white rounded-lg overflow-hidden border border-gray-200">
-                <div
-                  className="bg-[rgb(0,130,188)] text-white font-semibold py-2 px-4 text-sm"
-                >
-                  {day}
-                </div>
-                <div className="divide-y divide-gray-200">
-                  {classesByDay[day].length === 0 ? (
-                    <div className="p-4 text-gray-500">No classes available</div>
-                  ) : (
-                    classesByDay[day].map((cls, idx) => (
-                      <div 
-                        key={`${day}-${idx}`} 
-                        className="flex items-start p-3 hover:bg-gray-50 cursor-pointer"
-                        onClick={() => handleShowDescription(cls)}
-                      >
-                        <div className="w-28 flex flex-col text-left pr-4">
-                          <div className="font-medium text-gray-700 text-xs pt-0.5">{cls.time}</div>
-                        </div>
-                        <div className="flex-1 text-left">
-                          <div className="flex items-start justify-between">
-                            <div className="font-medium text-sm">
-                              {cls.activity}
-                            </div>
-                            <span
-                              className={`ml-2 w-fit px-1.5 py-0.5 text-xs font-medium rounded ${
-                                cls.center === 'Bootle'
-                                  ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                                  : cls.center === 'Crosby'
-                                  ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                                  : cls.center === 'Meadows'
-                                  ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                                  : cls.center === 'Netherton'
-                                  ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                                  : cls.center === 'Litherland'
-                                  ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                                  : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
-                              }`}
-                            >
-                              {CENTER_ABBREVIATIONS[cls.center] || cls.center}
-                            </span>
+                  <div className="divide-y divide-gray-200">
+                    {classesByDay[day].length === 0 ? (
+                      <div className="p-4 text-gray-500">No classes available</div>
+                    ) : (
+                      classesByDay[day].map((cls, idx) => (
+                        <div 
+                          key={`${day}-${idx}`} 
+                          className="flex items-start p-3 hover:bg-gray-50 cursor-pointer"
+                          onClick={() => handleShowDescription(cls)}
+                        >
+                          <div className="w-28 flex flex-col text-left pr-4">
+                            <div className="font-medium text-gray-700 text-xs pt-0.5">{cls.time}</div>
                           </div>
-                          <div className="flex items-center text-xs text-gray-500 mt-0.5">
-                            <span>{cls.location}</span>
-                            {cls.virtual && (
-                              <span className="ml-2 px-1.5 py-0.5 text-xs font-medium rounded bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]">
-                                V
+                          <div className="flex-1 text-left">
+                            <div className="flex items-start justify-between">
+                              <div className="font-medium text-sm">
+                                {cls.activity}
+                              </div>
+                              <span
+                                className={`ml-2 w-fit px-1.5 py-0.5 text-xs font-medium rounded ${
+                                  cls.center === 'Bootle'
+                                    ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
+                                    : cls.center === 'Crosby'
+                                    ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
+                                    : cls.center === 'Meadows'
+                                    ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
+                                    : cls.center === 'Netherton'
+                                    ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
+                                    : cls.center === 'Litherland'
+                                    ? 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
+                                    : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]'
+                                }`}
+                              >
+                                {CENTER_ABBREVIATIONS[cls.center] || cls.center}
                               </span>
-                            )}
+                            </div>
+                            <div className="flex items-center text-xs text-gray-500 mt-0.5">
+                              <span>{cls.location}</span>
+                              {cls.virtual && (
+                                <span className="ml-2 px-1.5 py-0.5 text-xs font-medium rounded bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]">
+                                  V
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
