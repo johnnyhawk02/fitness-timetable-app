@@ -753,6 +753,7 @@ const FitnessTimetable = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (openDropdown) {
+        console.log('Click event:', event.target);
         // Check if the click was on a menu button
         const isMenuButton = 
           event.target.closest('button') && 
@@ -764,7 +765,8 @@ const FitnessTimetable = () => {
             ((openDropdown === 'centers' && event.target.closest('button').id === 'centers-btn') ||
              (openDropdown === 'days' && event.target.closest('button').id === 'days-btn') ||
              (openDropdown === 'class-types' && event.target.closest('button').id === 'class-types-btn') ||
-             (openDropdown === 'time' && event.target.closest('button').id === 'time-btn'))) {
+             (openDropdown === 'time' && event.target.closest('button').id === 'time-btn') ||
+             (openDropdown === 'virtual' && event.target.closest('button').id === 'virtual-btn'))) {
           return;
         }
         
@@ -772,15 +774,18 @@ const FitnessTimetable = () => {
         const isInDropdown = event.target.closest('.dropdown-menu');
         
         // If not clicking a dropdown or different menu button, close the dropdown
-        if (!isInDropdown && !(isMenuButton && event.target.closest('button').id !== `${openDropdown}-btn`)) {
+        if (!isInDropdown) {
+          console.log('Closing dropdown - click outside');
           setOpenDropdown(null);
         }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [openDropdown]);
 
@@ -799,12 +804,23 @@ const FitnessTimetable = () => {
               <button 
                 id="centers-btn"
                 onClick={() => toggleDropdown('centers')}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-green-500 hover:bg-green-600 transition-colors"
+                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+                  openDropdown === 'centers' 
+                    ? 'ring-2 ring-white ring-opacity-70 ' 
+                    : ''
+                }${
+                  !Object.values(selectedCenters).every(selected => selected)
+                    ? 'bg-green-500 hover:bg-green-600'
+                    : 'bg-green-400 hover:bg-green-500'
+                }`}
                 title="Filter by Centers"
               >
                 <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
+                {!Object.values(selectedCenters).every(selected => selected) && 
+                  <div className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500 border border-white"></div>
+                }
               </button>
             </div>
             
@@ -813,12 +829,23 @@ const FitnessTimetable = () => {
               <button 
                 id="days-btn"
                 onClick={() => toggleDropdown('days')}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600 transition-colors"
+                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+                  openDropdown === 'days' 
+                    ? 'ring-2 ring-white ring-opacity-70 ' 
+                    : ''
+                }${
+                  !Object.values(selectedDays).every(selected => selected)
+                    ? 'bg-blue-500 hover:bg-blue-600'
+                    : 'bg-blue-400 hover:bg-blue-500'
+                }`}
                 title="Filter by Days"
               >
                 <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
+                {!Object.values(selectedDays).every(selected => selected) && 
+                  <div className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500 border border-white"></div>
+                }
               </button>
             </div>
             
@@ -827,12 +854,23 @@ const FitnessTimetable = () => {
               <button 
                 id="class-types-btn"
                 onClick={() => toggleDropdown('class-types')}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-purple-500 hover:bg-purple-600 transition-colors"
+                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+                  openDropdown === 'class-types' 
+                    ? 'ring-2 ring-white ring-opacity-70 ' 
+                    : ''
+                }${
+                  selectedCategory !== ''
+                    ? 'bg-purple-500 hover:bg-purple-600'
+                    : 'bg-purple-400 hover:bg-purple-500'
+                }`}
                 title="Filter by Class Types"
               >
                 <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
                 </svg>
+                {selectedCategory !== '' && 
+                  <div className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500 border border-white"></div>
+                }
               </button>
             </div>
             
@@ -841,12 +879,23 @@ const FitnessTimetable = () => {
               <button 
                 id="time-btn"
                 onClick={() => toggleDropdown('time')}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-orange-500 hover:bg-orange-600 transition-colors"
+                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+                  openDropdown === 'time' 
+                    ? 'ring-2 ring-white ring-opacity-70 ' 
+                    : ''
+                }${
+                  Object.values(selectedTimeBlocks).some(selected => selected)
+                    ? 'bg-orange-500 hover:bg-orange-600'
+                    : 'bg-orange-400 hover:bg-orange-500'
+                }`}
                 title="Filter by Time of Day"
               >
                 <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
+                {Object.values(selectedTimeBlocks).some(selected => selected) && 
+                  <div className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500 border border-white"></div>
+                }
               </button>
             </div>
             
@@ -856,20 +905,20 @@ const FitnessTimetable = () => {
                 id="virtual-btn"
                 onClick={() => toggleDropdown('virtual')}
                 className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+                  openDropdown === 'virtual' 
+                    ? 'ring-2 ring-white ring-opacity-70 ' 
+                    : ''
+                }${
                   includeVirtual ? 'bg-purple-500 hover:bg-purple-600' : 'bg-gray-400 hover:bg-gray-500'
                 }`}
                 title="Toggle Virtual Classes"
               >
                 <span className="font-bold text-white text-xs">V</span>
+                {!includeVirtual && 
+                  <div className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500 border border-white"></div>
+                }
               </button>
             </div>
-          </div>
-          
-          <div className="flex items-center">
-            {/* Filter count badge */}
-            <span className="bg-white/20 px-2 py-1 rounded-md text-xs font-medium">
-              {getActiveFilterCount()} active
-            </span>
           </div>
         </div>
       </div>
@@ -1019,11 +1068,17 @@ const FitnessTimetable = () => {
 
       {/* Render all dropdowns at the root level to prevent clipping */}
       {openDropdown === 'centers' && (
-        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" 
-             style={{top: document.getElementById('centers-btn')?.getBoundingClientRect().bottom + 5 + 'px', left: document.getElementById('centers-btn')?.getBoundingClientRect().left + 'px'}}>
+        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-48 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" 
+             style={{
+               top: document.getElementById('centers-btn')?.getBoundingClientRect().bottom + 5 + 'px', 
+               left: Math.max(5, Math.min(
+                 document.getElementById('centers-btn')?.getBoundingClientRect().left || 0,
+                 window.innerWidth - 200
+               )) + 'px'
+             }}>
           <div className="p-2">
             <div 
-              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+              className={`px-2 py-1.5 rounded-md flex items-center cursor-pointer ${
                 Object.values(selectedCenters).every(selected => selected)
                   ? 'bg-green-100 text-green-800'
                   : 'hover:bg-gray-100 text-gray-700'
@@ -1032,18 +1087,18 @@ const FitnessTimetable = () => {
             >
               <input 
                 type="checkbox" 
-                className="form-checkbox h-4 w-4 mr-2 text-green-600 border-gray-300 rounded" 
+                className="form-checkbox h-3.5 w-3.5 mr-1.5 text-green-600 border-gray-300 rounded" 
                 checked={Object.values(selectedCenters).every(selected => selected)}
                 readOnly
               />
-              <span>All Centers</span>
+              <span className="text-sm">All Centers</span>
             </div>
             
-            <div className="mt-2 pt-2 border-t border-gray-200">
+            <div className="mt-1.5 pt-1.5 border-t border-gray-200">
               {centers.map(center => (
                 <div 
                   key={center}
-                  className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                  className={`px-2 py-1.5 rounded-md flex items-center cursor-pointer ${
                     selectedCenters[center]
                       ? 'bg-green-100 text-green-800'
                       : 'hover:bg-gray-100 text-gray-700'
@@ -1052,11 +1107,11 @@ const FitnessTimetable = () => {
                 >
                   <input 
                     type="checkbox" 
-                    className="form-checkbox h-4 w-4 mr-2 text-green-600 border-gray-300 rounded" 
+                    className="form-checkbox h-3.5 w-3.5 mr-1.5 text-green-600 border-gray-300 rounded" 
                     checked={selectedCenters[center]}
                     readOnly
                   />
-                  <span>{center}</span>
+                  <span className="text-sm">{center}</span>
                 </div>
               ))}
             </div>
@@ -1065,11 +1120,17 @@ const FitnessTimetable = () => {
       )}
 
       {openDropdown === 'days' && (
-        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
-             style={{top: document.getElementById('days-btn')?.getBoundingClientRect().bottom + 5 + 'px', left: document.getElementById('days-btn')?.getBoundingClientRect().left + 'px'}}>
+        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-48 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+             style={{
+               top: document.getElementById('days-btn')?.getBoundingClientRect().bottom + 5 + 'px', 
+               left: Math.max(5, Math.min(
+                 document.getElementById('days-btn')?.getBoundingClientRect().left || 0,
+                 window.innerWidth - 200
+               )) + 'px'
+             }}>
           <div className="p-2">
             <div 
-              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+              className={`px-2 py-1.5 rounded-md flex items-center cursor-pointer ${
                 Object.values(selectedDays).every(selected => selected)
                   ? 'bg-blue-100 text-blue-800'
                   : 'hover:bg-gray-100 text-gray-700'
@@ -1078,18 +1139,18 @@ const FitnessTimetable = () => {
             >
               <input 
                 type="checkbox" 
-                className="form-checkbox h-4 w-4 mr-2 text-blue-600 border-gray-300 rounded" 
+                className="form-checkbox h-3.5 w-3.5 mr-1.5 text-blue-600 border-gray-300 rounded" 
                 checked={Object.values(selectedDays).every(selected => selected)}
                 readOnly
               />
-              <span>All Days</span>
+              <span className="text-sm">All Days</span>
             </div>
             
-            <div className="mt-2 pt-2 border-t border-gray-200">
+            <div className="mt-1.5 pt-1.5 border-t border-gray-200">
               {days.map(day => (
                 <div 
                   key={day}
-                  className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                  className={`px-2 py-1.5 rounded-md flex items-center cursor-pointer ${
                     selectedDays[day]
                       ? 'bg-blue-100 text-blue-800'
                       : 'hover:bg-gray-100 text-gray-700'
@@ -1098,11 +1159,11 @@ const FitnessTimetable = () => {
                 >
                   <input 
                     type="checkbox" 
-                    className="form-checkbox h-4 w-4 mr-2 text-blue-600 border-gray-300 rounded" 
+                    className="form-checkbox h-3.5 w-3.5 mr-1.5 text-blue-600 border-gray-300 rounded" 
                     checked={selectedDays[day]}
                     readOnly
                   />
-                  <span>{day}</span>
+                  <span className="text-sm">{day}</span>
                 </div>
               ))}
             </div>
@@ -1111,11 +1172,17 @@ const FitnessTimetable = () => {
       )}
 
       {openDropdown === 'class-types' && (
-        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
-             style={{top: document.getElementById('class-types-btn')?.getBoundingClientRect().bottom + 5 + 'px', left: document.getElementById('class-types-btn')?.getBoundingClientRect().left + 'px'}}>
+        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-48 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+             style={{
+               top: document.getElementById('class-types-btn')?.getBoundingClientRect().bottom + 5 + 'px', 
+               left: Math.max(5, Math.min(
+                 document.getElementById('class-types-btn')?.getBoundingClientRect().left || 0,
+                 window.innerWidth - 200
+               )) + 'px'
+             }}>
           <div className="p-2">
             <div 
-              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+              className={`px-2 py-1.5 rounded-md flex items-center cursor-pointer ${
                 selectedCategory === ''
                   ? 'bg-purple-100 text-purple-800'
                   : 'hover:bg-gray-100 text-gray-700'
@@ -1124,18 +1191,18 @@ const FitnessTimetable = () => {
             >
               <input 
                 type="radio" 
-                className="form-radio h-4 w-4 mr-2 text-purple-600 border-gray-300 rounded-full" 
+                className="form-radio h-3.5 w-3.5 mr-1.5 text-purple-600 border-gray-300 rounded-full" 
                 checked={selectedCategory === ''}
                 readOnly
               />
-              <span>All Types</span>
+              <span className="text-sm">All Types</span>
             </div>
             
-            <div className="mt-2 pt-2 border-t border-gray-200">
+            <div className="mt-1.5 pt-1.5 border-t border-gray-200">
               {Object.entries(classCategories).map(([value, label]) => (
                 <div 
                   key={value}
-                  className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                  className={`px-2 py-1.5 rounded-md flex items-center cursor-pointer ${
                     selectedCategory === value
                       ? 'bg-purple-100 text-purple-800'
                       : 'hover:bg-gray-100 text-gray-700'
@@ -1144,11 +1211,11 @@ const FitnessTimetable = () => {
                 >
                   <input 
                     type="radio" 
-                    className="form-radio h-4 w-4 mr-2 text-purple-600 border-gray-300 rounded-full" 
+                    className="form-radio h-3.5 w-3.5 mr-1.5 text-purple-600 border-gray-300 rounded-full" 
                     checked={selectedCategory === value}
                     readOnly
                   />
-                  <span>{label.replace('Classes', '').trim()}</span>
+                  <span className="text-sm">{label.replace('Classes', '').trim()}</span>
                 </div>
               ))}
             </div>
@@ -1157,11 +1224,17 @@ const FitnessTimetable = () => {
       )}
 
       {openDropdown === 'time' && (
-        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
-             style={{top: document.getElementById('time-btn')?.getBoundingClientRect().bottom + 5 + 'px', left: document.getElementById('time-btn')?.getBoundingClientRect().left + 'px'}}>
+        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-48 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+             style={{
+               top: document.getElementById('time-btn')?.getBoundingClientRect().bottom + 5 + 'px', 
+               left: Math.max(5, Math.min(
+                 document.getElementById('time-btn')?.getBoundingClientRect().left || 0,
+                 window.innerWidth - 200
+               )) + 'px'
+             }}>
           <div className="p-2">
             <div 
-              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+              className={`px-2 py-1.5 rounded-md flex items-center cursor-pointer ${
                 !Object.values(selectedTimeBlocks).some(selected => selected)
                   ? 'bg-orange-100 text-orange-800'
                   : 'hover:bg-gray-100 text-gray-700'
@@ -1170,18 +1243,18 @@ const FitnessTimetable = () => {
             >
               <input 
                 type="checkbox" 
-                className="form-checkbox h-4 w-4 mr-2 text-orange-600 border-gray-300 rounded" 
+                className="form-checkbox h-3.5 w-3.5 mr-1.5 text-orange-600 border-gray-300 rounded" 
                 checked={!Object.values(selectedTimeBlocks).some(selected => selected)}
                 readOnly
               />
-              <span>Any Time</span>
+              <span className="text-sm">Any Time</span>
             </div>
             
-            <div className="mt-2 pt-2 border-t border-gray-200">
+            <div className="mt-1.5 pt-1.5 border-t border-gray-200">
               {Object.entries(TIME_DIVISIONS).map(([key, division]) => (
                 <div 
                   key={key}
-                  className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                  className={`px-2 py-1.5 rounded-md flex items-center cursor-pointer ${
                     selectedTimeBlocks[key]
                       ? 'bg-orange-100 text-orange-800'
                       : 'hover:bg-gray-100 text-gray-700'
@@ -1190,11 +1263,11 @@ const FitnessTimetable = () => {
                 >
                   <input 
                     type="checkbox" 
-                    className="form-checkbox h-4 w-4 mr-2 text-orange-600 border-gray-300 rounded" 
+                    className="form-checkbox h-3.5 w-3.5 mr-1.5 text-orange-600 border-gray-300 rounded" 
                     checked={selectedTimeBlocks[key]}
                     readOnly
                   />
-                  <span>{division.start}:00 - {division.end}:00</span>
+                  <span className="text-sm">{division.start}:00 - {division.end}:00</span>
                 </div>
               ))}
             </div>
@@ -1204,11 +1277,17 @@ const FitnessTimetable = () => {
 
       {/* Add Virtual dropdown menu */}
       {openDropdown === 'virtual' && (
-        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
-             style={{top: document.getElementById('virtual-btn')?.getBoundingClientRect().bottom + 5 + 'px', left: document.getElementById('virtual-btn')?.getBoundingClientRect().left + 'px'}}>
+        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-48 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+             style={{
+               top: document.getElementById('virtual-btn')?.getBoundingClientRect().bottom + 5 + 'px', 
+               left: Math.max(5, Math.min(
+                 document.getElementById('virtual-btn')?.getBoundingClientRect().left || 0,
+                 window.innerWidth - 200
+               )) + 'px'
+             }}>
           <div className="p-2">
             <div 
-              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+              className={`px-2 py-1.5 rounded-md flex items-center cursor-pointer ${
                 includeVirtual
                   ? 'bg-purple-100 text-purple-800'
                   : 'hover:bg-gray-100 text-gray-700'
@@ -1217,15 +1296,15 @@ const FitnessTimetable = () => {
             >
               <input 
                 type="radio" 
-                className="form-radio h-4 w-4 mr-2 text-purple-600 border-gray-300 rounded-full" 
+                className="form-radio h-3.5 w-3.5 mr-1.5 text-purple-600 border-gray-300 rounded-full" 
                 checked={includeVirtual}
                 readOnly
               />
-              <span>Include Virtual Classes</span>
+              <span className="text-sm">Include Virtual</span>
             </div>
             
             <div 
-              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+              className={`px-2 py-1.5 rounded-md flex items-center cursor-pointer ${
                 !includeVirtual
                   ? 'bg-gray-100 text-gray-800'
                   : 'hover:bg-gray-100 text-gray-700'
@@ -1234,11 +1313,11 @@ const FitnessTimetable = () => {
             >
               <input 
                 type="radio" 
-                className="form-radio h-4 w-4 mr-2 text-gray-600 border-gray-300 rounded-full" 
+                className="form-radio h-3.5 w-3.5 mr-1.5 text-gray-600 border-gray-300 rounded-full" 
                 checked={!includeVirtual}
                 readOnly
               />
-              <span>Exclude Virtual Classes</span>
+              <span className="text-sm">Exclude Virtual</span>
             </div>
           </div>
         </div>
