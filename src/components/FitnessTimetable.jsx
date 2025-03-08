@@ -959,23 +959,10 @@ const FitnessTimetable = () => {
                   ) : (
                     classesByDay[day].map((cls, idx) => (
                       <div key={`${day}-${idx}`} className="flex items-start p-3 hover:bg-gray-50">
-                        <div className="w-28 font-medium text-gray-700 text-xs pt-0.5 text-left pr-4">{cls.time}</div>
-                        <div className="flex-1 text-left">
-                          <div className="font-medium text-sm">
-                            {cls.activity}
-                          </div>
-                          <div className="flex items-center text-xs text-gray-500 mt-0.5">
-                            <span>{cls.location}</span>
-                            {cls.virtual && (
-                              <span className="ml-2 px-1.5 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
-                                V
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="w-20 flex flex-col items-end">
+                        <div className="w-28 flex flex-col text-left pr-4">
+                          <div className="font-medium text-gray-700 text-xs pt-0.5">{cls.time}</div>
                           <span
-                            className={`px-1.5 py-0.5 text-xs font-medium rounded ${
+                            className={`mt-1 w-fit px-1.5 py-0.5 text-xs font-medium rounded ${
                               cls.center === 'Bootle'
                                 ? 'bg-blue-100 text-blue-800'
                                 : cls.center === 'Crosby'
@@ -991,9 +978,24 @@ const FitnessTimetable = () => {
                           >
                             {CENTER_ABBREVIATIONS[cls.center] || cls.center}
                           </span>
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="font-medium text-sm">
+                            {cls.activity}
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500 mt-0.5">
+                            <span>{cls.location}</span>
+                            {cls.virtual && (
+                              <span className="ml-2 px-1.5 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
+                                V
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="w-8 flex justify-end">
                           <button 
                             onClick={() => handleShowDescription(cls)}
-                            className="text-gray-400 hover:text-blue-500 focus:outline-none mt-1"
+                            className="text-gray-400 hover:text-blue-500 focus:outline-none"
                             aria-label={`Show information about ${cls.activity}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
