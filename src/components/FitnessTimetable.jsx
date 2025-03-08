@@ -737,11 +737,14 @@ const FitnessTimetable = () => {
 
   // Dropdowns state management
   const toggleDropdown = (dropdownName) => {
+    console.log('Toggling dropdown:', dropdownName, 'Current state:', openDropdown);
     // If the dropdown is already open, close it
     if (openDropdown === dropdownName) {
+      console.log('Closing dropdown');
       setOpenDropdown(null);
     } else {
       // Otherwise, open this dropdown and close any other
+      console.log('Opening dropdown:', dropdownName);
       setOpenDropdown(dropdownName);
     }
   };
@@ -786,11 +789,11 @@ const FitnessTimetable = () => {
       {/* Filter section - constrain its height */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col max-h-[80vh]">
         {/* App bar with logo, filter buttons and count */}
-        <div className="bg-[rgb(0,130,188)] text-white p-3 rounded-t-lg flex justify-between items-center">
+        <div className="bg-[rgb(0,130,188)] text-white p-3 rounded-t-lg flex flex-wrap justify-between items-center relative">
           <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain" />
           
           {/* Tiny menu buttons */}
-          <div className="flex space-x-3">
+          <div className="flex space-x-2 flex-wrap justify-center my-1">
             {/* Centers button */}
             <div className="relative">
               <button 
@@ -848,17 +851,18 @@ const FitnessTimetable = () => {
             </div>
             
             {/* Virtual Classes button */}
-            <button 
-              onClick={() => setIncludeVirtual(!includeVirtual)}
-              className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                includeVirtual ? 'bg-purple-500 hover:bg-purple-600' : 'bg-gray-400 hover:bg-gray-500'
-              }`}
-              title="Toggle Virtual Classes"
-            >
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </button>
+            <div className="relative">
+              <button 
+                id="virtual-btn"
+                onClick={() => toggleDropdown('virtual')}
+                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+                  includeVirtual ? 'bg-purple-500 hover:bg-purple-600' : 'bg-gray-400 hover:bg-gray-500'
+                }`}
+                title="Toggle Virtual Classes"
+              >
+                <span className="font-bold text-white text-xs">V</span>
+              </button>
+            </div>
           </div>
           
           <div className="flex items-center">
@@ -1013,192 +1017,232 @@ const FitnessTimetable = () => {
         </a>
       </div>
 
-      {/* All dropdowns rendered at the root level of the DOM for better visibility */}
-      <div className="dropdown-container">
-        {/* Centers dropdown */}
-        {openDropdown === 'centers' && (
-          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '5rem', left: '11rem'}}>
-            <div className="p-2">
-              <div 
-                className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
-                  Object.values(selectedCenters).every(selected => selected)
-                    ? 'bg-green-100 text-green-800'
-                    : 'hover:bg-gray-100 text-gray-700'
-                }`}
-                onClick={() => handleCenterChange('all')}
-              >
-                <input 
-                  type="checkbox" 
-                  className="form-checkbox h-4 w-4 mr-2 text-green-600 border-gray-300 rounded" 
-                  checked={Object.values(selectedCenters).every(selected => selected)}
-                  readOnly
-                />
-                <span>All Centers</span>
-              </div>
-              
-              <div className="mt-2 pt-2 border-t border-gray-200">
-                {centers.map(center => (
-                  <div 
-                    key={center}
-                    className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
-                      selectedCenters[center]
-                        ? 'bg-green-100 text-green-800'
-                        : 'hover:bg-gray-100 text-gray-700'
-                    }`}
-                    onClick={() => handleCenterChange(center)}
-                  >
-                    <input 
-                      type="checkbox" 
-                      className="form-checkbox h-4 w-4 mr-2 text-green-600 border-gray-300 rounded" 
-                      checked={selectedCenters[center]}
-                      readOnly
-                    />
-                    <span>{center}</span>
-                  </div>
-                ))}
-              </div>
+      {/* Render all dropdowns at the root level to prevent clipping */}
+      {openDropdown === 'centers' && (
+        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" 
+             style={{top: document.getElementById('centers-btn')?.getBoundingClientRect().bottom + 5 + 'px', left: document.getElementById('centers-btn')?.getBoundingClientRect().left + 'px'}}>
+          <div className="p-2">
+            <div 
+              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                Object.values(selectedCenters).every(selected => selected)
+                  ? 'bg-green-100 text-green-800'
+                  : 'hover:bg-gray-100 text-gray-700'
+              }`}
+              onClick={() => handleCenterChange('all')}
+            >
+              <input 
+                type="checkbox" 
+                className="form-checkbox h-4 w-4 mr-2 text-green-600 border-gray-300 rounded" 
+                checked={Object.values(selectedCenters).every(selected => selected)}
+                readOnly
+              />
+              <span>All Centers</span>
+            </div>
+            
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              {centers.map(center => (
+                <div 
+                  key={center}
+                  className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                    selectedCenters[center]
+                      ? 'bg-green-100 text-green-800'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  onClick={() => handleCenterChange(center)}
+                >
+                  <input 
+                    type="checkbox" 
+                    className="form-checkbox h-4 w-4 mr-2 text-green-600 border-gray-300 rounded" 
+                    checked={selectedCenters[center]}
+                    readOnly
+                  />
+                  <span>{center}</span>
+                </div>
+              ))}
             </div>
           </div>
-        )}
-        
-        {/* Days dropdown */}
-        {openDropdown === 'days' && (
-          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '5rem', left: '14rem'}}>
-            <div className="p-2">
-              <div 
-                className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
-                  Object.values(selectedDays).every(selected => selected)
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'hover:bg-gray-100 text-gray-700'
-                }`}
-                onClick={() => handleDayChange('all')}
-              >
-                <input 
-                  type="checkbox" 
-                  className="form-checkbox h-4 w-4 mr-2 text-blue-600 border-gray-300 rounded" 
-                  checked={Object.values(selectedDays).every(selected => selected)}
-                  readOnly
-                />
-                <span>All Days</span>
-              </div>
-              
-              <div className="mt-2 pt-2 border-t border-gray-200">
-                {days.map(day => (
-                  <div 
-                    key={day}
-                    className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
-                      selectedDays[day]
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'hover:bg-gray-100 text-gray-700'
-                    }`}
-                    onClick={() => handleDayChange(day)}
-                  >
-                    <input 
-                      type="checkbox" 
-                      className="form-checkbox h-4 w-4 mr-2 text-blue-600 border-gray-300 rounded" 
-                      checked={selectedDays[day]}
-                      readOnly
-                    />
-                    <span>{day}</span>
-                  </div>
-                ))}
-              </div>
+        </div>
+      )}
+
+      {openDropdown === 'days' && (
+        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+             style={{top: document.getElementById('days-btn')?.getBoundingClientRect().bottom + 5 + 'px', left: document.getElementById('days-btn')?.getBoundingClientRect().left + 'px'}}>
+          <div className="p-2">
+            <div 
+              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                Object.values(selectedDays).every(selected => selected)
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'hover:bg-gray-100 text-gray-700'
+              }`}
+              onClick={() => handleDayChange('all')}
+            >
+              <input 
+                type="checkbox" 
+                className="form-checkbox h-4 w-4 mr-2 text-blue-600 border-gray-300 rounded" 
+                checked={Object.values(selectedDays).every(selected => selected)}
+                readOnly
+              />
+              <span>All Days</span>
+            </div>
+            
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              {days.map(day => (
+                <div 
+                  key={day}
+                  className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                    selectedDays[day]
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  onClick={() => handleDayChange(day)}
+                >
+                  <input 
+                    type="checkbox" 
+                    className="form-checkbox h-4 w-4 mr-2 text-blue-600 border-gray-300 rounded" 
+                    checked={selectedDays[day]}
+                    readOnly
+                  />
+                  <span>{day}</span>
+                </div>
+              ))}
             </div>
           </div>
-        )}
-        
-        {/* Class type dropdown */}
-        {openDropdown === 'class-types' && (
-          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '5rem', left: '17rem'}}>
-            <div className="p-2">
-              <div 
-                className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
-                  selectedCategory === ''
-                    ? 'bg-purple-100 text-purple-800'
-                    : 'hover:bg-gray-100 text-gray-700'
-                }`}
-                onClick={() => handleCategoryChange('')}
-              >
-                <input 
-                  type="radio" 
-                  className="form-radio h-4 w-4 mr-2 text-purple-600 border-gray-300 rounded-full" 
-                  checked={selectedCategory === ''}
-                  readOnly
-                />
-                <span>All Types</span>
-              </div>
-              
-              <div className="mt-2 pt-2 border-t border-gray-200">
-                {Object.entries(classCategories).map(([value, label]) => (
-                  <div 
-                    key={value}
-                    className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
-                      selectedCategory === value
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'hover:bg-gray-100 text-gray-700'
-                    }`}
-                    onClick={() => handleCategoryChange(value)}
-                  >
-                    <input 
-                      type="radio" 
-                      className="form-radio h-4 w-4 mr-2 text-purple-600 border-gray-300 rounded-full" 
-                      checked={selectedCategory === value}
-                      readOnly
-                    />
-                    <span>{label.replace('Classes', '').trim()}</span>
-                  </div>
-                ))}
-              </div>
+        </div>
+      )}
+
+      {openDropdown === 'class-types' && (
+        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+             style={{top: document.getElementById('class-types-btn')?.getBoundingClientRect().bottom + 5 + 'px', left: document.getElementById('class-types-btn')?.getBoundingClientRect().left + 'px'}}>
+          <div className="p-2">
+            <div 
+              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                selectedCategory === ''
+                  ? 'bg-purple-100 text-purple-800'
+                  : 'hover:bg-gray-100 text-gray-700'
+              }`}
+              onClick={() => handleCategoryChange('')}
+            >
+              <input 
+                type="radio" 
+                className="form-radio h-4 w-4 mr-2 text-purple-600 border-gray-300 rounded-full" 
+                checked={selectedCategory === ''}
+                readOnly
+              />
+              <span>All Types</span>
+            </div>
+            
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              {Object.entries(classCategories).map(([value, label]) => (
+                <div 
+                  key={value}
+                  className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                    selectedCategory === value
+                      ? 'bg-purple-100 text-purple-800'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  onClick={() => handleCategoryChange(value)}
+                >
+                  <input 
+                    type="radio" 
+                    className="form-radio h-4 w-4 mr-2 text-purple-600 border-gray-300 rounded-full" 
+                    checked={selectedCategory === value}
+                    readOnly
+                  />
+                  <span>{label.replace('Classes', '').trim()}</span>
+                </div>
+              ))}
             </div>
           </div>
-        )}
-        
-        {/* Time dropdown */}
-        {openDropdown === 'time' && (
-          <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[400px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm" style={{top: '5rem', left: '20rem'}}>
-            <div className="p-2">
-              <div 
-                className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
-                  !Object.values(selectedTimeBlocks).some(selected => selected)
-                    ? 'bg-orange-100 text-orange-800'
-                    : 'hover:bg-gray-100 text-gray-700'
-                }`}
-                onClick={() => handleTimeDivisionChange('any')}
-              >
-                <input 
-                  type="checkbox" 
-                  className="form-checkbox h-4 w-4 mr-2 text-orange-600 border-gray-300 rounded" 
-                  checked={!Object.values(selectedTimeBlocks).some(selected => selected)}
-                  readOnly
-                />
-                <span>Any Time</span>
-              </div>
-              
-              <div className="mt-2 pt-2 border-t border-gray-200">
-                {Object.entries(TIME_DIVISIONS).map(([key, division]) => (
-                  <div 
-                    key={key}
-                    className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
-                      selectedTimeBlocks[key]
-                        ? 'bg-orange-100 text-orange-800'
-                        : 'hover:bg-gray-100 text-gray-700'
-                    }`}
-                    onClick={() => handleTimeDivisionChange(key)}
-                  >
-                    <input 
-                      type="checkbox" 
-                      className="form-checkbox h-4 w-4 mr-2 text-orange-600 border-gray-300 rounded" 
-                      checked={selectedTimeBlocks[key]}
-                      readOnly
-                    />
-                    <span>{division.start}:00 - {division.end}:00</span>
-                  </div>
-                ))}
-              </div>
+        </div>
+      )}
+
+      {openDropdown === 'time' && (
+        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+             style={{top: document.getElementById('time-btn')?.getBoundingClientRect().bottom + 5 + 'px', left: document.getElementById('time-btn')?.getBoundingClientRect().left + 'px'}}>
+          <div className="p-2">
+            <div 
+              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                !Object.values(selectedTimeBlocks).some(selected => selected)
+                  ? 'bg-orange-100 text-orange-800'
+                  : 'hover:bg-gray-100 text-gray-700'
+              }`}
+              onClick={() => handleTimeDivisionChange('any')}
+            >
+              <input 
+                type="checkbox" 
+                className="form-checkbox h-4 w-4 mr-2 text-orange-600 border-gray-300 rounded" 
+                checked={!Object.values(selectedTimeBlocks).some(selected => selected)}
+                readOnly
+              />
+              <span>Any Time</span>
+            </div>
+            
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              {Object.entries(TIME_DIVISIONS).map(([key, division]) => (
+                <div 
+                  key={key}
+                  className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                    selectedTimeBlocks[key]
+                      ? 'bg-orange-100 text-orange-800'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  onClick={() => handleTimeDivisionChange(key)}
+                >
+                  <input 
+                    type="checkbox" 
+                    className="form-checkbox h-4 w-4 mr-2 text-orange-600 border-gray-300 rounded" 
+                    checked={selectedTimeBlocks[key]}
+                    readOnly
+                  />
+                  <span>{division.start}:00 - {division.end}:00</span>
+                </div>
+              ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Add Virtual dropdown menu */}
+      {openDropdown === 'virtual' && (
+        <div className="dropdown-menu fixed z-[100] bg-white shadow-xl w-64 max-h-[350px] rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+             style={{top: document.getElementById('virtual-btn')?.getBoundingClientRect().bottom + 5 + 'px', left: document.getElementById('virtual-btn')?.getBoundingClientRect().left + 'px'}}>
+          <div className="p-2">
+            <div 
+              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                includeVirtual
+                  ? 'bg-purple-100 text-purple-800'
+                  : 'hover:bg-gray-100 text-gray-700'
+              }`}
+              onClick={() => setIncludeVirtual(true)}
+            >
+              <input 
+                type="radio" 
+                className="form-radio h-4 w-4 mr-2 text-purple-600 border-gray-300 rounded-full" 
+                checked={includeVirtual}
+                readOnly
+              />
+              <span>Include Virtual Classes</span>
+            </div>
+            
+            <div 
+              className={`px-3 py-2 rounded-md flex items-center cursor-pointer ${
+                !includeVirtual
+                  ? 'bg-gray-100 text-gray-800'
+                  : 'hover:bg-gray-100 text-gray-700'
+              }`}
+              onClick={() => setIncludeVirtual(false)}
+            >
+              <input 
+                type="radio" 
+                className="form-radio h-4 w-4 mr-2 text-gray-600 border-gray-300 rounded-full" 
+                checked={!includeVirtual}
+                readOnly
+              />
+              <span>Exclude Virtual Classes</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
