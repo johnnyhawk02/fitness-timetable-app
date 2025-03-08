@@ -726,10 +726,10 @@ const FitnessTimetable = () => {
                   <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
                   <div className="text-sm font-medium text-gray-700">Centers</div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="mt-2 flex flex-wrap gap-1">
                   <button
                     onClick={() => handleCenterChange('all')}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                       Object.values(selectedCenters).every(selected => selected)
                         ? 'bg-blue-600 text-white shadow-sm'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -741,7 +741,7 @@ const FitnessTimetable = () => {
                     <button
                       key={center}
                       onClick={() => handleCenterChange(center)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                         selectedCenters[center]
                           ? 'bg-blue-600 text-white shadow-sm'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -759,10 +759,10 @@ const FitnessTimetable = () => {
                   <div className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></div>
                   <div className="text-sm font-medium text-gray-700">Days</div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="mt-2 flex flex-wrap gap-1">
                   <button
                     onClick={() => handleDayChange('all')}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                       Object.values(selectedDays).every(selected => selected)
                         ? 'bg-indigo-600 text-white shadow-sm'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -774,7 +774,7 @@ const FitnessTimetable = () => {
                     <button
                       key={day}
                       onClick={() => handleDayChange(day)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
                         selectedDays[day]
                           ? 'bg-indigo-600 text-white shadow-sm'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -849,15 +849,15 @@ const FitnessTimetable = () => {
                   <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
                   <div className="text-sm font-medium text-gray-700">Class Format</div>
                 </div>
-                <label 
-                  className="inline-flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                <div 
+                  className="flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors w-fit"
                   onClick={() => setIncludeVirtual(!includeVirtual)}
                 >
                   <div className={`w-4 h-4 rounded-sm flex items-center justify-center ${includeVirtual ? 'bg-purple-600' : 'border border-gray-400 bg-white'}`}>
                     {includeVirtual && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>}
                   </div>
                   <span className="text-sm text-gray-700">Include Virtual Classes</span>
-                </label>
+                </div>
               </div>
             </div>
           </div>
@@ -958,30 +958,36 @@ const FitnessTimetable = () => {
                     <div className="p-4 text-gray-500">No classes available</div>
                   ) : (
                     classesByDay[day].map((cls, idx) => (
-                      <div key={`${day}-${idx}`} className="flex items-start p-3 hover:bg-gray-50">
+                      <div 
+                        key={`${day}-${idx}`} 
+                        className="flex items-start p-3 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleShowDescription(cls)}
+                      >
                         <div className="w-28 flex flex-col text-left pr-4">
                           <div className="font-medium text-gray-700 text-xs pt-0.5">{cls.time}</div>
-                          <span
-                            className={`mt-1 w-fit px-1.5 py-0.5 text-xs font-medium rounded ${
-                              cls.center === 'Bootle'
-                                ? 'bg-blue-100 text-blue-800'
-                                : cls.center === 'Crosby'
-                                ? 'bg-amber-100 text-amber-800'
-                                : cls.center === 'Meadows'
-                                ? 'bg-pink-100 text-pink-800'
-                                : cls.center === 'Netherton'
-                                ? 'bg-purple-100 text-purple-800'
-                                : cls.center === 'Litherland'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-indigo-100 text-indigo-800'
-                            }`}
-                          >
-                            {CENTER_ABBREVIATIONS[cls.center] || cls.center}
-                          </span>
                         </div>
                         <div className="flex-1 text-left">
-                          <div className="font-medium text-sm">
-                            {cls.activity}
+                          <div className="flex items-start justify-between">
+                            <div className="font-medium text-sm">
+                              {cls.activity}
+                            </div>
+                            <span
+                              className={`ml-2 w-fit px-1.5 py-0.5 text-xs font-medium rounded ${
+                                cls.center === 'Bootle'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : cls.center === 'Crosby'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : cls.center === 'Meadows'
+                                  ? 'bg-pink-100 text-pink-800'
+                                  : cls.center === 'Netherton'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : cls.center === 'Litherland'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-indigo-100 text-indigo-800'
+                              }`}
+                            >
+                              {CENTER_ABBREVIATIONS[cls.center] || cls.center}
+                            </span>
                           </div>
                           <div className="flex items-center text-xs text-gray-500 mt-0.5">
                             <span>{cls.location}</span>
@@ -991,17 +997,6 @@ const FitnessTimetable = () => {
                               </span>
                             )}
                           </div>
-                        </div>
-                        <div className="w-8 flex justify-end">
-                          <button 
-                            onClick={() => handleShowDescription(cls)}
-                            className="text-gray-400 hover:text-blue-500 focus:outline-none"
-                            aria-label={`Show information about ${cls.activity}`}
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                          </button>
                         </div>
                       </div>
                     ))
