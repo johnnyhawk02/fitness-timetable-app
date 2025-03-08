@@ -809,6 +809,19 @@ const FitnessTimetable = () => {
                   <span className="text-sm text-gray-700">Include Virtual Classes</span>
                 </div>
               </div>
+
+              {/* Bottom close button */}
+              <div className="p-4 border-t border-gray-200">
+                <button 
+                  onClick={toggleFilters}
+                  className="w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors rounded-lg px-4 py-2"
+                >
+                  <span>Close Filters</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
