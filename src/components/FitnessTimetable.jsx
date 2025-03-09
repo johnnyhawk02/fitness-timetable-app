@@ -931,7 +931,7 @@ const FitnessTimetable = () => {
               if (classesByDay[day].length === 0) return null;
               return (
                 <div key={day} className="bg-white rounded-lg overflow-hidden shadow">
-                  <div className="bg-[rgb(0,130,188)] text-white font-semibold py-2 px-4 text-sm">
+                  <div className="bg-[rgb(0,130,188)]/60 text-white font-semibold py-2 px-4 text-sm">
                     {day}
                   </div>
                   <div className="divide-y divide-gray-100">
