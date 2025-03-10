@@ -1,6 +1,16 @@
 import React from 'react';
 import { getClassCategory } from '../../services/classService';
 
+// Centers abbreviations for compact display
+const CENTER_ABBREVIATIONS = {
+  'Bootle': 'BLC',
+  'Meadows': 'MDW',
+  'Netherton': 'NAC',
+  'Crosby': 'CLC',
+  'Dunes': 'DSW',
+  'Litherland': 'LSP'
+};
+
 // Class descriptions
 const classDescriptions = {
   "Aerobics": "A high-energy exercise class that combines rhythmic aerobic exercise with stretching and strength training routines.",
@@ -49,6 +59,27 @@ const ClassDetails = ({ classInfo, onClose, colors = {} }) => {
     return "Join this class to improve your fitness level and well-being.";
   };
   
+  // Format time to show start and end time clearly
+  const formatTimeRange = (timeString) => {
+    if (!timeString) return { start: '', end: '' };
+    
+    // Handle different time formats
+    // e.g. "07:00 - 08:00", "7:00 - 8:00", "7:00", "7am - 8am", etc.
+    
+    const parts = timeString.split('-').map(part => part.trim());
+    if (parts.length === 2) {
+      return {
+        start: parts[0],
+        end: parts[1]
+      };
+    }
+    
+    return {
+      start: timeString,
+      end: ''
+    };
+  };
+  
   // Get color based on class category
   const getClassColor = () => {
     const category = getClassCategory(classInfo.activity);
@@ -62,6 +93,7 @@ const ClassDetails = ({ classInfo, onClose, colors = {} }) => {
   
   const headerColor = getClassColor();
   const centerColor = getCenterColor();
+  const timeInfo = formatTimeRange(classInfo.time);
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -111,7 +143,10 @@ const ClassDetails = ({ classInfo, onClose, colors = {} }) => {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              <span className="text-gray-700">{classInfo.time}</span>
+              <div className="text-gray-700">
+                <div>Start: <span className="font-medium">{timeInfo.start}</span></div>
+                {timeInfo.end && <div>End: <span className="font-medium">{timeInfo.end}</span></div>}
+              </div>
             </div>
             
             <div className="flex items-center text-sm">
@@ -134,7 +169,7 @@ const ClassDetails = ({ classInfo, onClose, colors = {} }) => {
                     color: centerColor
                   }}
                 >
-                  {classInfo.center}
+                  {CENTER_ABBREVIATIONS[classInfo.center] || classInfo.center}
                 </span>
               </span>
             </div>

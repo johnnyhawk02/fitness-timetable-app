@@ -3,12 +3,12 @@ import { getClassCategory } from '../../services/classService';
 
 // Centers abbreviations for compact display
 const CENTER_ABBREVIATIONS = {
-  'Bootle': 'BTL',
+  'Bootle': 'BLC',
   'Meadows': 'MDW',
-  'Netherton': 'NTH',
-  'Crosby': 'CRB',
-  'Dunes': 'DNS',
-  'Litherland': 'LTH'
+  'Netherton': 'NAC',
+  'Crosby': 'CLC',
+  'Dunes': 'DSW',
+  'Litherland': 'LSP'
 };
 
 /**
@@ -82,6 +82,26 @@ const ClassList = ({ classes, onClassClick, colors = {}, colorMode = 'standard' 
     
     return colors.centerColors?.[center] || colors.primary || 'rgb(0,130,188)';
   };
+  
+  // Format time to show start and end time clearly
+  const formatTimeRange = (timeString) => {
+    if (!timeString) return '';
+    
+    // Handle different time formats
+    // e.g. "07:00 - 08:00", "7:00 - 8:00", "7:00", "7am - 8am", etc.
+    
+    const parts = timeString.split('-').map(part => part.trim());
+    if (parts.length === 2) {
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium">{parts[0]}</span>
+          <span className="text-gray-500">to {parts[1]}</span>
+        </div>
+      );
+    }
+    
+    return <span className="font-medium">{timeString}</span>;
+  };
 
   return (
     <div className="grid grid-cols-1 gap-6">
@@ -131,9 +151,9 @@ const ClassList = ({ classes, onClassClick, colors = {}, colorMode = 'standard' 
                       className={`flex items-start p-3.5 hover:bg-gray-50 cursor-pointer transition-colors group ${isEven ? 'bg-gray-50/50' : 'bg-white'}`}
                       onClick={() => onClassClick(cls)}
                     >
-                      {/* Time column with subtle styling */}
-                      <div className="w-28 flex flex-col text-left pr-4">
-                        <div className="font-medium text-gray-700 text-sm pt-0.5">{cls.time}</div>
+                      {/* Time column with start and end times */}
+                      <div className="w-28 flex flex-col text-left pr-4 text-xs">
+                        {formatTimeRange(cls.time)}
                       </div>
                       <div className="flex-1 text-left">
                         <div className="flex items-start justify-between">

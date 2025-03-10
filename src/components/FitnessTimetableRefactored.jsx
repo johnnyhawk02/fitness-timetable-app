@@ -214,35 +214,36 @@ const FitnessTimetableInner = () => {
             centers={centers}
             selected={state.filters.centers}
             isSwimmingMode={isSwimmingMode}
-            onChange={(center) => {
-              if (center === 'all' || center === 'none') {
+            onChange={(action, customCenters) => {
+              if (action === 'all') {
                 const newCenters = { ...state.filters.centers };
-                
-                if (center === 'all') {
-                  centers.forEach(c => {
-                    newCenters[c] = true;
-                  });
-                } else if (center === 'none') {
-                  centers.forEach(c => {
-                    newCenters[c] = false;
-                  });
-                  // Ensure at least one center is selected
-                  const firstPoolCenter = CENTERS_WITH_POOLS[0] || centers[0];
-                  newCenters[firstPoolCenter] = true;
-                }
-                
+                centers.forEach(c => {
+                  newCenters[c] = true;
+                });
                 actions.setFilter('centers', newCenters);
+              } else if (action === 'none') {
+                const newCenters = { ...state.filters.centers };
+                centers.forEach(c => {
+                  newCenters[c] = false;
+                });
+                // Ensure at least one center is selected
+                const firstPoolCenter = CENTERS_WITH_POOLS[0] || centers[0];
+                newCenters[firstPoolCenter] = true;
+                actions.setFilter('centers', newCenters);
+              } else if (action === 'custom' && customCenters) {
+                // Handle custom selection of multiple centers
+                actions.setFilter('centers', customCenters);
               } else {
                 // Toggle individual center
                 const newCenters = { ...state.filters.centers };
                 
                 // Exclusive selection - only select the clicked center
                 centers.forEach(c => {
-                  newCenters[c] = (c === center);
+                  newCenters[c] = (c === action);
                 });
                 
                 actions.setFilter('centers', newCenters);
-                showToast(`Showing ${center} only`);
+                showToast(`Showing ${action} only`);
               }
             }}
             colors={COLORS}
@@ -272,35 +273,36 @@ const FitnessTimetableInner = () => {
             centers={centers}
             selected={state.filters.centers}
             isSwimmingMode={isSwimmingMode}
-            onChange={(center) => {
-              if (center === 'all' || center === 'none') {
+            onChange={(action, customCenters) => {
+              if (action === 'all') {
                 const newCenters = { ...state.filters.centers };
-                
-                if (center === 'all') {
-                  centers.forEach(c => {
-                    newCenters[c] = true;
-                  });
-                } else if (center === 'none') {
-                  centers.forEach(c => {
-                    newCenters[c] = false;
-                  });
-                  // Ensure at least one center is selected
-                  const firstCenter = centers[0];
-                  newCenters[firstCenter] = true;
-                }
-                
+                centers.forEach(c => {
+                  newCenters[c] = true;
+                });
                 actions.setFilter('centers', newCenters);
+              } else if (action === 'none') {
+                const newCenters = { ...state.filters.centers };
+                centers.forEach(c => {
+                  newCenters[c] = false;
+                });
+                // Ensure at least one center is selected
+                const firstCenter = centers[0];
+                newCenters[firstCenter] = true;
+                actions.setFilter('centers', newCenters);
+              } else if (action === 'custom' && customCenters) {
+                // Handle custom selection of multiple centers
+                actions.setFilter('centers', customCenters);
               } else {
                 // Toggle individual center
                 const newCenters = { ...state.filters.centers };
                 
                 // Exclusive selection - only select the clicked center
                 centers.forEach(c => {
-                  newCenters[c] = (c === center);
+                  newCenters[c] = (c === action);
                 });
                 
                 actions.setFilter('centers', newCenters);
-                showToast(`Showing ${center} only`);
+                showToast(`Showing ${action} only`);
               }
             }}
             colors={COLORS}
