@@ -23,6 +23,53 @@ const centers = ['Bootle', 'Meadows', 'Netherton', 'Crosby', 'Dunes', 'Litherlan
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const CENTERS_WITH_POOLS = ['Bootle', 'Meadows', 'Dunes'];
 
+// Color theme
+const COLORS = {
+  primary: 'rgb(0,130,188)', // Sefton blue
+  primaryLight: 'rgb(0,130,188, 0.1)',
+  primaryMedium: 'rgb(0,130,188, 0.6)',
+  secondary: 'rgb(255,152,0)', // Orange
+  secondaryLight: 'rgb(255,152,0, 0.1)',
+  success: 'rgb(76,175,80)', // Green
+  successLight: 'rgb(76,175,80, 0.1)',
+  error: 'rgb(244,67,54)', // Red
+  errorLight: 'rgb(244,67,54, 0.1)',
+  warning: 'rgb(255,193,7)', // Amber
+  warningLight: 'rgb(255,193,7, 0.1)',
+  info: 'rgb(3,169,244)', // Light Blue
+  infoLight: 'rgb(3,169,244, 0.1)',
+  
+  // Day colors (more subtle)
+  dayColors: {
+    'Monday': 'rgb(3,169,244, 0.7)', // Light Blue
+    'Tuesday': 'rgb(156,39,176, 0.7)', // Purple
+    'Wednesday': 'rgb(76,175,80, 0.7)', // Green
+    'Thursday': 'rgb(255,152,0, 0.7)', // Orange
+    'Friday': 'rgb(233,30,99, 0.7)', // Pink
+    'Saturday': 'rgb(0,188,212, 0.7)', // Cyan
+    'Sunday': 'rgb(121,85,72, 0.7)', // Brown
+  },
+  
+  // Category colors
+  categoryColors: {
+    'cardio': 'rgb(233,30,99)', // Pink
+    'strength': 'rgb(156,39,176)', // Purple
+    'mind-body': 'rgb(121,85,72)', // Brown
+    'core': 'rgb(255,152,0)', // Orange
+    'spinning': 'rgb(0,188,212)', // Cyan
+  },
+  
+  // Center colors
+  centerColors: {
+    'Bootle': 'rgb(3,169,244)', // Light Blue
+    'Meadows': 'rgb(76,175,80)', // Green
+    'Netherton': 'rgb(255,152,0)', // Orange
+    'Crosby': 'rgb(233,30,99)', // Pink
+    'Dunes': 'rgb(156,39,176)', // Purple
+    'Litherland': 'rgb(121,85,72)', // Brown
+  }
+};
+
 /**
  * The inner component that uses the context
  */
@@ -35,6 +82,7 @@ const FitnessTimetableInner = () => {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '' });
   const [selectedClass, setSelectedClass] = useState(null);
+  const [colorMode, setColorMode] = useLocalStorage('color_mode', 'standard'); // 'standard' or 'vibrant'
   
   // Load classes on mount
   useEffect(() => {
@@ -99,6 +147,12 @@ const FitnessTimetableInner = () => {
     return count;
   };
   
+  // Function to toggle color mode
+  const toggleColorMode = () => {
+    setColorMode(colorMode === 'standard' ? 'vibrant' : 'standard');
+    showToast(`Color mode: ${colorMode === 'standard' ? 'Vibrant' : 'Standard'}`);
+  };
+  
   // Function to handle class selection
   const handleClassClick = (classInfo) => {
     setSelectedClass(classInfo);
@@ -110,6 +164,7 @@ const FitnessTimetableInner = () => {
       <PoolTypeFilter
         value={state.filters.poolLocationType}
         onChange={(value) => actions.setFilter('poolLocationType', value)}
+        colors={COLORS}
       />
       
       <CentersFilter
@@ -147,6 +202,8 @@ const FitnessTimetableInner = () => {
             showToast(`Showing ${center} only`);
           }
         }}
+        colors={COLORS}
+        colorMode={colorMode}
       />
     </div>
   );
@@ -157,6 +214,8 @@ const FitnessTimetableInner = () => {
       <ClassTypeFilter
         value={state.filters.category}
         onChange={(value) => actions.setFilter('category', value)}
+        colors={COLORS}
+        colorMode={colorMode}
       />
       
       <CentersFilter
@@ -193,11 +252,14 @@ const FitnessTimetableInner = () => {
             showToast(`Showing ${center} only`);
           }
         }}
+        colors={COLORS}
+        colorMode={colorMode}
       />
       
       <VirtualClassToggle
         value={state.filters.includeVirtual}
         onChange={(value) => actions.setFilter('includeVirtual', value)}
+        colors={COLORS}
       />
     </div>
   );
@@ -214,21 +276,44 @@ const FitnessTimetableInner = () => {
           <ModeToggle
             isSwimmingMode={isSwimmingMode}
             onToggle={(value) => actions.setMode(value ? 'swimming' : 'fitness')}
+            colors={COLORS}
           />
           
           {/* Filter button */}
           <FilterButton
             onClick={() => actions.toggleFiltersExpanded()}
             activeCount={getActiveFilterCount()}
+            colors={COLORS}
           />
           
           {/* Today button */}
-          <TodayButton onClick={scrollToToday} />
+          <TodayButton onClick={scrollToToday} colors={COLORS} />
+          
+          {/* Color mode toggle */}
+          <button
+            onClick={toggleColorMode}
+            className="flex items-center bg-white/10 hover:bg-white/20 px-2 py-1.5 rounded-full transition-all shadow-sm backdrop-blur-sm ml-1"
+            title={`Switch to ${colorMode === 'standard' ? 'vibrant' : 'standard'} colors`}
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-4 w-4" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
+            </svg>
+          </button>
         </div>
       </div>
       
       {/* Toast notification */}
-      <Toast show={toast.show} message={toast.message} />
+      <Toast show={toast.show} message={toast.message} colors={COLORS} />
       
       {/* Filter panel - slides down when expanded */}
       <div
@@ -275,6 +360,8 @@ const FitnessTimetableInner = () => {
             <ClassList
               classes={filteredClasses}
               onClassClick={handleClassClick}
+              colors={COLORS}
+              colorMode={colorMode}
             />
           )}
         </div>
@@ -285,6 +372,7 @@ const FitnessTimetableInner = () => {
         <ClassDetails
           classInfo={selectedClass}
           onClose={() => setSelectedClass(null)}
+          colors={COLORS}
         />
       )}
     </div>

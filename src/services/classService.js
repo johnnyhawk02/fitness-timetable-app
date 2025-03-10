@@ -4,6 +4,111 @@
 // ... etc
 
 /**
+ * Gets a description for a class based on its activity name
+ * @param {string} activity Activity name
+ * @returns {string} Activity description
+ */
+export function getClassDescription(activity) {
+  const descriptions = {
+    "Aerobics": "A high-energy exercise class that combines rhythmic aerobic exercise with stretching and strength training routines.",
+    "Aqua Aerobics": "Water-based exercises that take pressure off your bones, joints and muscles.",
+    "Body Attack": "A high-energy fitness class with moves that cater for total beginners to total addicts.",
+    "Body Balance": "A mix of yoga, tai chi and pilates to build flexibility and strength.",
+    "Body Combat": "A high-energy martial arts-inspired workout that is non-contact and with no complex moves to master.",
+    "Body Conditioning": "A full-body workout designed to strengthen and tone all major muscle groups.",
+    "Body Pump": "A barbell workout for anyone looking to get lean, toned and fit.",
+    "Body Tone": "Improve your muscle strength and tone with this full-body workout.",
+    "Circuits": "A series of exercise stations that you rotate through to give you a full body workout.",
+    "Core": "Focus on strengthening your core muscles to improve stability, balance, and overall fitness.",
+    "Swimming": "Swim sessions for all abilities.",
+    "Adult Swim": "Swimming sessions reserved for adults only.",
+    "Family Swim": "Fun swimming sessions for the whole family.",
+    "Hiit": "High Intensity Interval Training alternating between intense bursts of activity and fixed periods of less-intense activity.",
+    "Kettlebells": "A full-body workout that utilizes kettlebells for strength training and cardiovascular fitness.",
+    "Pilates": "A method of exercise that focuses on improving flexibility, strength, and body awareness.",
+    "Spin": "An indoor cycling workout where you ride to the rhythm of powerful music and take on the terrain with your inspiring team coach.",
+    "Yoga": "A practice that brings together physical and mental disciplines to achieve peacefulness of body and mind.",
+    "Zumba": "A fitness program that combines Latin and international music with dance moves."
+  };
+  
+  if (!activity) return "No description available";
+  
+  // Try to find a direct match
+  const activityLower = activity.toLowerCase();
+  for (const [key, description] of Object.entries(descriptions)) {
+    if (activityLower.includes(key.toLowerCase())) {
+      return description;
+    }
+  }
+  
+  // Default description
+  return "Join this class to improve your fitness level and well-being.";
+}
+
+/**
+ * Helper function to determine class category
+ * @param {string} activity - The activity name
+ * @returns {string} The category identifier
+ */
+export function getClassCategory(activity) {
+  if (!activity) return 'other';
+  
+  const activityLower = activity.toLowerCase();
+  
+  // Skip placeholder entries
+  if (activityLower.includes('no classes') || 
+      activityLower === 'none' || 
+      activityLower === '-') 
+    return 'other';
+  
+  // Cardio classes
+  if (activityLower.includes('hiit') || 
+      activityLower.includes('spin') || 
+      activityLower.includes('zumba') || 
+      activityLower.includes('aerobic') || 
+      activityLower.includes('step') ||
+      activityLower.includes('cardio') ||
+      activityLower.includes('cycle') ||
+      activityLower.includes('combat') ||
+      activityLower.includes('box') ||
+      activityLower.includes('circuit')) 
+    return 'cardio';
+  
+  // Strength classes
+  if (activityLower.includes('pump') || 
+      activityLower.includes('kettlebell') || 
+      activityLower.includes('strength') || 
+      activityLower.includes('tone') || 
+      activityLower.includes('conditioning') ||
+      activityLower.includes('bodytone') ||
+      activityLower.includes('body tone'))
+    return 'strength';
+  
+  // Mind & body classes
+  if (activityLower.includes('yoga') || 
+      activityLower.includes('pilates') || 
+      activityLower.includes('balance') || 
+      activityLower.includes('flex') ||
+      activityLower.includes('stretch') ||
+      activityLower.includes('relax'))
+    return 'mind-body';
+  
+  // Core classes
+  if (activityLower.includes('abs') || 
+      activityLower.includes('core'))
+    return 'core';
+  
+  // Spinning classes
+  if (activityLower.includes('spin') || 
+      activityLower.includes('cycle') ||
+      activityLower.includes('rpm'))
+    return 'spinning';
+  
+  // Default category
+  return 'other';
+}
+
+/**
  * Service for handling class data
  */
 const classService = {
@@ -93,48 +198,6 @@ function generateMockClasses() {
   }
   
   return classes;
-}
-
-/**
- * Gets a description for a class based on its activity name
- * @param {string} activity Activity name
- * @returns {string} Activity description
- */
-function getClassDescription(activity) {
-  const descriptions = {
-    "Aerobics": "A high-energy exercise class that combines rhythmic aerobic exercise with stretching and strength training routines.",
-    "Aqua Aerobics": "Water-based exercises that take pressure off your bones, joints and muscles.",
-    "Body Attack": "A high-energy fitness class with moves that cater for total beginners to total addicts.",
-    "Body Balance": "A mix of yoga, tai chi and pilates to build flexibility and strength.",
-    "Body Combat": "A high-energy martial arts-inspired workout that is non-contact and with no complex moves to master.",
-    "Body Conditioning": "A full-body workout designed to strengthen and tone all major muscle groups.",
-    "Body Pump": "A barbell workout for anyone looking to get lean, toned and fit.",
-    "Body Tone": "Improve your muscle strength and tone with this full-body workout.",
-    "Circuits": "A series of exercise stations that you rotate through to give you a full body workout.",
-    "Core": "Focus on strengthening your core muscles to improve stability, balance, and overall fitness.",
-    "Swimming": "Swim sessions for all abilities.",
-    "Adult Swim": "Swimming sessions reserved for adults only.",
-    "Family Swim": "Fun swimming sessions for the whole family.",
-    "Hiit": "High Intensity Interval Training alternating between intense bursts of activity and fixed periods of less-intense activity.",
-    "Kettlebells": "A full-body workout that utilizes kettlebells for strength training and cardiovascular fitness.",
-    "Pilates": "A method of exercise that focuses on improving flexibility, strength, and body awareness.",
-    "Spin": "An indoor cycling workout where you ride to the rhythm of powerful music and take on the terrain with your inspiring team coach.",
-    "Yoga": "A practice that brings together physical and mental disciplines to achieve peacefulness of body and mind.",
-    "Zumba": "A fitness program that combines Latin and international music with dance moves."
-  };
-  
-  if (!activity) return "No description available";
-  
-  // Try to find a direct match
-  const activityLower = activity.toLowerCase();
-  for (const [key, description] of Object.entries(descriptions)) {
-    if (activityLower.includes(key.toLowerCase())) {
-      return description;
-    }
-  }
-  
-  // Default description
-  return "Join this class to improve your fitness level and well-being.";
 }
 
 export default classService; 
