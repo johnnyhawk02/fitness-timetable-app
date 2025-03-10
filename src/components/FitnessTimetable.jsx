@@ -966,7 +966,12 @@ const FitnessTimetable = () => {
                   : "bg-[rgb(0,130,188)]/5 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10"
               }`}
             >
-              <span>All Pools</span>
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
+                </svg>
+                <span className="hidden sm:inline">All Pools</span>
+              </div>
               {poolLocationType === "all" && (
                 <svg className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
@@ -981,7 +986,14 @@ const FitnessTimetable = () => {
                   : "bg-[rgb(0,130,188)]/5 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10"
               }`}
             >
-              <span>Main Pool</span>
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z" />
+                  <path d="M2 18V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12" />
+                  <path d="M3 16h18" />
+                </svg>
+                <span className="hidden sm:inline">Main Pool</span>
+              </div>
               {poolLocationType === "main" && (
                 <svg className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
@@ -996,7 +1008,14 @@ const FitnessTimetable = () => {
                   : "bg-[rgb(0,130,188)]/5 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10"
               }`}
             >
-              <span>Leisure/Learner Pool</span>
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 9a4 4 0 0 1-4 4h-1a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4h1a4 4 0 0 1 4 4v1Z" />
+                  <path d="M18 16v2a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4v-1a4 4 0 0 1 4-4h4" />
+                  <path d="M12 19v-8" />
+                </svg>
+                <span className="hidden sm:inline">Leisure/Learner Pool</span>
+              </div>
               {poolLocationType === "leisure" && (
                 <svg className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
@@ -1038,24 +1057,94 @@ const FitnessTimetable = () => {
             Class Type
           </h3>
           <div className="flex flex-wrap gap-2 items-center">
-            {Object.entries(classCategories).map(([categoryId, categoryName]) => (
-              <button
-                key={categoryId}
-                onClick={() => handleCategoryChange(categoryId)}
-                className={`flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  selectedCategory === categoryId
-                    ? `bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]`
-                    : `bg-[rgb(0,130,188)]/5 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10`
-                }`}
-              >
-                <span>{categoryName}</span>
-                {selectedCategory === categoryId && (
-                  <svg className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                )}
-              </button>
-            ))}
+            {Object.entries(classCategories).map(([categoryId, categoryName]) => {
+              // Define icons for each category
+              let icon;
+              switch(categoryId) {
+                case 'cardio':
+                  icon = (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.4 3.6a2 2 0 0 0-2.8 0l-8.5 8.5a2 2 0 0 0 0 2.8l3.4 3.4a2 2 0 0 0 2.8 0l8.5-8.5a2 2 0 0 0 0-2.8l-3.4-3.4Z" />
+                      <path d="m2 22 3-3" />
+                      <path d="M18 2 6 14" />
+                      <path d="m17 7-5 5" />
+                      <path d="m7 17-5 5" />
+                    </svg>
+                  );
+                  break;
+                case 'strength':
+                  icon = (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 5v14" />
+                      <path d="M18 5v14" />
+                      <path d="M6 9h12" />
+                      <path d="M6 15h12" />
+                      <path d="M6 5h12" />
+                      <path d="M6 19h12" />
+                    </svg>
+                  );
+                  break;
+                case 'mind-body':
+                  icon = (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2a10 10 0 1 0 10 10 4 4 0 1 1-8 0 4 4 0 1 1 8 0" />
+                    </svg>
+                  );
+                  break;
+                case 'core':
+                  icon = (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 2a4.2 4.2 0 0 0 4 4 4.2 4.2 0 0 1 4 4 4.2 4.2 0 0 1-4 4 4.2 4.2 0 0 0-4 4" />
+                      <path d="M12 22a4.2 4.2 0 0 1-4-4 4.2 4.2 0 0 0-4-4 4.2 4.2 0 0 0 4-4 4.2 4.2 0 0 1 4-4" />
+                    </svg>
+                  );
+                  break;
+                case 'spinning':
+                  icon = (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M3 12h3" />
+                      <path d="M15 12h3" />
+                      <path d="M7.5 7.5 6 6" />
+                      <path d="M16.5 7.5 18 6" />
+                      <path d="M7.5 16.5 6 18" />
+                      <path d="M16.5 16.5 18 18" />
+                    </svg>
+                  );
+                  break;
+                default:
+                  icon = (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                      <path d="M9.5 9a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0" />
+                      <path d="M7.5 14c1.5-1 3.5-1 5 0 1.5 1 3.5 1 5 0" />
+                    </svg>
+                  );
+              }
+              
+              return (
+                <button
+                  key={categoryId}
+                  onClick={() => handleCategoryChange(categoryId)}
+                  className={`flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    selectedCategory === categoryId
+                      ? `bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]`
+                      : `bg-[rgb(0,130,188)]/5 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10`
+                  }`}
+                >
+                  <div className="flex items-center">
+                    {icon}
+                    <span className="hidden sm:inline">{categoryName}</span>
+                  </div>
+                  {selectedCategory === categoryId && (
+                    <svg className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
             <button
               onClick={() => handleCategoryChange('')}
               className={`flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
@@ -1064,7 +1153,17 @@ const FitnessTimetable = () => {
                   : `bg-[rgb(0,130,188)]/5 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10`
               }`}
             >
-              <span>All</span>
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h1" />
+                  <path d="M17 3h1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1" />
+                  <path d="M12 12v9" />
+                  <path d="M8 21h8" />
+                  <path d="M4.5 9 2 12l2.5 3" />
+                  <path d="M19.5 9 22 12l-2.5 3" />
+                </svg>
+                <span className="hidden sm:inline">All</span>
+              </div>
               {!selectedCategory && (
                 <svg className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
@@ -1246,6 +1345,82 @@ const FitnessTimetable = () => {
           const hasPool = CENTERS_WITH_POOLS.includes(center);
           const isSelected = selectedCenters[center];
           
+          // Define icons for each center
+          let icon;
+          switch(center) {
+            case 'Bootle':
+              icon = (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
+                  <path d="M3 9V5a2 2 0 0 1 2-2h2L8 7" />
+                  <path d="M13 5V3h6v6" />
+                  <path d="M21 9V3" />
+                </svg>
+              );
+              break;
+            case 'Meadows':
+              icon = (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                  <path d="m2 12 10 5 10-5" />
+                  <path d="m2 12 10-5 10 5" />
+                  <path d="M12 22V12" />
+                  <path d="M12 12 7.5 6.5" />
+                  <path d="M12 12l4.5-5.5" />
+                </svg>
+              );
+              break;
+            case 'Dunes':
+              icon = (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 22 12 2l10 20" />
+                  <path d="M12 22V2" />
+                  <path d="M17 22V6" />
+                  <path d="M7 22v-8" />
+                </svg>
+              );
+              break;
+            case 'Netherton':
+              icon = (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
+                  <path d="M9 22V12h6v10" />
+                  <path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4" />
+                </svg>
+              );
+              break;
+            case 'Crosby':
+              icon = (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z" />
+                  <path d="m9 16 .348-.24c1.465-1.013 3.84-1.013 5.304 0L15 16" />
+                  <path d="M8 7h.01" />
+                  <path d="M16 7h.01" />
+                  <path d="M12 7h.01" />
+                  <path d="M12 11h.01" />
+                  <path d="M16 11h.01" />
+                  <path d="M8 11h.01" />
+                  <path d="M10 22v-6.5m4 0V22" />
+                </svg>
+              );
+              break;
+            case 'Litherland':
+              icon = (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                  <path d="m7 10 3 3 7-7" />
+                </svg>
+              );
+              break;
+            default:
+              icon = (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              );
+          }
+          
           return (
             <button 
               key={center} 
@@ -1255,10 +1430,12 @@ const FitnessTimetable = () => {
               }`}
             >
               <div className="flex items-center">
-                <span className="text-sm text-gray-700">{center}</span>
+                {icon}
+                <span className="hidden sm:inline text-sm text-gray-700">{center}</span>
                 {showPoolClasses && (
                   <span className={`ml-1.5 text-xs font-medium ${hasPool ? 'text-[rgb(0,130,188)]' : 'text-red-500'}`}>
-                    {hasPool ? '(Pool)' : '(No Pool)'}
+                    <span className="hidden sm:inline">{hasPool ? '(Pool)' : '(No Pool)'}</span>
+                    <span className="sm:hidden">{hasPool ? '🏊' : '❌'}</span>
                   </span>
                 )}
               </div>
@@ -1274,15 +1451,24 @@ const FitnessTimetable = () => {
       <div className="flex justify-between mt-3">
         <button 
           onClick={() => handleCenterChange('all')}
-          className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
+          className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors flex items-center"
         >
-          Select All
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 3h18v18H3z" />
+            <path d="m9 13 2 2 4-4" />
+          </svg>
+          <span className="hidden sm:inline">Select All</span>
         </button>
         <button 
           onClick={() => handleCenterChange('none')}
-          className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
+          className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors flex items-center"
         >
-          Clear All
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 3h18v18H3z" />
+            <path d="m15 9-6 6" />
+            <path d="m9 9 6 6" />
+          </svg>
+          <span className="hidden sm:inline">Clear All</span>
         </button>
       </div>
     </div>
