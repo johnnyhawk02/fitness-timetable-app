@@ -289,13 +289,10 @@ const FitnessTimetableInner = () => {
             </div>
             <button
               onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
-              className={`px-3 py-1.5 text-white text-xs font-medium transition-all shadow-sm rounded-full border border-white/30 backdrop-blur-sm ${
-                isSwimmingMode 
-                  ? 'bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500' 
-                  : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500'
-              }`}
+              className="text-4xl transition-transform hover:scale-110 focus:outline-none ml-2 p-1"
+              title={`Switch to ${isSwimmingMode ? 'Fitness' : 'Swimming'} Mode`}
             >
-              {isSwimmingMode ? 'Swimming' : 'Fitness'} Mode
+              {isSwimmingMode ? '🏊‍♂️' : '🏋️‍♂️'}
             </button>
           </div>
           
