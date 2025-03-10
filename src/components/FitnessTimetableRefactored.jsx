@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TimetableProvider, useTimetable } from '../context/TimetableContext';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useFilteredClasses from '../hooks/useFilteredClasses';
@@ -10,6 +10,7 @@ import TodayButton from './ui/TodayButton';
 import ClassList from './ui/ClassList';
 import ClassDetails from './ui/ClassDetails';
 import Toast from './ui/Toast';
+import LoadingScreen from './ui/LoadingScreen';
 import PoolTypeFilter from './filters/PoolTypeFilter';
 import ClassTypeFilter from './filters/ClassTypeFilter';
 import CentersFilter from './filters/CentersFilter';
@@ -21,45 +22,63 @@ import classService from '../services/classService';
 // Constants
 const centers = ['Bootle', 'Meadows', 'Netherton', 'Crosby', 'Dunes', 'Litherland'];
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const CENTERS_WITH_POOLS = ['Bootle', 'Meadows', 'Dunes'];
 
-// Color theme
+// Color themes - separate themes for fitness and swimming
 const COLORS = {
+  // Shared colors
   primary: 'rgb(0,130,188)', // Sefton blue
   primaryLight: 'rgb(0,130,188, 0.1)',
   primaryMedium: 'rgb(0,130,188, 0.6)',
-  secondary: 'rgb(255,152,0)', // Orange
-  secondaryLight: 'rgb(255,152,0, 0.1)',
-  success: 'rgb(76,175,80)', // Green
-  successLight: 'rgb(76,175,80, 0.1)',
-  error: 'rgb(244,67,54)', // Red
-  errorLight: 'rgb(244,67,54, 0.1)',
-  warning: 'rgb(255,193,7)', // Amber
-  warningLight: 'rgb(255,193,7, 0.1)',
-  info: 'rgb(3,169,244)', // Light Blue
-  infoLight: 'rgb(3,169,244, 0.1)',
   
-  // Day colors (darker for better contrast with white text)
-  dayColors: {
-    'Monday': 'rgb(3,119,194)', // Darker Blue
-    'Tuesday': 'rgb(126,29,156)', // Darker Purple
-    'Wednesday': 'rgb(46,125,50)', // Darker Green
-    'Thursday': 'rgb(230,122,0)', // Darker Orange
-    'Friday': 'rgb(183,28,78)', // Darker Pink
-    'Saturday': 'rgb(0,138,162)', // Darker Cyan
-    'Sunday': 'rgb(91,55,42)', // Darker Brown
+  // Fitness mode colors (warm)
+  fitness: {
+    primary: 'rgb(233,84,32)', // Warm orange/red
+    secondary: 'rgb(255,152,0)', // Orange
+    accent: 'rgb(249,115,22)', // Burnt orange
+    background: 'rgb(255,237,213)', // Light peach
+    
+    // Warm day colors for fitness
+    dayColors: {
+      'Monday': 'rgb(220,38,38)', // Red
+      'Tuesday': 'rgb(234,88,12)', // Orange
+      'Wednesday': 'rgb(217,119,6)', // Amber
+      'Thursday': 'rgb(202,138,4)', // Yellow
+      'Friday': 'rgb(180,83,9)', // Burnt orange
+      'Saturday': 'rgb(194,65,12)', // Rust
+      'Sunday': 'rgb(153,27,27)', // Dark red
+    }
   },
   
-  // Category colors
+  // Swimming mode colors (cool blues)
+  swimming: {
+    primary: 'rgb(3,105,161)', // Medium blue
+    secondary: 'rgb(6,182,212)', // Cyan
+    accent: 'rgb(14,165,233)', // Sky blue
+    background: 'rgb(224,242,254)', // Light blue
+    
+    // Cool day colors for swimming
+    dayColors: {
+      'Monday': 'rgb(3,105,161)', // Blue
+      'Tuesday': 'rgb(8,145,178)', // Cyan
+      'Wednesday': 'rgb(13,148,136)', // Teal
+      'Thursday': 'rgb(6,95,70)', // Green
+      'Friday': 'rgb(7,89,133)', // Blue-green
+      'Saturday': 'rgb(30,64,175)', // Indigo
+      'Sunday': 'rgb(91,33,182)', // Purple
+    }
+  },
+  
+  // Shared colors for categories regardless of mode
   categoryColors: {
     'cardio': 'rgb(233,30,99)', // Pink
     'strength': 'rgb(156,39,176)', // Purple
     'mind-body': 'rgb(121,85,72)', // Brown
     'core': 'rgb(255,152,0)', // Orange
     'spinning': 'rgb(0,188,212)', // Cyan
+    'swimming': 'rgb(3,169,244)', // Light Blue
   },
   
-  // Center colors
+  // Shared colors for centers regardless of mode
   centerColors: {
     'Bootle': 'rgb(3,169,244)', // Light Blue
     'Meadows': 'rgb(76,175,80)', // Green
@@ -67,6 +86,18 @@ const COLORS = {
     'Crosby': 'rgb(233,30,99)', // Pink
     'Dunes': 'rgb(156,39,176)', // Purple
     'Litherland': 'rgb(121,85,72)', // Brown
+  },
+  
+  // Helper function to get the active theme colors based on mode
+  getThemeColors: (isSwimmingMode) => {
+    return isSwimmingMode ? COLORS.swimming : COLORS.fitness;
+  },
+  
+  // Helper function to get day color based on mode
+  getDayColor: (day, isSwimmingMode) => {
+    return isSwimmingMode 
+      ? COLORS.swimming.dayColors[day] 
+      : COLORS.fitness.dayColors[day];
   }
 };
 
@@ -88,19 +119,40 @@ const FitnessTimetableInner = () => {
   
   // Local state
   const [classes, setClasses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // This will start as true for initial load
+  const [initialLoad, setInitialLoad] = useState(true); // Track if this is the first load
   const [toast, setToast] = useState({ show: false, message: '' });
   const [selectedClass, setSelectedClass] = useState(null);
   const [colorMode, setColorMode] = useLocalStorage('color_mode', 'standard'); // 'standard' or 'vibrant'
   
+  // Function to show toast notifications - moved up before it's used
+  const showToast = (message) => {
+    setToast({ show: true, message });
+    setTimeout(() => {
+      setToast({ show: false, message: '' });
+    }, 3000);
+  };
+  
   // Load classes on mount and when mode changes
   useEffect(() => {
     const loadClasses = async () => {
-      setLoading(true);
+      // Only show loading screen on initial load, not on mode switch
+      if (initialLoad) {
+        setLoading(true);
+      } else {
+        // For mode switches, just show a toast instead of full loading screen
+        showToast(`Switching to ${isSwimmingMode ? 'Swimming' : 'Fitness'} mode...`);
+      }
+      
       try {
         const data = await classService.getAllClasses();
         setClasses(data);
         console.log('Classes reloaded, total count:', data.length);
+        
+        // After first successful load, set initialLoad to false
+        if (initialLoad) {
+          setInitialLoad(false);
+        }
       } catch (error) {
         console.error('Error loading classes:', error);
         showToast('Error loading classes');
@@ -110,17 +162,7 @@ const FitnessTimetableInner = () => {
     };
     
     loadClasses();
-  }, [isSwimmingMode]); // Re-run when mode changes
-  
-  // Add explicit effect to handle mode changes
-  useEffect(() => {
-    console.log('Mode effect triggered, current mode:', state.mode);
-    console.log('isSwimmingMode in effect:', isSwimmingMode);
-    
-    // Force UI update by showing toast with mode
-    showToast(`Mode: ${isSwimmingMode ? 'Swimming' : 'Fitness'}`);
-    
-  }, [state.mode, isSwimmingMode]);
+  }, [isSwimmingMode, initialLoad]); // Removed showToast from dependencies
   
   // Filter classes based on current filters
   const filteredClasses = useFilteredClasses(
@@ -129,13 +171,14 @@ const FitnessTimetableInner = () => {
     isSwimmingMode
   );
   
-  // Function to show toast notifications
-  const showToast = (message) => {
-    setToast({ show: true, message });
-    setTimeout(() => {
-      setToast({ show: false, message: '' });
-    }, 3000);
-  };
+  // Group classes by day for display
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const classesByDay = useMemo(() => {
+    return days.reduce((acc, day) => {
+      acc[day] = filteredClasses.filter(cls => cls.day === day);
+      return acc;
+    }, {});
+  }, [filteredClasses]); // Removed days from dependencies
   
   // Function to scroll to today's classes
   const scrollToToday = () => {
@@ -181,19 +224,14 @@ const FitnessTimetableInner = () => {
     setSelectedClass(classInfo);
   };
   
-  // Add explicit handler for mode switching
+  // Function to handle mode switching - updated to not use loading screen
   const handleModeSwitch = (newMode) => {
     console.log('Manual mode switch to:', newMode);
-    // Show loading state while switching
-    setLoading(true);
-    // Set mode after a brief delay to ensure UI updates
-    setTimeout(() => {
-      actions.setMode(newMode);
-      // Add a small delay before turning off loading for better UX
-      setTimeout(() => {
-        setLoading(false);
-      }, 300);
-    }, 100);
+    // Don't show loading screen for mode switches
+    // Just set the mode directly
+    actions.setMode(newMode);
+    // Show a toast to indicate the mode change
+    showToast(`Switching to ${newMode} mode`);
   };
   
   // Render swimming specific filters
@@ -281,8 +319,13 @@ const FitnessTimetableInner = () => {
   
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      {/* App bar with logo, filter buttons and count */}
-      <div className="bg-[rgb(0,130,188)]/95 backdrop-blur-sm text-white px-4 py-2.5 shadow-lg z-20 sticky top-0">
+      {/* Loading screen */}
+      <LoadingScreen show={loading} colors={COLORS} />
+      
+      {/* App bar with logo, filter buttons and count - always Sefton blue */}
+      <div 
+        className="bg-[rgb(0,130,188)]/95 backdrop-blur-sm text-white px-4 py-2.5 shadow-lg z-20 sticky top-0"
+      >
         {/* Single row for app bar with all elements */}
         <div className="flex items-center justify-between">
           {/* Logo only - removed redundant mode indicator */}
@@ -336,27 +379,34 @@ const FitnessTimetableInner = () => {
       {/* Toast notification */}
       <Toast show={toast.show} message={toast.message} colors={COLORS} />
       
-      {/* Filter panel - slides down when expanded */}
+      {/* Filter panel - slides down when expanded with mode-specific colors */}
       <div
         className={`overflow-hidden transition-all duration-300 ease-in-out border-b border-gray-300 shadow-lg relative z-10 ${
           state.ui.filtersExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        <div className="bg-gray-50">
+        <div className={`${isSwimmingMode ? 'bg-blue-50' : 'bg-orange-50'}`}>
           <div className="max-w-5xl mx-auto">
             <div className="divide-y divide-gray-200">
-              {/* Filter header with mode info and switch button */}
-              <div className="px-2 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+              {/* Filter header with mode info and switch button - mode-specific styling */}
+              <div className={`px-2 py-1.5 sm:px-3 sm:py-2 border-b ${
+                isSwimmingMode 
+                  ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200' 
+                  : 'bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200'
+              }`}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs sm:text-sm font-medium text-gray-800 flex items-center">
-                    <svg className="w-4 h-4 mr-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg className={`w-4 h-4 mr-1 ${isSwimmingMode ? 'text-blue-600' : 'text-orange-600'}`} 
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                     </svg>
                     {isSwimmingMode ? 'Swimming Pool Filters' : 'Fitness Class Filters'}
                   </h3>
                   <button
                     onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
-                    className="px-2 py-1 bg-blue-600 text-white hover:bg-blue-700 rounded-md text-xs sm:text-sm font-medium transition-all shadow-sm"
+                    className={`px-2 py-1 text-white hover:opacity-90 rounded-md text-xs sm:text-sm font-medium transition-all shadow-sm ${
+                      isSwimmingMode ? 'bg-orange-600' : 'bg-blue-600'
+                    }`}
                   >
                     Switch to {isSwimmingMode ? 'Fitness' : 'Swimming'}
                   </button>
@@ -373,11 +423,11 @@ const FitnessTimetableInner = () => {
                 </div>
               </div>
               
-              {/* Bottom close button */}
+              {/* Bottom close button - mode-specific styling */}
               <div className="sticky bottom-0 py-3 px-4 bg-gradient-to-b from-gray-50/80 to-gray-50 backdrop-blur-md border-t border-gray-200 shadow-[0_-2px_5px_rgba(0,0,0,0.05)]">
                 <button 
                   onClick={() => actions.toggleFiltersExpanded()}
-                  className="w-full bg-[rgb(0,130,188)] text-white px-4 py-2.5 rounded-lg font-medium hover:bg-[rgb(0,130,188)]/90 transition-all shadow-sm"
+                  className="w-full text-white px-4 py-2.5 rounded-lg font-medium hover:opacity-90 transition-all shadow-sm bg-[rgb(0,130,188)]"
                 >
                   Apply Filters
                 </button>
@@ -387,67 +437,45 @@ const FitnessTimetableInner = () => {
         </div>
       </div>
 
-      {/* Timetable content - full screen scrollable area */}
-      <div className="flex-1 overflow-hidden bg-gray-100">
+      {/* Timetable content - full screen scrollable area with mode-specific background */}
+      <div className={`flex-1 overflow-hidden ${
+        isSwimmingMode ? 'bg-blue-50' : 'bg-orange-50'
+      }`}>
         <div className="h-full overflow-y-auto scrollbar-hide">
           {/* Mode indicator in scrollable area */}
           <div className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
             <div className="flex items-center justify-between py-2 px-4">
               <span className="text-sm font-medium text-gray-700 flex items-center">
                 <span 
-                  className={`inline-block w-2 h-2 rounded-full mr-2 ${isSwimmingMode ? 'bg-cyan-500' : 'bg-orange-500'}`}
+                  className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                    isSwimmingMode ? 'bg-cyan-500' : 'bg-orange-500'
+                  }`}
                 ></span>
                 {isSwimmingMode ? 'Pool Sessions' : 'Fitness Classes'}
               </span>
-              
-              <button
-                onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
-                className="text-xs py-1 px-2.5 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded font-medium flex items-center transition-colors"
-              >
-                <span className="mr-1">Switch to</span>
-                <span className={isSwimmingMode ? 'text-orange-600' : 'text-cyan-600'}>
-                  {isSwimmingMode ? 'Fitness' : 'Swimming'}
-                </span>
-              </button>
             </div>
           </div>
           
-          {/* Loading indicator */}
-          {loading ? (
-            <div className="h-full flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[rgb(0,130,188)]"></div>
-            </div>
-          ) : (
-            <div className="p-4 h-[calc(100%-48px)] overflow-y-auto">
-              {/* Class list */}
-              <ClassList
-                classes={filteredClasses}
-                onClassClick={handleClassClick}
-                colors={COLORS}
-                colorMode={colorMode}
-              />
-              
-              {/* Empty state message if no classes */}
-              {filteredClasses.length === 0 && (
-                <div className="mt-10 text-center p-6 bg-white rounded-lg shadow">
-                  <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <h3 className="text-lg font-semibold text-gray-700 mb-1">No Classes Found</h3>
-                  <p className="text-gray-500">Try adjusting your filters to see more classes.</p>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Class list component */}
+          <ClassList 
+            classesByDay={classesByDay}
+            onClassClick={handleClassClick}
+            mode={state.mode}
+            colorMode={colorMode}
+            days={days}
+            colors={COLORS}
+            isSwimmingMode={isSwimmingMode}
+          />
         </div>
       </div>
       
       {/* Class details modal */}
       {selectedClass && (
-        <ClassDetails
+        <ClassDetails 
           classInfo={selectedClass}
           onClose={() => setSelectedClass(null)}
           colors={COLORS}
+          isSwimmingMode={isSwimmingMode}
         />
       )}
     </div>

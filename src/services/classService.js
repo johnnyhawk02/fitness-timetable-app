@@ -147,7 +147,6 @@ const classService = {
    */
   getAllClasses: async () => {
     try {
-      // Use the real data imported from files
       return Promise.resolve(allClassData);
     } catch (error) {
       console.error("Error fetching class data:", error);
@@ -161,8 +160,6 @@ const classService = {
    * @returns {Promise<Object>} Promise that resolves with class details
    */
   getClassDetails: async (classInfo) => {
-    // In a real app, this might fetch additional details from an API
-    // For now, we'll just return the class info with an added description
     return Promise.resolve({
       ...classInfo,
       description: getClassDescription(classInfo.activity)
