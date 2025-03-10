@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import bootleClasses from '../data/bootleData';
-import crosbyClasses from '../data/crosbyData';
-import meadowsClasses from '../data/meadowsData';
-import nethertonClasses from '../data/nethertonData';
-import litherlandClasses from '../data/litherlandData';
-import dunesClasses from '../data/dunesData';
+import bootleClasses from '../data/bootleClassData';
+import crosbyClasses from '../data/crosbyClassData';
+import meadowsClasses from '../data/meadowsClassData';
+import nethertonClasses from '../data/nethertonClassData';
+import litherlandClasses from '../data/litherlandClassData';
+import dunesClasses from '../data/dunesClassData';
+import bootlePoolData from '../data/bootlePoolData';
+import meadowsPoolData from '../data/meadowsPoolData';
+import dunesSplashWorldData from '../data/dunesPoolData';
 import classDescriptions from '../data/classDescriptions';
 
 // Local storage keys
@@ -45,24 +48,11 @@ const CENTER_ABBREVIATIONS = {
 };
 
 const FitnessTimetable = () => {
-  // Combine all classes using useMemo to maintain reference stability
-  const allClasses = useMemo(() => [
-    ...bootleClasses, 
-    ...crosbyClasses, 
-    ...meadowsClasses, 
-    ...nethertonClasses, 
-    ...litherlandClasses, 
-    ...dunesClasses
-  ], []);  // Empty dependency array means this only runs once
-
-  // Default time blocks configuration
-  const defaultTimeBlocks = {
-    'morning': { label: 'Morning', start: 6, end: 12 },
-    'afternoon-evening': { label: 'Afternoon/Evening', start: 12, end: 22 }
-  };
-
-  // Filter options
+  // Filter options - moved to the top to avoid reference errors
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const centers = ['Bootle', 'Crosby', 'Meadows', 'Netherton', 'Litherland', 'Dunes'];
+  
+  // Day abbreviations
   const dayAbbreviations = {
     'Monday': 'Mo',
     'Tuesday': 'Tu',
@@ -72,8 +62,106 @@ const FitnessTimetable = () => {
     'Saturday': 'Sa',
     'Sunday': 'Su'
   };
-  const centers = ['Bootle', 'Crosby', 'Meadows', 'Netherton', 'Litherland', 'Dunes'];
-  //const allLocations = [...new Set(allClasses.map(cls => cls.location))];
+
+  // Add new state for pool/class filter
+  const [showPoolClasses, setShowPoolClasses] = useState(() => 
+    getStoredValue('fitness_show_pool_classes', false)
+  );
+
+  // Fitness class-specific filter states
+  const [fitnessSelectedCenters, setFitnessSelectedCenters] = useState(() => 
+    getStoredValue('fitness_selected_centers', centers.reduce((acc, center) => {
+      acc[center] = true;
+      return acc;
+    }, {}))
+  );
+  const [fitnessSelectedCategory, setFitnessSelectedCategory] = useState(() => 
+    getStoredValue('fitness_selected_category', '')
+  );
+  const [fitnessIncludeVirtual, setFitnessIncludeVirtual] = useState(() => 
+    getStoredValue('fitness_include_virtual', true)
+  );
+  const [fitnessSelectedDays, setFitnessSelectedDays] = useState(() => 
+    getStoredValue('fitness_selected_days', days.reduce((acc, day) => {
+      acc[day] = true;
+      return acc;
+    }, {}))
+  );
+  const [fitnessSelectedTimeBlocks, setFitnessSelectedTimeBlocks] = useState(() => 
+    getStoredValue('fitness_selected_time_blocks', Object.keys(TIME_DIVISIONS).reduce((acc, block) => {
+      acc[block] = false;
+      return acc;
+    }, {}))
+  );
+
+  // Swimming pool-specific filter states
+  const [poolSelectedCenters, setPoolSelectedCenters] = useState(() => 
+    getStoredValue('pool_selected_centers', centers.reduce((acc, center) => {
+      acc[center] = true;
+      return acc;
+    }, {}))
+  );
+  const [poolSelectedDays, setPoolSelectedDays] = useState(() => 
+    getStoredValue('pool_selected_days', days.reduce((acc, day) => {
+      acc[day] = true;
+      return acc;
+    }, {}))
+  );
+  const [poolSelectedTimeBlocks, setPoolSelectedTimeBlocks] = useState(() => 
+    getStoredValue('pool_selected_time_blocks', Object.keys(TIME_DIVISIONS).reduce((acc, block) => {
+      acc[block] = false;
+      return acc;
+    }, {}))
+  );
+  // Add pool location filter
+  const [poolLocationType, setPoolLocationType] = useState(() => 
+    getStoredValue('pool_location_type', 'all') // Options: 'all', 'main', 'leisure'
+  );
+
+  // Save pool location filter to localStorage
+  useEffect(() => {
+    localStorage.setItem('pool_location_type', poolLocationType);
+  }, [poolLocationType]);
+
+  // Combined state values that change based on current mode
+  const selectedCenters = useMemo(() => 
+    showPoolClasses ? poolSelectedCenters : fitnessSelectedCenters,
+  [showPoolClasses, poolSelectedCenters, fitnessSelectedCenters]);
+  
+  const selectedDays = useMemo(() => 
+    showPoolClasses ? poolSelectedDays : fitnessSelectedDays,
+  [showPoolClasses, poolSelectedDays, fitnessSelectedDays]);
+  
+  const selectedTimeBlocks = useMemo(() => 
+    showPoolClasses ? poolSelectedTimeBlocks : fitnessSelectedTimeBlocks,
+  [showPoolClasses, poolSelectedTimeBlocks, fitnessSelectedTimeBlocks]);
+  
+  const selectedCategory = useMemo(() => 
+    showPoolClasses ? '' : fitnessSelectedCategory,
+  [showPoolClasses, fitnessSelectedCategory]);
+  
+  const includeVirtual = useMemo(() => 
+    showPoolClasses ? false : fitnessIncludeVirtual,
+  [showPoolClasses, fitnessIncludeVirtual]);
+
+  // Combine all classes using useMemo to maintain reference stability
+  const allClasses = useMemo(() => [
+    ...bootleClasses, 
+    ...crosbyClasses, 
+    ...meadowsClasses, 
+    ...nethertonClasses, 
+    ...litherlandClasses, 
+    ...dunesClasses,
+    ...bootlePoolData,
+    ...meadowsPoolData,
+    ...dunesSplashWorldData
+  ], []);  // Empty dependency array means this only runs once
+
+  // Default time blocks configuration
+  const defaultTimeBlocks = {
+    'morning': { label: 'Morning', start: 6, end: 12 },
+    'afternoon-evening': { label: 'Afternoon/Evening', start: 12, end: 22 }
+  };
 
   // Default centers selection - all centers selected by default
   const defaultCentersSelection = centers.reduce((acc, center) => {
@@ -90,92 +178,69 @@ const FitnessTimetable = () => {
     spinning: 'Spinning'
   };
 
-  // State hooks with localStorage integration
-  const [selectedCenters, setSelectedCenters] = useState(() => 
-    getStoredValue(STORAGE_KEYS.SELECTED_CENTERS, defaultCentersSelection)
-  );
-  const [selectedCategory, setSelectedCategory] = useState(() => 
-    getStoredValue(STORAGE_KEYS.SELECTED_CATEGORY, '')
-  );
-  const [includeVirtual, setIncludeVirtual] = useState(() => 
-    getStoredValue(STORAGE_KEYS.INCLUDE_VIRTUAL, true)
-  );
-  const [selectedTimeBlocks, setSelectedTimeBlocks] = useState(() => 
-    getStoredValue(STORAGE_KEYS.SELECTED_TIME_BLOCKS, {
-      morning: false,
-      afternoon: false,
-      evening: false
-    })
-  );
+  // Additional state variables
   const [isTimePopupOpen, setIsTimePopupOpen] = useState(false);
   const [editingTimeBlock, setEditingTimeBlock] = useState(null);
   const [timeBlocks, setTimeBlocks] = useState(() => 
     getStoredValue(STORAGE_KEYS.TIME_BLOCKS, defaultTimeBlocks)
   );
-
-  // Additional state for filter UI
   const [filtersExpanded, setFiltersExpanded] = useState(false);
-  const [selectedDays, setSelectedDays] = useState(() => 
-    getStoredValue('fitness_selected_days', days.reduce((acc, day) => {
-      acc[day] = true;
-      return acc;
-    }, {}))
-  );
-
-  // Add state for class description modal
   const [showDescription, setShowDescription] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedClassDetails, setSelectedClassDetails] = useState(null);
-
-  // Additional state for dropdown UIs
   const [openDropdown, setOpenDropdown] = useState(null);
 
   // Toggle all filters visibility
   const toggleFilters = () => {
-    console.log('Current filtersExpanded:', filtersExpanded);
     setFiltersExpanded(!filtersExpanded);
   };
 
-  // Save selected days to localStorage
+  // Save mode-specific filters to localStorage
   useEffect(() => {
-    localStorage.setItem('fitness_selected_days', JSON.stringify(selectedDays));
-  }, [selectedDays]);
+    localStorage.setItem('fitness_selected_centers', JSON.stringify(fitnessSelectedCenters));
+  }, [fitnessSelectedCenters]);
 
-  // Handle day selection toggling with improved logic
+  useEffect(() => {
+    localStorage.setItem('fitness_selected_category', JSON.stringify(fitnessSelectedCategory));
+  }, [fitnessSelectedCategory]);
+
+  useEffect(() => {
+    localStorage.setItem('fitness_include_virtual', JSON.stringify(fitnessIncludeVirtual));
+  }, [fitnessIncludeVirtual]);
+
+  useEffect(() => {
+    localStorage.setItem('fitness_selected_days', JSON.stringify(fitnessSelectedDays));
+  }, [fitnessSelectedDays]);
+
+  useEffect(() => {
+    localStorage.setItem('fitness_selected_time_blocks', JSON.stringify(fitnessSelectedTimeBlocks));
+  }, [fitnessSelectedTimeBlocks]);
+
+  useEffect(() => {
+    localStorage.setItem('pool_selected_centers', JSON.stringify(poolSelectedCenters));
+  }, [poolSelectedCenters]);
+
+  useEffect(() => {
+    localStorage.setItem('pool_selected_days', JSON.stringify(poolSelectedDays));
+  }, [poolSelectedDays]);
+
+  useEffect(() => {
+    localStorage.setItem('pool_selected_time_blocks', JSON.stringify(poolSelectedTimeBlocks));
+  }, [poolSelectedTimeBlocks]);
+
+  // Handle day selection based on current mode
   const handleDayChange = (day) => {
-    const newSelectedDays = { ...selectedDays };
-    
-    // Special handling for "All" button
-    if (day === 'all') {
-      // Check if all days are currently selected
-      const allSelected = Object.values(newSelectedDays).every(selected => selected);
-      
-      // Toggle all days
-      const newValue = !allSelected;
-      Object.keys(newSelectedDays).forEach(key => {
-        newSelectedDays[key] = newValue;
-      });
-      
-      // Always ensure at least one day is selected
-      if (!newValue) {
-        // If toggling off, select Monday as default
-        newSelectedDays['Monday'] = true;
-      }
-    } 
-    // Individual day selection
-    else {
-      // Toggle the clicked day
+    if (showPoolClasses) {
+      // Swimming mode
+      const newSelectedDays = { ...poolSelectedDays };
       newSelectedDays[day] = !newSelectedDays[day];
-      
-      // Ensure at least one day is always selected
-      const anySelected = Object.values(newSelectedDays).some(selected => selected);
-      if (!anySelected) {
-        // If none are selected, reselect the one that was just deselected
-        newSelectedDays[day] = true;
-      }
+      setPoolSelectedDays(newSelectedDays);
+    } else {
+      // Fitness mode
+      const newSelectedDays = { ...fitnessSelectedDays };
+      newSelectedDays[day] = !newSelectedDays[day];
+      setFitnessSelectedDays(newSelectedDays);
     }
-    
-    setSelectedDays(newSelectedDays);
   };
 
   // Determine category for a given activity - IMPORTANT: Define this BEFORE it's used
@@ -324,76 +389,221 @@ const FitnessTimetable = () => {
     });
   };
 
-  // Simplified clear all filters function
+  // Handle center selection based on current mode
+  const handleCenterChange = (center) => {
+    if (showPoolClasses) {
+      // Swimming mode
+      const newSelectedCenters = { ...poolSelectedCenters };
+      
+      if (center === 'all') {
+        // Select/deselect all centers
+        const allSelected = Object.values(newSelectedCenters).every(selected => selected);
+        centers.forEach(c => {
+          newSelectedCenters[c] = !allSelected;
+        });
+        // Ensure at least one center is selected
+        if (allSelected) {
+          newSelectedCenters[centers[0]] = true;
+        }
+      } 
+      else if (center === 'none') {
+        // Deselect all centers except the first one
+        centers.forEach(c => {
+          newSelectedCenters[c] = false;
+        });
+        newSelectedCenters[centers[0]] = true;
+      }
+      else {
+        // Toggle individual center
+        newSelectedCenters[center] = !newSelectedCenters[center];
+        
+        // Ensure at least one center is selected
+        const anySelected = Object.values(newSelectedCenters).some(selected => selected);
+        if (!anySelected) {
+          newSelectedCenters[center] = true;
+        }
+      }
+      
+      setPoolSelectedCenters(newSelectedCenters);
+    } 
+    else {
+      // Fitness mode
+      const newSelectedCenters = { ...fitnessSelectedCenters };
+      
+      if (center === 'all') {
+        // Select/deselect all centers
+        const allSelected = Object.values(newSelectedCenters).every(selected => selected);
+        centers.forEach(c => {
+          newSelectedCenters[c] = !allSelected;
+        });
+        // Ensure at least one center is selected
+        if (allSelected) {
+          newSelectedCenters[centers[0]] = true;
+        }
+      } 
+      else if (center === 'none') {
+        // Deselect all centers except the first one
+        centers.forEach(c => {
+          newSelectedCenters[c] = false;
+        });
+        newSelectedCenters[centers[0]] = true;
+      }
+      else {
+        // Toggle individual center
+        newSelectedCenters[center] = !newSelectedCenters[center];
+        
+        // Ensure at least one center is selected
+        const anySelected = Object.values(newSelectedCenters).some(selected => selected);
+        if (!anySelected) {
+          newSelectedCenters[center] = true;
+        }
+      }
+      
+      setFitnessSelectedCenters(newSelectedCenters);
+    }
+  };
+
+  // Handle category selection (fitness mode only)
+  const handleCategoryChange = (category) => {
+    setFitnessSelectedCategory(category);
+  };
+
+  // Handle virtual class toggle (fitness mode only)
+  const handleVirtualChange = (include) => {
+    setFitnessIncludeVirtual(include);
+  };
+
+  // Handle time blocks based on current mode
+  const handleTimeDivisionChange = (division) => {
+    if (showPoolClasses) {
+      // Swimming mode
+      const newTimeBlocks = { ...poolSelectedTimeBlocks };
+      newTimeBlocks[division] = !newTimeBlocks[division];
+      setPoolSelectedTimeBlocks(newTimeBlocks);
+    } else {
+      // Fitness mode
+      const newTimeBlocks = { ...fitnessSelectedTimeBlocks };
+      newTimeBlocks[division] = !newTimeBlocks[division];
+      setFitnessSelectedTimeBlocks(newTimeBlocks);
+    }
+  };
+
+  // Clear all filters based on current mode
   const clearAllFilters = () => {
-    // Reset centers to all selected
-    const resetCenters = centers.reduce((acc, center) => {
-      acc[center] = true;
-      return acc;
-    }, {});
-    
-    // Reset days to all selected
-    const resetDays = days.reduce((acc, day) => {
-      acc[day] = true;
-      return acc;
-    }, {});
-    
-    // Reset time blocks to none selected (any time)
-    const resetTimeBlocks = {
-      morning: false,
-      afternoon: false,
-      evening: false
-    };
-    
-    // Update all states
-    setSelectedCenters(resetCenters);
-    setSelectedDays(resetDays);
-    setSelectedTimeBlocks(resetTimeBlocks);
-    setSelectedCategory('');
-    setIncludeVirtual(true);
-    
-    // Update localStorage
-    localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(resetCenters));
-    localStorage.setItem('fitness_selected_days', JSON.stringify(resetDays));
-    localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCKS, JSON.stringify(resetTimeBlocks));
-    localStorage.setItem(STORAGE_KEYS.SELECTED_CATEGORY, '');
-    localStorage.setItem(STORAGE_KEYS.INCLUDE_VIRTUAL, JSON.stringify(true));
+    if (showPoolClasses) {
+      // Reset swimming filters
+      const resetCenters = centers.reduce((acc, center) => {
+        acc[center] = true;
+        return acc;
+      }, {});
+      
+      const resetDays = days.reduce((acc, day) => {
+        acc[day] = true;
+        return acc;
+      }, {});
+      
+      const resetTimeBlocks = {
+        morning: false,
+        afternoon: false,
+        evening: false
+      };
+      
+      setPoolSelectedCenters(resetCenters);
+      setPoolSelectedDays(resetDays);
+      setPoolSelectedTimeBlocks(resetTimeBlocks);
+      setPoolLocationType('all'); // Reset pool location filter
+    } else {
+      // Reset fitness filters
+      const resetCenters = centers.reduce((acc, center) => {
+        acc[center] = true;
+        return acc;
+      }, {});
+      
+      const resetDays = days.reduce((acc, day) => {
+        acc[day] = true;
+        return acc;
+      }, {});
+      
+      const resetTimeBlocks = {
+        morning: false,
+        afternoon: false,
+        evening: false
+      };
+      
+      setFitnessSelectedCenters(resetCenters);
+      setFitnessSelectedDays(resetDays);
+      setFitnessSelectedTimeBlocks(resetTimeBlocks);
+      setFitnessSelectedCategory('');
+      setFitnessIncludeVirtual(true);
+    }
   };
 
   // Quick filter presets
   const applyQuickFilter = (preset) => {
-    switch(preset) {
-      case 'today': {
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-        const resetDays = days.reduce((acc, day) => {
-          acc[day] = day === today;
-          return acc;
-        }, {});
-        setSelectedDays(resetDays);
-        localStorage.setItem('fitness_selected_days', JSON.stringify(resetDays));
-        break;
+    if (showPoolClasses) {
+      // Pool mode quick filters
+      switch(preset) {
+        case 'today': {
+          const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+          const resetDays = days.reduce((acc, day) => {
+            acc[day] = day === today;
+            return acc;
+          }, {});
+          setPoolSelectedDays(resetDays);
+          break;
+        }
+        case 'weekend': {
+          const resetDays = days.reduce((acc, day) => {
+            acc[day] = day === 'Saturday' || day === 'Sunday';
+            return acc;
+          }, {});
+          setPoolSelectedDays(resetDays);
+          break;
+        }
+        case 'evening': {
+          const resetTimeBlocks = {
+            morning: false,
+            afternoon: false,
+            evening: true
+          };
+          setPoolSelectedTimeBlocks(resetTimeBlocks);
+          break;
+        }
+        default:
+          break;
       }
-      case 'weekend': {
-        const resetDays = days.reduce((acc, day) => {
-          acc[day] = day === 'Saturday' || day === 'Sunday';
-          return acc;
-        }, {});
-        setSelectedDays(resetDays);
-        localStorage.setItem('fitness_selected_days', JSON.stringify(resetDays));
-        break;
+    } else {
+      // Fitness mode quick filters
+      switch(preset) {
+        case 'today': {
+          const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+          const resetDays = days.reduce((acc, day) => {
+            acc[day] = day === today;
+            return acc;
+          }, {});
+          setFitnessSelectedDays(resetDays);
+          break;
+        }
+        case 'weekend': {
+          const resetDays = days.reduce((acc, day) => {
+            acc[day] = day === 'Saturday' || day === 'Sunday';
+            return acc;
+          }, {});
+          setFitnessSelectedDays(resetDays);
+          break;
+        }
+        case 'evening': {
+          const resetTimeBlocks = {
+            morning: false,
+            afternoon: false,
+            evening: true
+          };
+          setFitnessSelectedTimeBlocks(resetTimeBlocks);
+          break;
+        }
+        default:
+          break;
       }
-      case 'evening': {
-        const resetTimeBlocks = {
-          morning: false,
-          afternoon: false,
-          evening: true
-        };
-        setSelectedTimeBlocks(resetTimeBlocks);
-        localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCKS, JSON.stringify(resetTimeBlocks));
-        break;
-      }
-      default:
-        break;
     }
   };
 
@@ -469,28 +679,6 @@ const FitnessTimetable = () => {
     return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
-  // Handle category change - simplified
-  const handleCategoryChange = (category) => {
-    // If clicking the currently selected category or the "All Types" button when no category is selected,
-    // clear the selection (meaning "all categories")
-    if (selectedCategory === category) {
-      setSelectedCategory('');
-      localStorage.setItem(STORAGE_KEYS.SELECTED_CATEGORY, '');
-    } else {
-      // Otherwise, select the clicked category
-      setSelectedCategory(category);
-      localStorage.setItem(STORAGE_KEYS.SELECTED_CATEGORY, category);
-    }
-  };
-
-  // Handle time block selection
-  const handleTimeBlockChange = (blockId) => {
-    setSelectedTimeBlocks({
-      ...selectedTimeBlocks,
-      [blockId]: !selectedTimeBlocks[blockId]
-    });
-  };
-
   // Handle opening the time popup for a specific time block
   const handleOpenTimePopup = (e, blockId) => {
     e.stopPropagation();
@@ -506,11 +694,22 @@ const FitnessTimetable = () => {
         ...timeBlocks,
         [editingTimeBlock]: updatedBlock
       });
-      if (selectedTimeBlocks[editingTimeBlock] !== true) {
-        setSelectedTimeBlocks({
-          ...selectedTimeBlocks,
-          [editingTimeBlock]: true
-        });
+
+      // Use the appropriate setter based on current mode
+      if (showPoolClasses) {
+        if (poolSelectedTimeBlocks[editingTimeBlock] !== true) {
+          setPoolSelectedTimeBlocks({
+            ...poolSelectedTimeBlocks,
+            [editingTimeBlock]: true
+          });
+        }
+      } else {
+        if (fitnessSelectedTimeBlocks[editingTimeBlock] !== true) {
+          setFitnessSelectedTimeBlocks({
+            ...fitnessSelectedTimeBlocks,
+            [editingTimeBlock]: true
+          });
+        }
       }
     }
     setIsTimePopupOpen(false);
@@ -530,132 +729,103 @@ const FitnessTimetable = () => {
     }
   };
 
-  // Handle center selection toggling - simplified and more intuitive
-  const handleCenterChange = (center) => {
-    const newSelectedCenters = { ...selectedCenters };
-    
-    // Special handling for "All" button
-    if (center === 'all') {
-      // Check if all centers are currently selected
-      const allSelected = Object.values(newSelectedCenters).every(selected => selected);
-      
-      // Toggle all centers: If all selected, deselect all. If not all selected, select all.
-      const newValue = !allSelected;
-      Object.keys(newSelectedCenters).forEach(key => {
-        newSelectedCenters[key] = newValue;
-      });
-    } 
-    // Handling for individual center selection
-    else {
-      // Toggle the clicked center
-      newSelectedCenters[center] = !newSelectedCenters[center];
-      
-      // Always ensure at least one center is selected
-      const anySelected = Object.values(newSelectedCenters).some(selected => selected);
-      if (!anySelected) {
-        // If none are selected, reselect the one that was just deselected
-        newSelectedCenters[center] = true;
-      }
-    }
-    
-    // Update state and localStorage
-    setSelectedCenters(newSelectedCenters);
-    localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(newSelectedCenters));
-  };
-
-  // Simplify the time division selection logic
-  const handleTimeDivisionChange = (division) => {
-    const newSelectedTimeBlocks = { ...selectedTimeBlocks };
-    
-    // Special handling for "any" time option
-    if (division === 'any') {
-      // Check if any time blocks are currently selected
-      const anySelected = Object.values(newSelectedTimeBlocks).some(selected => selected);
-      
-      // If any are selected, deselect all (meaning "any time")
-      // If none are selected, this is already the "any time" state
-      if (anySelected) {
-        Object.keys(newSelectedTimeBlocks).forEach(key => {
-          newSelectedTimeBlocks[key] = false;
-        });
-      }
-    } 
-    // Regular time block selection
-    else {
-      // Toggle the clicked time block
-      newSelectedTimeBlocks[division] = !newSelectedTimeBlocks[division];
-    }
-    
-    setSelectedTimeBlocks(newSelectedTimeBlocks);
-    localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCKS, JSON.stringify(newSelectedTimeBlocks));
-  };
-
-  // Simplified filter classes logic
+  // Filter classes based on pool/regular selection
   const filteredClasses = useMemo(() => {
-    return allClasses.filter(cls => {
-      // Center filter - class center must be selected
-      if (!selectedCenters[cls.center]) return false;
-
-      // Day filter - class day must be selected
-      if (!selectedDays[cls.day]) return false;
-
-      // Time filter - only apply if any time block is selected
-      const anyTimeBlockSelected = Object.values(selectedTimeBlocks).some(selected => selected);
-      if (anyTimeBlockSelected) {
-        const classStartHour = convertTimeToHours(cls.time);
-        // Check if the class time falls within any of the selected time blocks
-        const timeMatch = Object.entries(selectedTimeBlocks).some(([division, isSelected]) => {
-          if (!isSelected) return false;
-          const { start, end } = TIME_DIVISIONS[division];
-          return classStartHour >= start && classStartHour < end;
+    console.log("Current mode:", showPoolClasses ? "Swimming" : "Fitness Classes");
+    console.log("Pool location type:", poolLocationType);
+    
+    if (showPoolClasses) {
+      // Only show pool classes (assuming they have location containing "Pool" or "Splash")
+      const poolClasses = allClasses.filter(cls => 
+        cls.location && (cls.location.includes('Pool') || 
+                         cls.location.includes('Splash') || 
+                         cls.location.includes('Swimming'))
+      );
+      
+      console.log("Total pool classes before location filter:", poolClasses.length);
+      
+      // Apply pool location filter if not set to "all"
+      if (poolLocationType !== 'all') {
+        const filteredByLocation = poolClasses.filter(cls => {
+          if (poolLocationType === 'main') {
+            return cls.location && cls.location.includes('Main Pool');
+          } else if (poolLocationType === 'leisure') {
+            return cls.location && (
+              cls.location.includes('Leisure Pool') || 
+              cls.location.includes('Small Pool') || 
+              cls.location.includes('Learner Pool')
+            );
+          }
+          return true;
         });
         
-        if (!timeMatch) return false;
+        console.log("Pool classes after location filter:", filteredByLocation.length);
+        return filteredByLocation;
       }
+      
+      return poolClasses;
+    } else {
+      // Show regular fitness classes (not pool)
+      return allClasses.filter(cls => 
+        !cls.location || (!cls.location.includes('Pool') && 
+                         !cls.location.includes('Splash') && 
+                         !cls.location.includes('Swimming'))
+      );
+    }
+  }, [allClasses, showPoolClasses, poolLocationType]);
 
-      // Category filter - only apply if a category is selected
-      if (selectedCategory) {
-        const category = getClassCategory(cls.activity);
-        if (category !== selectedCategory) return false;
-      }
+  // Update localStorage when pool/class filter changes
+  useEffect(() => {
+    localStorage.setItem('fitness_show_pool_classes', JSON.stringify(showPoolClasses));
+  }, [showPoolClasses]);
 
-      // Virtual filter - exclude virtual classes if not included
-      if (!includeVirtual && cls.virtual) return false;
+  // Toggle pool/class filter
+  const togglePoolClasses = () => {
+    console.log("Toggling pool mode from", showPoolClasses, "to", !showPoolClasses);
+    setShowPoolClasses(!showPoolClasses);
+  };
 
-      // If we pass all filters, include the class
-      return true;
+  // Helper function to check if a class is in a selected time block
+  const isInSelectedTimeBlock = useCallback((timeString) => {
+    const classStartHour = convertTimeToHours(timeString);
+    return Object.entries(selectedTimeBlocks).some(([division, isSelected]) => {
+      if (!isSelected) return false;
+      const { start, end } = TIME_DIVISIONS[division];
+      return classStartHour >= start && classStartHour < end;
     });
-  }, [
-    allClasses, 
-    selectedCenters, 
-    selectedDays, 
-    selectedTimeBlocks, 
-    selectedCategory, 
-    includeVirtual, 
-    getClassCategory, 
-    convertTimeToHours
-  ]);
+  }, [selectedTimeBlocks, convertTimeToHours]);
 
-  // Get locations specific to the selected center (if needed)
-  // const centerLocations =
-  //   selectedCenter === 'all'
-  //     ? allLocations
-  //     : [...new Set(allClasses.filter(cls => cls.center === selectedCenter).map(cls => cls.location))];
+  // Update class filtering based on all filters (now using filteredClasses instead of allClasses)
+  const filteredAndSortedClasses = useMemo(() => {
+    // Start with pre-filtered classes (pool or regular)
+    return filteredClasses
+      .filter(cls => {
+        // Apply all other existing filters
+        return (
+          selectedCenters[cls.center] &&
+          selectedDays[cls.day] &&
+          (includeVirtual || !cls.virtual) &&
+          (!selectedCategory || getClassCategory(cls.activity) === selectedCategory) &&
+          (!Object.values(selectedTimeBlocks).some(selected => selected) || isInSelectedTimeBlock(cls.time))
+        );
+      })
+      .sort((a, b) => {
+        // First sort by day
+        const dayOrder = days.indexOf(a.day) - days.indexOf(b.day);
+        if (dayOrder !== 0) return dayOrder;
+        
+        // Then sort by time
+        return convertTimeToHours(a.time) - convertTimeToHours(b.time);
+      });
+  }, [filteredClasses, selectedCenters, selectedDays, includeVirtual, selectedCategory, selectedTimeBlocks]);
 
-  // Group classes by day for display and sort by time
-  const classesByDay = {};
-  days.forEach(day => {
-    const dayClasses = filteredClasses.filter(cls => cls.day === day);
-    
-    // Sort classes by time
-    dayClasses.sort((a, b) => {
-      const timeA = convertTimeToHours(a.time);
-      const timeB = convertTimeToHours(b.time);
-      return timeA - timeB;
-    });
-    
-    classesByDay[day] = dayClasses;
-  });
+  // Group classes by day (now using filteredAndSortedClasses)
+  const classesByDay = useMemo(() => {
+    return days.reduce((acc, day) => {
+      acc[day] = filteredAndSortedClasses.filter(cls => cls.day === day);
+      return acc;
+    }, {});
+  }, [filteredAndSortedClasses, days]);
 
   // Function to handle showing class description
   const handleShowDescription = (cls) => {
@@ -789,6 +959,338 @@ const FitnessTimetable = () => {
     };
   }, [openDropdown]);
 
+  // Handler for pool location type changes
+  const handlePoolLocationType = (type) => {
+    setPoolLocationType(type);
+  };
+  
+  // Special function to render pool type filters
+  const renderPoolTypeFilters = () => {
+    return (
+      <div className="p-4 bg-[rgb(0,130,188)]/5 border-y border-[rgb(0,130,188)]/10">
+        <h3 className="text-sm font-semibold text-[rgb(0,130,188)] mb-2">Pool Type Filter</h3>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => handlePoolLocationType('all')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              poolLocationType === 'all'
+                ? 'bg-[rgb(0,130,188)] text-white'
+                : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
+            }`}
+          >
+            All Pools
+          </button>
+          <button
+            onClick={() => handlePoolLocationType('main')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              poolLocationType === 'main'
+                ? 'bg-[rgb(0,130,188)] text-white'
+                : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
+            }`}
+          >
+            Main Pool
+          </button>
+          <button
+            onClick={() => handlePoolLocationType('leisure')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              poolLocationType === 'leisure'
+                ? 'bg-[rgb(0,130,188)] text-white'
+                : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
+            }`}
+          >
+            Leisure/Learner Pool
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Let's add a custom filter panel for Pool classes
+  const renderFilterPanel = () => {
+    return (
+      <>
+        {/* Filter mode tabs */}
+        <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
+          <div className="flex">
+            <button
+              onClick={() => {
+                setShowPoolClasses(false);
+                console.log("Switched to Fitness Classes mode");
+              }}
+              className={`flex-1 py-3 text-sm font-medium ${
+                !showPoolClasses 
+                  ? 'text-[rgb(0,130,188)] border-b-2 border-[rgb(0,130,188)]' 
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Fitness Classes
+            </button>
+            <button
+              onClick={() => {
+                setShowPoolClasses(true);
+                console.log("Switched to Swimming mode");
+              }}
+              className={`flex-1 py-3 text-sm font-medium ${
+                showPoolClasses 
+                  ? 'text-[rgb(0,130,188)] border-b-2 border-[rgb(0,130,188)]' 
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Swimming
+            </button>
+          </div>
+        </div>
+
+        {/* Filter content based on selected mode */}
+        <div className="bg-[rgb(0,130,188)]/5 py-2">
+          <div className="text-center text-sm font-medium text-[rgb(0,130,188)]">
+            {showPoolClasses ? 'Swimming Pool Filters' : 'Fitness Class Filters'}
+          </div>
+        </div>
+
+        {/* Mode-specific filters */}
+        {showPoolClasses ? (
+          // Pool filters
+          <>
+            {/* Pool instructions */}
+            <div className="px-4 py-2 bg-yellow-50 text-yellow-800 text-sm font-medium flex items-center">
+              <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Swimming Pool Filters
+            </div>
+
+            {/* Pool type filters */}
+            {renderPoolTypeFilters()}
+
+            {/* Days filter section */}
+            <div className="p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Days</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {days.map(day => (
+                  <button
+                    key={day}
+                    onClick={() => handleDayChange(day)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      selectedDays[day]
+                        ? 'bg-[rgb(0,130,188)] text-white'
+                        : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
+                    }`}
+                  >
+                    {dayAbbreviations[day]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Centers filter section */}
+            <div className="p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Swimming Pools</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {centers.map(center => (
+                  <label 
+                    key={center} 
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
+                    <input 
+                      type="checkbox" 
+                      checked={selectedCenters[center]}
+                      onChange={() => handleCenterChange(center)}
+                      className="form-checkbox h-4 w-4 text-[rgb(0,130,188)] rounded border-gray-300 focus:ring-[rgb(0,130,188)]"
+                    />
+                    <span className="text-sm text-gray-700">{center}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="flex justify-between mt-2">
+                <button 
+                  onClick={() => handleCenterChange('all')}
+                  className="text-xs text-[rgb(0,130,188)] hover:underline"
+                >
+                  Select All
+                </button>
+                <button 
+                  onClick={() => handleCenterChange('none')}
+                  className="text-xs text-[rgb(0,130,188)] hover:underline"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+
+            {/* Time filter section */}
+            <div className="p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Time of Day</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(TIME_DIVISIONS).map(([divId, { label }]) => (
+                  <button
+                    key={divId}
+                    onClick={() => handleTimeDivisionChange(divId)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      selectedTimeBlocks[divId]
+                        ? 'bg-[rgb(0,130,188)] text-white'
+                        : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Reset filters section */}
+            <div className="p-4">
+              <button 
+                onClick={clearAllFilters}
+                className="w-full px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition-colors"
+              >
+                Reset Pool Filters
+              </button>
+            </div>
+          </>
+        ) : (
+          // Fitness filters
+          <>
+            {/* Days filter section */}
+            <div className="p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Days</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {days.map(day => (
+                  <button
+                    key={day}
+                    onClick={() => handleDayChange(day)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      selectedDays[day]
+                        ? 'bg-[rgb(0,130,188)] text-white'
+                        : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
+                    }`}
+                  >
+                    {dayAbbreviations[day]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Class types filter section */}
+            <div className="p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Class Type</h3>
+              <div className="flex flex-wrap gap-1 items-center">
+                {Object.entries(classCategories).map(([categoryId, categoryName]) => (
+                  <button
+                    key={categoryId}
+                    onClick={() => handleCategoryChange(categoryId)}
+                    className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors ${
+                      selectedCategory === categoryId
+                        ? `bg-[rgb(0,130,188)] text-white`
+                        : `bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30`
+                    }`}
+                  >
+                    {categoryName}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handleCategoryChange('')}
+                  className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors ${
+                    !selectedCategory
+                      ? `bg-[rgb(0,130,188)] text-white`
+                      : `bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30`
+                  }`}
+                >
+                  All
+                </button>
+              </div>
+            </div>
+
+            {/* Centers filter section */}
+            <div className="p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Centers</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {centers.map(center => (
+                  <label 
+                    key={center} 
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
+                    <input 
+                      type="checkbox" 
+                      checked={selectedCenters[center]}
+                      onChange={() => handleCenterChange(center)}
+                      className="form-checkbox h-4 w-4 text-[rgb(0,130,188)] rounded border-gray-300 focus:ring-[rgb(0,130,188)]"
+                    />
+                    <span className="text-sm text-gray-700">{center}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="flex justify-between mt-2">
+                <button 
+                  onClick={() => handleCenterChange('all')}
+                  className="text-xs text-[rgb(0,130,188)] hover:underline"
+                >
+                  Select All
+                </button>
+                <button 
+                  onClick={() => handleCenterChange('none')}
+                  className="text-xs text-[rgb(0,130,188)] hover:underline"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+
+            {/* Time filter section */}
+            <div className="p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Time of Day</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(TIME_DIVISIONS).map(([divId, { label }]) => (
+                  <button
+                    key={divId}
+                    onClick={() => handleTimeDivisionChange(divId)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      selectedTimeBlocks[divId]
+                        ? 'bg-[rgb(0,130,188)] text-white'
+                        : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Virtual class filter section */}
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-700">Virtual Classes</h3>
+                <label className="inline-flex items-center cursor-pointer">
+                  <span className="mr-2 text-sm text-gray-700">{includeVirtual ? 'Show' : 'Hide'}</span>
+                  <div className="relative">
+                    <input 
+                      type="checkbox" 
+                      value="" 
+                      className="sr-only peer" 
+                      checked={includeVirtual} 
+                      onChange={() => handleVirtualChange(!includeVirtual)} 
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[rgb(0,130,188)]"></div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Reset filters section */}
+            <div className="p-4">
+              <button 
+                onClick={clearAllFilters}
+                className="w-full px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition-colors"
+              >
+                Reset Class Filters
+              </button>
+            </div>
+          </>
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Filter section - constrain its height */}
@@ -797,135 +1299,36 @@ const FitnessTimetable = () => {
         <div className="bg-[rgb(0,130,188)] text-white p-3 flex flex-wrap justify-between items-center relative">
           <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain" />
           
-          {/* Tiny menu buttons */}
-          <div className="flex space-x-2 flex-wrap justify-center my-1">
-            {/* Centers button */}
-            <div className="relative">
-              <button 
-                id="centers-btn"
-                onClick={() => toggleDropdown('centers')}
-                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                  openDropdown === 'centers' 
-                    ? 'ring-2 ring-white ring-opacity-70 ' 
-                    : ''
-                }${
-                  !Object.values(selectedCenters).every(selected => selected)
-                    ? 'bg-green-500 hover:bg-green-600'
-                    : 'bg-green-400 hover:bg-green-500'
-                }`}
-                title="Filter by Centers"
-              >
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                {!Object.values(selectedCenters).every(selected => selected) && 
-                  <div className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500"></div>
-                }
-              </button>
-            </div>
-            
-            {/* Days button */}
-            <div className="relative">
-              <button 
-                id="days-btn"
-                onClick={() => toggleDropdown('days')}
-                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                  openDropdown === 'days' 
-                    ? 'ring-2 ring-white ring-opacity-70 ' 
-                    : ''
-                }${
-                  !Object.values(selectedDays).every(selected => selected)
-                    ? 'bg-blue-500 hover:bg-blue-600'
-                    : 'bg-blue-400 hover:bg-blue-500'
-                }`}
-                title="Filter by Days"
-              >
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                {!Object.values(selectedDays).every(selected => selected) && 
-                  <div className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500"></div>
-                }
-              </button>
-            </div>
-            
-            {/* Class Types button */}
-            <div className="relative">
-              <button 
-                id="class-types-btn"
-                onClick={() => toggleDropdown('class-types')}
-                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                  openDropdown === 'class-types' 
-                    ? 'ring-2 ring-white ring-opacity-70 ' 
-                    : ''
-                }${
-                  selectedCategory !== ''
-                    ? 'bg-purple-500 hover:bg-purple-600'
-                    : 'bg-purple-400 hover:bg-purple-500'
-                }`}
-                title="Filter by Class Types"
-              >
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
-                </svg>
-                {selectedCategory !== '' && 
-                  <div className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500"></div>
-                }
-              </button>
-            </div>
-            
-            {/* Time button */}
-            <div className="relative">
-              <button 
-                id="time-btn"
-                onClick={() => toggleDropdown('time')}
-                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                  openDropdown === 'time' 
-                    ? 'ring-2 ring-white ring-opacity-70 ' 
-                    : ''
-                }${
-                  Object.values(selectedTimeBlocks).some(selected => selected)
-                    ? 'bg-orange-500 hover:bg-orange-600'
-                    : 'bg-orange-400 hover:bg-orange-500'
-                }`}
-                title="Filter by Time of Day"
-              >
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {Object.values(selectedTimeBlocks).some(selected => selected) && 
-                  <div className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500"></div>
-                }
-              </button>
-            </div>
-            
-            {/* Virtual Classes button */}
-            <div className="relative">
-              <button 
-                id="virtual-btn"
-                onClick={() => toggleDropdown('virtual')}
-                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                  openDropdown === 'virtual' 
-                    ? 'ring-2 ring-white ring-opacity-70 ' 
-                    : ''
-                }${
-                  includeVirtual ? 'bg-purple-500 hover:bg-purple-600' : 'bg-gray-400 hover:bg-gray-500'
-                }`}
-                title="Toggle Virtual Classes"
-              >
-                <span className="font-bold text-white text-xs">V</span>
-                {!includeVirtual && 
-                  <div className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500"></div>
-                }
-              </button>
-            </div>
-          </div>
+          {/* Filter button */}
+          <button 
+            onClick={toggleFilters}
+            className="flex items-center space-x-1.5 px-3 py-1.5 bg-[rgb(0,130,188)]/80 hover:bg-[rgb(0,130,188)]/90 rounded-full transition-colors"
+          >
+            <span className="text-sm font-medium">Filters</span>
+            {getActiveFilterCount() > 0 && 
+              <span className="bg-orange-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                {getActiveFilterCount()}
+              </span>
+            }
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+            </svg>
+          </button>
         </div>
       </div>
 
-      {/* Timetable content - directly connected to app bar */}
-      <div className="flex-1 overflow-hidden bg-white rounded-none shadow-none">
+      {/* Timetable content - full screen scrollable area */}
+      <div className="flex-1 overflow-hidden bg-white mt-[52px]">
         <div className="h-full overflow-y-auto scrollbar-hide">
+          {/* Mode indicator */}
+          <div className="sticky top-0 z-10 bg-gray-100 py-1 px-4 flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-500">
+              Showing: <span className="text-[rgb(0,130,188)]">{showPoolClasses ? 'Swimming Pool Sessions' : 'Fitness Classes'}</span>
+            </span>
+            <span className="text-xs font-medium text-[rgb(0,130,188)]">
+              Class Timetable
+            </span>
+          </div>
           <div className="grid grid-cols-1 gap-4 p-4">
             {days.map(day => {
               if (classesByDay[day].length === 0) return null;
@@ -966,6 +1369,19 @@ const FitnessTimetable = () => {
                               >
                                 {CENTER_ABBREVIATIONS[cls.center] || cls.center}
                               </span>
+                            </div>
+                            <div className="flex items-center mt-1">
+                              <svg 
+                                className="w-3 h-3 text-gray-400 mr-1" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24" 
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1 1 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                              </svg>
+                              <span className="text-xs text-gray-500">{cls.location}</span>
                             </div>
                             {cls.virtual && (
                               <div className="mt-1">
@@ -1053,6 +1469,30 @@ const FitnessTimetable = () => {
           </div>
         </div>
       )}
+
+      {/* Filter panel wrapper - slides over content */}
+      <div 
+        className={`fixed top-[52px] left-0 right-0 z-50 bg-white overflow-auto transition-all duration-300 ease-in-out shadow-md ${
+          filtersExpanded ? 'h-[80vh] opacity-100' : 'h-0 opacity-0'
+        }`}
+      >
+        <div className="bg-white">
+          <div className="divide-y divide-[rgb(0,130,188)]/15">
+            {/* Render appropriate filter panel based on mode */}
+            {renderFilterPanel()}
+            
+            {/* Bottom close button */}
+            <div className="sticky bottom-0 bg-white shadow-md">
+              <button 
+                onClick={toggleFilters}
+                className="w-full px-4 py-2 text-[rgb(0,130,188)] font-medium hover:bg-gray-50 transition-colors"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Render all dropdowns at the root level to prevent clipping */}
       {openDropdown === 'centers' && (
@@ -1280,7 +1720,7 @@ const FitnessTimetable = () => {
                   ? 'bg-purple-100 text-purple-800'
                   : 'hover:bg-gray-100 text-gray-700'
               }`}
-              onClick={() => setIncludeVirtual(true)}
+              onClick={() => handleVirtualChange(true)}
             >
               <input 
                 type="radio" 
@@ -1297,7 +1737,7 @@ const FitnessTimetable = () => {
                   ? 'bg-gray-100 text-gray-800'
                   : 'hover:bg-gray-100 text-gray-700'
               }`}
-              onClick={() => setIncludeVirtual(false)}
+              onClick={() => handleVirtualChange(false)}
             >
               <input 
                 type="radio" 

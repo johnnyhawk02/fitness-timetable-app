@@ -1,4 +1,4 @@
-const nethertonData = [
+const nethertonClassData = [
     {
       "center": "Netherton",
       "day": "Monday",
@@ -305,4 +305,4 @@ const nethertonData = [
     }
   ];
   
-  export default nethertonData;
+  export default nethertonClassData;

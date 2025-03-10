@@ -1,4 +1,4 @@
-const crosbyData = [
+const crosbyClassData = [
   {
     "center": "Crosby",
     "day": "Monday",
@@ -657,4 +657,4 @@ const crosbyData = [
   }
 ];
 
-export default crosbyData;
+export default crosbyClassData;

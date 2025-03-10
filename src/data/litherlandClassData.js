@@ -1,4 +1,4 @@
-const litherlandData = [
+const litherlandClassData = [
     {
       "center": "Litherland",
       "day": "Monday",
@@ -465,4 +465,4 @@ const litherlandData = [
     }
   ];
   
-  export default litherlandData;
+  export default litherlandClassData;

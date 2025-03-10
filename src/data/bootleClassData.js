@@ -1,4 +1,4 @@
-const bootleData = [
+const bootleClassData = [
     {
       "center": "Bootle",
       "day": "Monday",
@@ -368,4 +368,4 @@ const bootleData = [
       "virtual": true
     }
   ]
-  export default bootleData;
+  export default bootleClassData;

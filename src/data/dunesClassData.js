@@ -1,4 +1,4 @@
-const dunesData = [
+const dunesClassData = [
     {
       "center": "Dunes",
       "day": "Monday",
@@ -649,4 +649,4 @@ const dunesData = [
     }
   ];
   
-  export default dunesData;
+  export default dunesClassData;
