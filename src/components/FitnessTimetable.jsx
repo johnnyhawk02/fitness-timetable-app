@@ -47,6 +47,9 @@ const CENTER_ABBREVIATIONS = {
   'Dunes': 'DSW'
 };
 
+// Centers with swimming pools
+const CENTERS_WITH_POOLS = ['Bootle', 'Meadows', 'Dunes'];
+
 const FitnessTimetable = () => {
   // Filter options - moved to the top to avoid reference errors
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -68,12 +71,15 @@ const FitnessTimetable = () => {
     getStoredValue('fitness_show_pool_classes', false)
   );
 
-  // Fitness class-specific filter states
-  const [fitnessSelectedCenters, setFitnessSelectedCenters] = useState(() => 
-    getStoredValue('fitness_selected_centers', centers.reduce((acc, center) => {
-      acc[center] = true;
-      return acc;
-    }, {}))
+  // Initialize all centers selected by default
+  const defaultCenters = centers.reduce((acc, center) => {
+    acc[center] = true;
+    return acc;
+  }, {});
+
+  // Fitness class filter states
+  const [selectedCentersState, setSelectedCentersState] = useState(() => 
+    getStoredValue('selected_centers', defaultCenters)
   );
   const [fitnessSelectedCategory, setFitnessSelectedCategory] = useState(() => 
     getStoredValue('fitness_selected_category', '')
@@ -95,12 +101,6 @@ const FitnessTimetable = () => {
   );
 
   // Swimming pool-specific filter states
-  const [poolSelectedCenters, setPoolSelectedCenters] = useState(() => 
-    getStoredValue('pool_selected_centers', centers.reduce((acc, center) => {
-      acc[center] = true;
-      return acc;
-    }, {}))
-  );
   const [poolSelectedDays, setPoolSelectedDays] = useState(() => 
     getStoredValue('pool_selected_days', days.reduce((acc, day) => {
       acc[day] = true;
@@ -124,9 +124,7 @@ const FitnessTimetable = () => {
   }, [poolLocationType]);
 
   // Combined state values that change based on current mode
-  const selectedCenters = useMemo(() => 
-    showPoolClasses ? poolSelectedCenters : fitnessSelectedCenters,
-  [showPoolClasses, poolSelectedCenters, fitnessSelectedCenters]);
+  const selectedCenters = selectedCentersState;
   
   const selectedDays = useMemo(() => 
     showPoolClasses ? poolSelectedDays : fitnessSelectedDays,
@@ -190,8 +188,15 @@ const FitnessTimetable = () => {
   const [selectedClassDetails, setSelectedClassDetails] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [quickFiltersOpen, setQuickFiltersOpen] = useState(false);
+  const [centersDropdownOpen, setCentersDropdownOpen] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '' });
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const [quickFiltersPosition, setQuickFiltersPosition] = useState({ top: 0, left: 0 });
+  const [centersDropdownPosition, setCentersDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownButtonRef = useRef(null);
+  const quickFiltersButtonRef = useRef(null);
+  const centersDropdownButtonRef = useRef(null);
 
   // Toggle all filters visibility
   const toggleFilters = () => {
@@ -200,8 +205,8 @@ const FitnessTimetable = () => {
 
   // Save mode-specific filters to localStorage
   useEffect(() => {
-    localStorage.setItem('fitness_selected_centers', JSON.stringify(fitnessSelectedCenters));
-  }, [fitnessSelectedCenters]);
+    localStorage.setItem('fitness_selected_centers', JSON.stringify(selectedCentersState));
+  }, [selectedCentersState]);
 
   useEffect(() => {
     localStorage.setItem('fitness_selected_category', JSON.stringify(fitnessSelectedCategory));
@@ -218,10 +223,6 @@ const FitnessTimetable = () => {
   useEffect(() => {
     localStorage.setItem('fitness_selected_time_blocks', JSON.stringify(fitnessSelectedTimeBlocks));
   }, [fitnessSelectedTimeBlocks]);
-
-  useEffect(() => {
-    localStorage.setItem('pool_selected_centers', JSON.stringify(poolSelectedCenters));
-  }, [poolSelectedCenters]);
 
   useEffect(() => {
     localStorage.setItem('pool_selected_days', JSON.stringify(poolSelectedDays));
@@ -394,76 +395,44 @@ const FitnessTimetable = () => {
 
   // Handle center selection based on current mode
   const handleCenterChange = (center) => {
-    if (showPoolClasses) {
-      // Swimming mode
-      const newSelectedCenters = { ...poolSelectedCenters };
+    let newSelectedCenters = { ...selectedCentersState };
+    
+    if (center === 'all') {
+      // Select all centers
+      centers.forEach(c => {
+        newSelectedCenters[c] = true;
+      });
       
-      if (center === 'all') {
-        // Select/deselect all centers
-        const allSelected = Object.values(newSelectedCenters).every(selected => selected);
-        centers.forEach(c => {
-          newSelectedCenters[c] = !allSelected;
-        });
-        // Ensure at least one center is selected
-        if (allSelected) {
-          newSelectedCenters[centers[0]] = true;
-        }
-      } 
-      else if (center === 'none') {
-        // Deselect all centers except the first one
-        centers.forEach(c => {
-          newSelectedCenters[c] = false;
-        });
-        newSelectedCenters[centers[0]] = true;
-      }
-      else {
-        // Toggle individual center
-        newSelectedCenters[center] = !newSelectedCenters[center];
-        
-        // Ensure at least one center is selected
-        const anySelected = Object.values(newSelectedCenters).some(selected => selected);
-        if (!anySelected) {
-          newSelectedCenters[center] = true;
-        }
-      }
-      
-      setPoolSelectedCenters(newSelectedCenters);
+      // Show toast notification
+      showToast('Showing all centers');
     } 
-    else {
-      // Fitness mode
-      const newSelectedCenters = { ...fitnessSelectedCenters };
+    else if (center === 'none') {
+      // Deselect all centers except the first one
+      centers.forEach(c => {
+        newSelectedCenters[c] = false;
+      });
       
-      if (center === 'all') {
-        // Select/deselect all centers
-        const allSelected = Object.values(newSelectedCenters).every(selected => selected);
-        centers.forEach(c => {
-          newSelectedCenters[c] = !allSelected;
-        });
-        // Ensure at least one center is selected
-        if (allSelected) {
-          newSelectedCenters[centers[0]] = true;
-        }
-      } 
-      else if (center === 'none') {
-        // Deselect all centers except the first one
-        centers.forEach(c => {
-          newSelectedCenters[c] = false;
-        });
-        newSelectedCenters[centers[0]] = true;
-      }
-      else {
-        // Toggle individual center
-        newSelectedCenters[center] = !newSelectedCenters[center];
-        
-        // Ensure at least one center is selected
-        const anySelected = Object.values(newSelectedCenters).some(selected => selected);
-        if (!anySelected) {
-          newSelectedCenters[center] = true;
-        }
-      }
+      // Default to first center with a pool if in swimming mode, otherwise first center
+      const defaultCenter = showPoolClasses ? (CENTERS_WITH_POOLS[0] || centers[0]) : centers[0];
+      newSelectedCenters[defaultCenter] = true;
       
-      setFitnessSelectedCenters(newSelectedCenters);
+      // Show toast notification
+      showToast(`Showing ${defaultCenter} only`);
     }
+    else {
+      // Exclusive selection - only select the clicked center
+      centers.forEach(c => {
+        newSelectedCenters[c] = (c === center);
+      });
+      
+      // Show toast notification
+      showToast(`Showing ${center} only`);
+    }
+    
+    setSelectedCentersState(newSelectedCenters);
+    
+    // Close the centers dropdown after making a selection
+    setCentersDropdownOpen(false);
   };
 
   // Handle category selection (fitness mode only)
@@ -500,20 +469,13 @@ const FitnessTimetable = () => {
         return acc;
       }, {});
       
-      const resetDays = days.reduce((acc, day) => {
-        acc[day] = true;
-        return acc;
-      }, {});
+      // Day filtering removed
       
-      const resetTimeBlocks = {
-        morning: false,
-        afternoon: false,
-        evening: false
-      };
+      // Time blocks removed from filters
       
-      setPoolSelectedCenters(resetCenters);
-      setPoolSelectedDays(resetDays);
-      setPoolSelectedTimeBlocks(resetTimeBlocks);
+      setSelectedCentersState(resetCenters);
+      // Day filter setting removed
+      // Time block setting removed
       setPoolLocationType('all'); // Reset pool location filter
     } else {
       // Reset fitness filters
@@ -522,22 +484,12 @@ const FitnessTimetable = () => {
         return acc;
       }, {});
       
-      const resetDays = days.reduce((acc, day) => {
-        acc[day] = true;
-        return acc;
-      }, {});
+      // Day filtering removed
       
-      const resetTimeBlocks = {
-        morning: false,
-        afternoon: false,
-        evening: false
-      };
+      // Time blocks removed from filters
       
-      setFitnessSelectedCenters(resetCenters);
-      setFitnessSelectedDays(resetDays);
-      setFitnessSelectedTimeBlocks(resetTimeBlocks);
-      setFitnessSelectedCategory('');
-      setFitnessIncludeVirtual(true);
+      setSelectedCentersState(resetCenters);
+      // Day filter setting removed
     }
   };
 
@@ -553,6 +505,7 @@ const FitnessTimetable = () => {
             return acc;
           }, {});
           setPoolSelectedDays(resetDays);
+          showToast(`Showing today's swimming sessions`);
           break;
         }
         case 'weekend': {
@@ -561,15 +514,76 @@ const FitnessTimetable = () => {
             return acc;
           }, {});
           setPoolSelectedDays(resetDays);
+          showToast('Showing weekend swimming sessions');
           break;
         }
-        case 'evening': {
+        case 'adult-swim': {
+          // Adult Swim - all centers for today
+          const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+          const resetDays = days.reduce((acc, day) => {
+            acc[day] = day === today;
+            return acc;
+          }, {});
+          
+          // Select only centers with pools
+          const poolCenters = centers.reduce((acc, center) => {
+            acc[center] = CENTERS_WITH_POOLS.includes(center);
+            return acc;
+          }, {});
+          
+          // Set pool location type to main pool (typically where adult swim happens)
+          setPoolLocationType('main');
+          setPoolSelectedDays(resetDays);
+          setSelectedCentersState(poolCenters);
+          showToast('Showing adult swim sessions for today');
+          break;
+        }
+        case 'small-pool-swims': {
+          // Small Pool Swims - all centers, leisure/learner pools
+          const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+          const resetDays = days.reduce((acc, day) => {
+            acc[day] = day === today;
+            return acc;
+          }, {});
+          
+          // Select only centers with pools
+          const poolCenters = centers.reduce((acc, center) => {
+            acc[center] = CENTERS_WITH_POOLS.includes(center);
+            return acc;
+          }, {});
+          
+          // Set pool location type to leisure/learner pools
+          setPoolLocationType('leisure');
+          setPoolSelectedDays(resetDays);
+          setSelectedCentersState(poolCenters);
+          showToast('Showing leisure/learner pool sessions for today');
+          break;
+        }
+        case 'childrens-swim': {
+          // Children's Swim - focus on weekend days and afternoon timeblock
+          const resetDays = days.reduce((acc, day) => {
+            acc[day] = day === 'Saturday' || day === 'Sunday';
+            return acc;
+          }, {});
+          
+          // Select all centers
+          const allCenters = centers.reduce((acc, center) => {
+            acc[center] = true;
+            return acc;
+          }, {});
+          
+          // Set pool location type to leisure/learner pool and afternoon time block
           const resetTimeBlocks = {
             morning: false,
-            afternoon: false,
-            evening: true
+            afternoon: true,
+            evening: false
           };
+          
+          setPoolLocationType('leisure');
+          setPoolSelectedDays(resetDays);
+          setSelectedCentersState(allCenters);
           setPoolSelectedTimeBlocks(resetTimeBlocks);
+          showToast('Showing weekend children\'s swimming sessions');
           break;
         }
         default:
@@ -585,6 +599,7 @@ const FitnessTimetable = () => {
             return acc;
           }, {});
           setFitnessSelectedDays(resetDays);
+          showToast(`Showing today's fitness classes`);
           break;
         }
         case 'weekend': {
@@ -593,15 +608,7 @@ const FitnessTimetable = () => {
             return acc;
           }, {});
           setFitnessSelectedDays(resetDays);
-          break;
-        }
-        case 'evening': {
-          const resetTimeBlocks = {
-            morning: false,
-            afternoon: false,
-            evening: true
-          };
-          setFitnessSelectedTimeBlocks(resetTimeBlocks);
+          showToast('Showing weekend fitness classes');
           break;
         }
         default:
@@ -618,13 +625,9 @@ const FitnessTimetable = () => {
     const unselectedCenters = centers.filter(center => !selectedCenters[center]).length;
     if (unselectedCenters > 0) count++;
     
-    // Count days that are not selected
-    const unselectedDays = days.filter(day => !selectedDays[day]).length;
-    if (unselectedDays > 0) count++;
+    // Days filtering removed
     
-    // Count time blocks
-    const activeTimeBlocks = Object.values(selectedTimeBlocks).filter(selected => selected).length;
-    if (activeTimeBlocks > 0) count++;
+    // Time blocks removed from filter count
     
     // Count other active filters
     if (selectedCategory) count++;
@@ -635,16 +638,16 @@ const FitnessTimetable = () => {
 
   // Save to localStorage when values change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(selectedCenters));
-  }, [selectedCenters]);
+    localStorage.setItem(STORAGE_KEYS.SELECTED_CENTERS, JSON.stringify(selectedCentersState));
+  }, [selectedCentersState]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SELECTED_CATEGORY, JSON.stringify(selectedCategory));
   }, [selectedCategory]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.INCLUDE_VIRTUAL, JSON.stringify(includeVirtual));
-  }, [includeVirtual]);
+    localStorage.setItem(STORAGE_KEYS.INCLUDE_VIRTUAL, JSON.stringify(fitnessIncludeVirtual));
+  }, [fitnessIncludeVirtual]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SELECTED_TIME_BLOCKS, JSON.stringify(selectedTimeBlocks));
@@ -788,28 +791,23 @@ const FitnessTimetable = () => {
     setShowPoolClasses(!showPoolClasses);
   };
 
-  // Helper function to check if a class is in a selected time block
-  const isInSelectedTimeBlock = useCallback((timeString) => {
-    const classStartHour = convertTimeToHours(timeString);
-    return Object.entries(selectedTimeBlocks).some(([division, isSelected]) => {
-      if (!isSelected) return false;
-      const { start, end } = TIME_DIVISIONS[division];
-      return classStartHour >= start && classStartHour < end;
-    });
-  }, [selectedTimeBlocks, convertTimeToHours]);
-
   // Update class filtering based on all filters (now using filteredClasses instead of allClasses)
   const filteredAndSortedClasses = useMemo(() => {
     // Start with pre-filtered classes (pool or regular)
     return filteredClasses
       .filter(cls => {
+        // If in swimming mode, exclude classes from centers without pools
+        if (showPoolClasses && !CENTERS_WITH_POOLS.includes(cls.center)) {
+          return false;
+        }
+        
         // Apply all other existing filters
         return (
           selectedCenters[cls.center] &&
-          selectedDays[cls.day] &&
+          // Day filtering removed
           (includeVirtual || !cls.virtual) &&
-          (!selectedCategory || getClassCategory(cls.activity) === selectedCategory) &&
-          (!Object.values(selectedTimeBlocks).some(selected => selected) || isInSelectedTimeBlock(cls.time))
+          (!selectedCategory || getClassCategory(cls.activity) === selectedCategory)
+          // Time filters removed
         );
       })
       .sort((a, b) => {
@@ -820,7 +818,7 @@ const FitnessTimetable = () => {
         // Then sort by time
         return convertTimeToHours(a.time) - convertTimeToHours(b.time);
       });
-  }, [filteredClasses, selectedCenters, selectedDays, includeVirtual, selectedCategory, selectedTimeBlocks]);
+  }, [filteredClasses, selectedCenters, includeVirtual, selectedCategory]);
 
   // Group classes by day (now using filteredAndSortedClasses)
   const classesByDay = useMemo(() => {
@@ -922,45 +920,25 @@ const FitnessTimetable = () => {
     }
   };
 
-  // Add event listener to close dropdown when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (openDropdown) {
-        console.log('Click event:', event.target);
-        // Check if the click was on a menu button
-        const isMenuButton = 
-          event.target.closest('button') && 
-          (event.target.closest('button').title?.includes('Filter by') || 
-           event.target.closest('button').title?.includes('Toggle Virtual'));
-           
-        // If clicking the active menu button, let toggleDropdown handle it
-        if (isMenuButton && 
-            ((openDropdown === 'centers' && event.target.closest('button').id === 'centers-btn') ||
-             (openDropdown === 'days' && event.target.closest('button').id === 'days-btn') ||
-             (openDropdown === 'class-types' && event.target.closest('button').id === 'class-types-btn') ||
-             (openDropdown === 'time' && event.target.closest('button').id === 'time-btn') ||
-             (openDropdown === 'virtual' && event.target.closest('button').id === 'virtual-btn'))) {
-          return;
-        }
-        
-        // Check if the click was inside a dropdown
-        const isInDropdown = event.target.closest('.dropdown-menu');
-        
-        // If not clicking a dropdown or different menu button, close the dropdown
-        if (!isInDropdown) {
-          console.log('Closing dropdown - click outside');
-          setOpenDropdown(null);
-        }
+      if (dropdownOpen && !event.target.closest('.mode-dropdown')) {
+        setDropdownOpen(false);
+      }
+      if (quickFiltersOpen && !event.target.closest('.quick-filters-dropdown')) {
+        setQuickFiltersOpen(false);
+      }
+      if (centersDropdownOpen && !event.target.closest('.centers-dropdown')) {
+        setCentersDropdownOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [openDropdown]);
+  }, [dropdownOpen, quickFiltersOpen, centersDropdownOpen]);
 
   // Handler for pool location type changes
   const handlePoolLocationType = (type) => {
@@ -982,126 +960,54 @@ const FitnessTimetable = () => {
           <div className="flex gap-2">
             <button
               onClick={() => handlePoolLocationType("all")}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 poolLocationType === "all"
-                  ? "bg-[rgb(0,130,188)] text-white shadow-sm"
-                  : "bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20"
+                  ? "bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]"
+                  : "bg-[rgb(0,130,188)]/5 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10"
               }`}
             >
-              All Pools
+              <span>All Pools</span>
+              {poolLocationType === "all" && (
+                <svg className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              )}
             </button>
             <button
               onClick={() => handlePoolLocationType("main")}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 poolLocationType === "main"
-                  ? "bg-[rgb(0,130,188)] text-white shadow-sm"
-                  : "bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20"
+                  ? "bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]"
+                  : "bg-[rgb(0,130,188)]/5 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10"
               }`}
             >
-              Main Pool
+              <span>Main Pool</span>
+              {poolLocationType === "main" && (
+                <svg className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              )}
             </button>
             <button
               onClick={() => handlePoolLocationType("leisure")}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 poolLocationType === "leisure"
-                  ? "bg-[rgb(0,130,188)] text-white shadow-sm"
-                  : "bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20"
+                  ? "bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]"
+                  : "bg-[rgb(0,130,188)]/5 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10"
               }`}
             >
-              Leisure/Learner Pool
+              <span>Leisure/Learner Pool</span>
+              {poolLocationType === "leisure" && (
+                <svg className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              )}
             </button>
-          </div>
-        </div>
-
-        {/* Days filter section */}
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-            </svg>
-            Days
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {days.map(day => (
-              <button
-                key={day}
-                onClick={() => handleDayChange(day)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  selectedDays[day]
-                    ? 'bg-[rgb(0,130,188)] text-white shadow-sm'
-                    : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20'
-                }`}
-              >
-                {dayAbbreviations[day]}
-              </button>
-            ))}
           </div>
         </div>
 
         {/* Centers filter section */}
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clipRule="evenodd" />
-            </svg>
-            Swimming Pools
-          </h3>
-          <div className="grid grid-cols-2 gap-2">
-            {centers.map(center => (
-              <label 
-                key={center} 
-                className="flex items-center space-x-2 cursor-pointer"
-              >
-                <input 
-                  type="checkbox" 
-                  checked={selectedCenters[center]}
-                  onChange={() => handleCenterChange(center)}
-                  className="form-checkbox h-4 w-4 text-[rgb(0,130,188)] rounded border-gray-300 focus:ring-[rgb(0,130,188)]"
-                />
-                <span className="text-sm text-gray-700">{center}</span>
-              </label>
-            ))}
-          </div>
-          <div className="flex justify-between mt-3">
-            <button 
-              onClick={() => handleCenterChange('all')}
-              className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
-            >
-              Select All
-            </button>
-            <button 
-              onClick={() => handleCenterChange('none')}
-              className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
-            >
-              Clear All
-            </button>
-          </div>
-        </div>
-
-        {/* Time filter section */}
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-            </svg>
-            Time of Day
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(TIME_DIVISIONS).map(([divId, { label }]) => (
-              <button
-                key={divId}
-                onClick={() => handleTimeDivisionChange(divId)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  selectedTimeBlocks[divId]
-                    ? 'bg-[rgb(0,130,188)] text-white shadow-sm'
-                    : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {renderCentersFilter()}
 
         {/* Reset filters section */}
         <div className="p-4">
@@ -1123,31 +1029,6 @@ const FitnessTimetable = () => {
   const renderFitnessFilters = () => {
     return (
       <div className="space-y-6">
-        {/* Days filter section */}
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-            </svg>
-            Days
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {days.map(day => (
-              <button
-                key={day}
-                onClick={() => handleDayChange(day)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  selectedDays[day]
-                    ? 'bg-[rgb(0,130,188)] text-white shadow-sm'
-                    : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20'
-                }`}
-              >
-                {dayAbbreviations[day]}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Class types filter section */}
         <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
           <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
@@ -1161,92 +1042,40 @@ const FitnessTimetable = () => {
               <button
                 key={categoryId}
                 onClick={() => handleCategoryChange(categoryId)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                className={`flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                   selectedCategory === categoryId
-                    ? `bg-[rgb(0,130,188)] text-white shadow-sm`
-                    : `bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20`
+                    ? `bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]`
+                    : `bg-[rgb(0,130,188)]/5 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10`
                 }`}
               >
-                {categoryName}
+                <span>{categoryName}</span>
+                {selectedCategory === categoryId && (
+                  <svg className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                )}
               </button>
             ))}
             <button
               onClick={() => handleCategoryChange('')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 !selectedCategory
-                  ? `bg-[rgb(0,130,188)] text-white shadow-sm`
-                  : `bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20`
+                  ? `bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)]`
+                  : `bg-[rgb(0,130,188)]/5 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/10`
               }`}
             >
-              All
+              <span>All</span>
+              {!selectedCategory && (
+                <svg className="w-4 h-4 ml-1.5 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              )}
             </button>
           </div>
         </div>
 
         {/* Centers filter section */}
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clipRule="evenodd" />
-            </svg>
-            Centers
-          </h3>
-          <div className="grid grid-cols-2 gap-2">
-            {centers.map(center => (
-              <label 
-                key={center} 
-                className="flex items-center space-x-2 cursor-pointer"
-              >
-                <input 
-                  type="checkbox" 
-                  checked={selectedCenters[center]}
-                  onChange={() => handleCenterChange(center)}
-                  className="form-checkbox h-4 w-4 text-[rgb(0,130,188)] rounded border-gray-300 focus:ring-[rgb(0,130,188)]"
-                />
-                <span className="text-sm text-gray-700">{center}</span>
-              </label>
-            ))}
-          </div>
-          <div className="flex justify-between mt-3">
-            <button 
-              onClick={() => handleCenterChange('all')}
-              className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
-            >
-              Select All
-            </button>
-            <button 
-              onClick={() => handleCenterChange('none')}
-              className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
-            >
-              Clear All
-            </button>
-          </div>
-        </div>
-
-        {/* Time filter section */}
-        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-            </svg>
-            Time of Day
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(TIME_DIVISIONS).map(([divId, { label }]) => (
-              <button
-                key={divId}
-                onClick={() => handleTimeDivisionChange(divId)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  selectedTimeBlocks[divId]
-                    ? 'bg-[rgb(0,130,188)] text-white shadow-sm'
-                    : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {renderCentersFilter()}
 
         {/* Virtual class filter section */}
         <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
@@ -1341,20 +1170,6 @@ const FitnessTimetable = () => {
     );
   };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownOpen && !event.target.closest('.mode-dropdown')) {
-        setDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [dropdownOpen]);
-
   // Handle opening the dropdown and calculate its position
   const toggleModeDropdown = () => {
     if (!dropdownOpen && dropdownButtonRef.current) {
@@ -1366,6 +1181,112 @@ const FitnessTimetable = () => {
       });
     }
     setDropdownOpen(!dropdownOpen);
+  };
+
+  // Handle opening the quick filters dropdown and calculate its position
+  const toggleQuickFilters = () => {
+    if (!quickFiltersOpen && quickFiltersButtonRef.current) {
+      const rect = quickFiltersButtonRef.current.getBoundingClientRect();
+      // Position dropdown to align with left edge of button and add a small margin below
+      setQuickFiltersPosition({
+        top: rect.bottom + 5,
+        left: Math.min(rect.left, window.innerWidth - 176) // Ensure dropdown doesn't go off screen
+      });
+    }
+    setQuickFiltersOpen(!quickFiltersOpen);
+  };
+
+  // Handle opening the centers dropdown and calculate its position
+  const toggleCentersDropdown = () => {
+    if (!centersDropdownOpen && centersDropdownButtonRef.current) {
+      const rect = centersDropdownButtonRef.current.getBoundingClientRect();
+      // Position dropdown to align with left edge of button and add a small margin below
+      setCentersDropdownPosition({
+        top: rect.bottom + 5,
+        left: Math.min(rect.left, window.innerWidth - 176) // Ensure dropdown doesn't go off screen
+      });
+    }
+    setCentersDropdownOpen(!centersDropdownOpen);
+  };
+
+  // Show toast notification
+  const showToast = (message) => {
+    setToast({ show: true, message });
+    setTimeout(() => {
+      setToast({ show: false, message: '' });
+    }, 3000);
+  };
+
+  // Function to scroll to today's classes
+  const scrollToToday = () => {
+    const today = new Date();
+    const dayOfWeek = today.toLocaleDateString('en-US', { weekday: 'long' });
+    
+    const todayElement = document.getElementById(`day-${dayOfWeek}`);
+    if (todayElement) {
+      todayElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast(`Scrolled to ${dayOfWeek}`);
+    } else {
+      showToast('No classes available for today');
+    }
+  };
+
+  // Common centers filter component
+  const renderCentersFilter = () => {
+    return (
+      <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clipRule="evenodd" />
+        </svg>
+        Centers
+      </h3>
+      <div className="grid grid-cols-2 gap-2">
+        {centers.map(center => {
+          const hasPool = CENTERS_WITH_POOLS.includes(center);
+          const isSelected = selectedCenters[center];
+          
+          return (
+            <button 
+              key={center} 
+              onClick={() => handleCenterChange(center)}
+              className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md text-left hover:bg-gray-50 ${
+                isSelected ? 'bg-[rgb(0,130,188)]/5' : ''
+              }`}
+            >
+              <div className="flex items-center">
+                <span className="text-sm text-gray-700">{center}</span>
+                {showPoolClasses && (
+                  <span className={`ml-1.5 text-xs font-medium ${hasPool ? 'text-[rgb(0,130,188)]' : 'text-red-500'}`}>
+                    {hasPool ? '(Pool)' : '(No Pool)'}
+                  </span>
+                )}
+              </div>
+              {isSelected && (
+                <svg className="w-4 h-4 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex justify-between mt-3">
+        <button 
+          onClick={() => handleCenterChange('all')}
+          className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
+        >
+          Select All
+        </button>
+        <button 
+          onClick={() => handleCenterChange('none')}
+          className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
+        >
+          Clear All
+        </button>
+      </div>
+    </div>
+    );
   };
 
   return (
@@ -1443,6 +1364,237 @@ const FitnessTimetable = () => {
             )}
           </div>
           
+          {/* Quick Filters button */}
+          <div className="relative inline-block quick-filters-dropdown">
+            <button
+              ref={quickFiltersButtonRef}
+              onClick={toggleQuickFilters}
+              className="flex items-center bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition-all shadow-sm backdrop-blur-sm"
+            >
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 6h16"></path>
+                  <path d="M7 12h10"></path>
+                  <path d="M10 18h4"></path>
+                </svg>
+                <span className="text-sm font-medium mr-1">Quick Filters</span>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </button>
+            
+            {/* Quick Filters dropdown menu */}
+            {quickFiltersOpen && (
+              <div 
+                className="fixed py-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[100]"
+                style={{
+                  top: `${quickFiltersPosition.top}px`,
+                  left: `${quickFiltersPosition.left}px`,
+                }}
+              >
+                <div className="px-4 py-2 text-xs font-semibold text-gray-500 border-b border-gray-100 uppercase">
+                  {showPoolClasses ? 'Swimming Presets' : 'Fitness Presets'}
+                </div>
+                
+                {showPoolClasses ? (
+                  <>
+                    <button 
+                      onClick={() => {
+                        applyQuickFilter('adult-swim');
+                        setQuickFiltersOpen(false);
+                      }}
+                      className="w-full block px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-[rgb(0,130,188)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
+                      </svg>
+                      Adult Swim
+                    </button>
+                    <button 
+                      onClick={() => {
+                        applyQuickFilter('small-pool-swims');
+                        setQuickFiltersOpen(false);
+                      }}
+                      className="w-full block px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-[rgb(0,130,188)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 20.5H7" />
+                        <path d="M3 20.5h2" />
+                        <path d="M19 20.5h2" />
+                        <path d="M15.47 17c-1.68 0-3-1.75-3-4s1.32-4 3-4 3 1.75 3 4-1.32 4-3 4z" />
+                        <path d="M5 17s3-2 4-4l-1-1 .5-3.5 2 2 .5-1.5 3 1c.14 1.65.42 4.5.5 6.5" />
+                      </svg>
+                      Small Pool Swims
+                    </button>
+                    <button 
+                      onClick={() => {
+                        applyQuickFilter('childrens-swim');
+                        setQuickFiltersOpen(false);
+                      }}
+                      className="w-full block px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-[rgb(0,130,188)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="5" r="3" />
+                        <path d="M12 8v2" />
+                        <path d="m9 10 1 3" />
+                        <path d="m14 10 1 3" />
+                        <path d="M13 19h-2a2 2 0 0 1-2-2v-3c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2z" />
+                        <path d="m7 19-3 1.5" />
+                        <path d="m17 19 3 1.5" />
+                      </svg>
+                      Children's Swim
+                    </button>
+                    <button 
+                      onClick={() => {
+                        applyQuickFilter('today');
+                        setQuickFiltersOpen(false);
+                      }}
+                      className="w-full block px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-[rgb(0,130,188)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                      Today's Sessions
+                    </button>
+                    <button 
+                      onClick={() => {
+                        applyQuickFilter('weekend');
+                        setQuickFiltersOpen(false);
+                      }}
+                      className="w-full block px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-[rgb(0,130,188)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 8L8 12H12V16L16 12H12z"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                      </svg>
+                      Weekend Sessions
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => {
+                        applyQuickFilter('today');
+                        setQuickFiltersOpen(false);
+                      }}
+                      className="w-full block px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-[rgb(0,130,188)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                      Today's Classes
+                    </button>
+                    <button 
+                      onClick={() => {
+                        applyQuickFilter('weekend');
+                        setQuickFiltersOpen(false);
+                      }}
+                      className="w-full block px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-[rgb(0,130,188)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 8L8 12H12V16L16 12H12z"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                      </svg>
+                      Weekend Classes
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          
+          {/* Centers dropdown button */}
+          <div className="relative inline-block centers-dropdown">
+            <button
+              ref={centersDropdownButtonRef}
+              onClick={toggleCentersDropdown}
+              className="flex items-center bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition-all shadow-sm backdrop-blur-sm"
+            >
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span className="text-sm font-medium mr-1">
+                  {(() => {
+                    const selectedCenterCount = Object.values(selectedCenters).filter(selected => selected).length;
+                    const selectedCenterNames = Object.entries(selectedCenters)
+                      .filter(([center, isSelected]) => isSelected)
+                      .map(([center]) => center);
+                    
+                    if (selectedCenterCount === 0) {
+                      return "Select Center";
+                    } else if (selectedCenterCount === 1) {
+                      return selectedCenterNames[0];
+                    } else if (selectedCenterCount === centers.length) {
+                      return "All Centers";
+                    } else {
+                      return `${selectedCenterCount} Centers`;
+                    }
+                  })()}
+                </span>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </button>
+            
+            {/* Centers dropdown menu */}
+            {centersDropdownOpen && (
+              <div 
+                className="fixed py-1 w-52 bg-white rounded-md shadow-lg border border-gray-200 z-[100]"
+                style={{
+                  top: `${centersDropdownPosition.top}px`,
+                  left: `${centersDropdownPosition.left}px`,
+                }}
+              >
+                <div className="px-4 py-2 text-xs font-semibold text-gray-500 border-b border-gray-100 uppercase">
+                  Leisure Centers
+                </div>
+                
+                <div className="p-2">
+                  {centers.map(center => {
+                    const hasPool = CENTERS_WITH_POOLS.includes(center);
+                    
+                    return (
+                      <button 
+                        key={center} 
+                        onClick={() => handleCenterChange(center)}
+                        className="w-full flex items-center px-2 py-1.5 rounded-md text-left hover:bg-gray-50 cursor-pointer"
+                      >
+                        <div className={`h-4 w-4 rounded-full border flex-shrink-0 ${
+                          selectedCenters[center] 
+                            ? 'border-[rgb(0,130,188)] bg-white' 
+                            : 'border-gray-300 bg-white'
+                        }`}>
+                          {selectedCenters[center] && (
+                            <div className="w-2 h-2 bg-[rgb(0,130,188)] rounded-full m-auto"></div>
+                          )}
+                        </div>
+                        <span className="ml-2 text-sm text-gray-700">
+                          {center}
+                          {showPoolClasses && hasPool && (
+                            <span className="ml-1 text-xs font-medium text-[rgb(0,130,188)]">(Pool)</span>
+                          )}
+                          {showPoolClasses && !hasPool && (
+                            <span className="ml-1 text-xs font-medium text-red-500">(No Pool)</span>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+          
           {/* Filter button */}
           <button 
             onClick={toggleFilters}
@@ -1458,8 +1610,49 @@ const FitnessTimetable = () => {
               </span>
             }
           </button>
+          
+          {/* Today button */}
+          <button 
+            onClick={scrollToToday}
+            className="flex items-center bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-full transition-all shadow-sm backdrop-blur-sm"
+          >
+            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <span className="text-sm font-medium">Today</span>
+          </button>
         </div>
       </div>
+      
+      {/* Toast notification */}
+      {toast.show && (
+        <div 
+          className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-[rgb(0,130,188)] text-white px-4 py-2 rounded-lg shadow-lg z-[200] flex items-center"
+          style={{ 
+            animation: 'fadeInUp 0.3s ease-out forwards',
+            minWidth: '200px',
+            maxWidth: '90%'
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <span className="text-sm font-medium">{toast.message}</span>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translate(-50%, 20px);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+          }
+        }
+      `}</style>
 
       {/* Filter panel wrapper - slides over content */}
       <div 
@@ -1501,7 +1694,7 @@ const FitnessTimetable = () => {
             {days.map(day => {
               if (classesByDay[day].length === 0) return null;
               return (
-                <div key={day} className="bg-white rounded-lg overflow-hidden shadow">
+                <div key={day} id={`day-${day}`} className="bg-white rounded-lg overflow-hidden shadow">
                   <div className="bg-[rgb(0,130,188)]/60 text-white font-semibold py-2 px-4 text-sm">
                     {day}
                   </div>
