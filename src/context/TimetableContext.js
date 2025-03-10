@@ -1,8 +1,19 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
+// Helper function to get stored value from localStorage
+const getStoredMode = () => {
+  try {
+    const storedMode = localStorage.getItem('app_mode');
+    return storedMode ? JSON.parse(storedMode) : 'fitness';
+  } catch (error) {
+    console.error('Error reading app mode from localStorage:', error);
+    return 'fitness';
+  }
+};
+
 // Initial state
 const initialState = {
-  mode: 'fitness', // 'fitness' or 'swimming'
+  mode: getStoredMode(), // Get from localStorage with fallback to 'fitness'
   filters: {
     centers: {},
     days: {},
@@ -34,6 +45,14 @@ function timetableReducer(state, action) {
     case ActionTypes.SET_MODE:
       console.log('SET_MODE reducer called with payload:', action.payload);
       console.log('Previous mode:', state.mode);
+      
+      // Save the new mode to localStorage
+      try {
+        localStorage.setItem('app_mode', JSON.stringify(action.payload));
+      } catch (error) {
+        console.error('Error saving mode to localStorage:', error);
+      }
+      
       return {
         ...state,
         mode: action.payload
