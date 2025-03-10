@@ -30,12 +30,12 @@ const ModeToggle = ({ isSwimmingMode, onToggle, colors = {} }) => {
       {/* Direct toggle button */}
       <button
         onClick={directToggleMode}
-        className={`flex items-center justify-center bg-white/15 hover:bg-white/25 rounded-full transition-all duration-300 shadow-sm backdrop-blur-sm h-8 sm:w-auto sm:px-3.5 focus:ring-2 focus:ring-white/30 focus:outline-none ${isAnimating ? 'scale-[0.98] bg-white/20' : ''}`}
+        className={`flex items-center justify-center bg-white/15 hover:bg-white/25 rounded-full transition-all duration-300 shadow-sm backdrop-blur-sm h-8 px-3.5 focus:ring-2 focus:ring-white/30 focus:outline-none ${isAnimating ? 'scale-[0.98] bg-white/20' : ''}`}
         title={`Switch to ${isSwimmingMode ? 'Fitness' : 'Swimming'} mode`}
       >
         <div className="flex items-center">
           {/* Icons container with fixed width for proper alignment */}
-          <div className="relative w-4 h-4 sm:mr-1.5 flex-shrink-0">
+          <div className="relative w-4 h-4 mr-1.5 flex-shrink-0">
             {/* Swimming icon with crossfade transition */}
             <div className={`absolute inset-0 transition-all duration-500 ease-in-out ${isSwimmingMode ? 'opacity-100 transform-none' : 'opacity-0 -translate-y-1'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -53,7 +53,7 @@ const ModeToggle = ({ isSwimmingMode, onToggle, colors = {} }) => {
           </div>
           
           {/* Text label with crossfade */}
-          <span className="text-sm font-medium hidden sm:inline relative w-[70px]">
+          <span className="text-sm font-medium relative w-[70px]">
             <span className={`absolute left-0 whitespace-nowrap transition-all duration-500 ease-in-out ${isSwimmingMode ? 'opacity-100 transform-none' : 'opacity-0'}`}>
               Swimming
             </span>

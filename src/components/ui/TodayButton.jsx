@@ -12,11 +12,11 @@ const TodayButton = ({ onClick, colors = {} }) => {
   return (
     <button 
       onClick={onClick}
-      className="flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-all shadow-sm backdrop-blur-sm h-8 w-8 sm:w-auto sm:px-3"
+      className="flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-all shadow-sm backdrop-blur-sm h-8 px-3"
       title="Scroll to today's classes"
     >
       <svg 
-        className="w-4 h-4 sm:mr-1.5" 
+        className="w-4 h-4 mr-1.5" 
         fill="none" 
         stroke="currentColor" 
         viewBox="0 0 24 24" 
@@ -29,7 +29,7 @@ const TodayButton = ({ onClick, colors = {} }) => {
           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
         ></path>
       </svg>
-      <span className="text-sm font-medium hidden sm:inline">Today</span>
+      <span className="text-sm font-medium">Today</span>
     </button>
   );
 };

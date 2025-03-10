@@ -302,55 +302,37 @@ const FitnessTimetableInner = () => {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* App bar with logo, filter buttons and count */}
-      <div className="bg-[rgb(0,130,188)]/95 backdrop-blur-sm text-white px-4 py-2.5 flex justify-between items-center shadow-lg z-20 sticky top-0">
-        <div className="flex items-center">
-          <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-9 object-contain rounded shadow-sm" />
-          {/* Current mode indicator */}
-          <div className="hidden md:flex ml-4 items-center">
-            <div className={`text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors duration-200 ${isSwimmingMode ? 'bg-cyan-500/20' : 'bg-orange-500/20'}`}>
-              {isSwimmingMode ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8h1a4 4 0 010 8h-1"></path>
-                  <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
-                </svg>
-              )}
-              <span className="font-semibold">{isSwimmingMode ? 'Swimming' : 'Fitness'}</span>
+      <div className="bg-[rgb(0,130,188)]/95 backdrop-blur-sm text-white px-4 py-2.5 shadow-lg z-20 sticky top-0">
+        {/* First row for logo and mode indicator */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain rounded shadow-sm" />
+            <div className="ml-3 flex items-center">
+              <div className={`text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1.5 transition-colors duration-200 ${isSwimmingMode ? 'bg-cyan-500/20' : 'bg-orange-500/20'}`}>
+                {isSwimmingMode ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8h1a4 4 0 010 8h-1"></path>
+                    <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
+                  </svg>
+                )}
+                <span className="font-semibold">{isSwimmingMode ? 'Swimming' : 'Fitness'}</span>
+              </div>
             </div>
           </div>
-        </div>
-        
-        {/* Action buttons group */}
-        <div className="flex items-center gap-2.5">
-          {/* Mode toggle button */}
-          <ModeToggle
-            isSwimmingMode={isSwimmingMode}
-            onToggle={(value) => handleModeSwitch(value ? 'swimming' : 'fitness')}
-            colors={COLORS}
-          />
-          
-          {/* Filter button */}
-          <FilterButton
-            onClick={() => actions.toggleFiltersExpanded()}
-            activeCount={getActiveFilterCount()}
-            colors={COLORS}
-          />
-          
-          {/* Today button */}
-          <TodayButton onClick={scrollToToday} colors={COLORS} />
           
           {/* Color mode toggle */}
           <button
             onClick={toggleColorMode}
-            className="flex items-center justify-center bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full transition-all shadow-sm backdrop-blur-sm focus:ring-2 focus:ring-white/30 focus:outline-none"
+            className="flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-all shadow-sm backdrop-blur-sm h-7 px-2.5 focus:ring-2 focus:ring-white/30 focus:outline-none"
             title={`Switch to ${colorMode === 'standard' ? 'vibrant' : 'standard'} colors`}
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
-              className="h-4 w-4" 
+              className="h-3.5 w-3.5 mr-1" 
               viewBox="0 0 24 24" 
               fill="none" 
               stroke="currentColor" 
@@ -361,7 +343,35 @@ const FitnessTimetableInner = () => {
               <circle cx="12" cy="12" r="5" />
               <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
             </svg>
+            <span className="text-xs font-medium">{colorMode === 'standard' ? 'Vibrant' : 'Standard'}</span>
           </button>
+        </div>
+        
+        {/* Second row for action buttons */}
+        <div className="flex items-center justify-between">
+          <div className="text-xs opacity-70">
+            Fitness Timetable
+          </div>
+          
+          {/* Action buttons group */}
+          <div className="flex items-center gap-2">
+            {/* Mode toggle button */}
+            <ModeToggle
+              isSwimmingMode={isSwimmingMode}
+              onToggle={(value) => handleModeSwitch(value ? 'swimming' : 'fitness')}
+              colors={COLORS}
+            />
+            
+            {/* Filter button */}
+            <FilterButton
+              onClick={() => actions.toggleFiltersExpanded()}
+              activeCount={getActiveFilterCount()}
+              colors={COLORS}
+            />
+            
+            {/* Today button */}
+            <TodayButton onClick={scrollToToday} colors={COLORS} />
+          </div>
         </div>
       </div>
       
