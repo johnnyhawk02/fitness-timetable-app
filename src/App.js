@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import FitnessTimetable from './components/FitnessTimetable';
+import FitnessTimetable from './components/FitnessTimetableRefactored';
 
 function App() {
   return (
