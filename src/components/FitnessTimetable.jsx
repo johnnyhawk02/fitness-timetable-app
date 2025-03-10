@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import bootleClasses from '../data/bootleClassData';
 import crosbyClasses from '../data/crosbyClassData';
 import meadowsClasses from '../data/meadowsClassData';
@@ -189,6 +189,9 @@ const FitnessTimetable = () => {
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedClassDetails, setSelectedClassDetails] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const dropdownButtonRef = useRef(null);
 
   // Toggle all filters visibility
   const toggleFilters = () => {
@@ -964,368 +967,533 @@ const FitnessTimetable = () => {
     setPoolLocationType(type);
   };
   
-  // Special function to render pool type filters
-  const renderPoolTypeFilters = () => {
+  // Render swimming specific filters
+  const renderSwimmingFilters = () => {
     return (
-      <div className="p-4 bg-[rgb(0,130,188)]/5 border-y border-[rgb(0,130,188)]/10">
-        <h3 className="text-sm font-semibold text-[rgb(0,130,188)] mb-2">Pool Type Filter</h3>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => handlePoolLocationType('all')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              poolLocationType === 'all'
-                ? 'bg-[rgb(0,130,188)] text-white'
-                : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
-            }`}
+      <div className="space-y-6">
+        {/* Pool type filters */}
+        <div className="bg-[rgb(0,130,188)]/5 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+            </svg>
+            Pool Type
+          </h3>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handlePoolLocationType("all")}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                poolLocationType === "all"
+                  ? "bg-[rgb(0,130,188)] text-white shadow-sm"
+                  : "bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20"
+              }`}
+            >
+              All Pools
+            </button>
+            <button
+              onClick={() => handlePoolLocationType("main")}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                poolLocationType === "main"
+                  ? "bg-[rgb(0,130,188)] text-white shadow-sm"
+                  : "bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20"
+              }`}
+            >
+              Main Pool
+            </button>
+            <button
+              onClick={() => handlePoolLocationType("leisure")}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                poolLocationType === "leisure"
+                  ? "bg-[rgb(0,130,188)] text-white shadow-sm"
+                  : "bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20"
+              }`}
+            >
+              Leisure/Learner Pool
+            </button>
+          </div>
+        </div>
+
+        {/* Days filter section */}
+        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+            </svg>
+            Days
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {days.map(day => (
+              <button
+                key={day}
+                onClick={() => handleDayChange(day)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  selectedDays[day]
+                    ? 'bg-[rgb(0,130,188)] text-white shadow-sm'
+                    : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20'
+                }`}
+              >
+                {dayAbbreviations[day]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Centers filter section */}
+        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clipRule="evenodd" />
+            </svg>
+            Swimming Pools
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            {centers.map(center => (
+              <label 
+                key={center} 
+                className="flex items-center space-x-2 cursor-pointer"
+              >
+                <input 
+                  type="checkbox" 
+                  checked={selectedCenters[center]}
+                  onChange={() => handleCenterChange(center)}
+                  className="form-checkbox h-4 w-4 text-[rgb(0,130,188)] rounded border-gray-300 focus:ring-[rgb(0,130,188)]"
+                />
+                <span className="text-sm text-gray-700">{center}</span>
+              </label>
+            ))}
+          </div>
+          <div className="flex justify-between mt-3">
+            <button 
+              onClick={() => handleCenterChange('all')}
+              className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
+            >
+              Select All
+            </button>
+            <button 
+              onClick={() => handleCenterChange('none')}
+              className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
+
+        {/* Time filter section */}
+        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+            </svg>
+            Time of Day
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(TIME_DIVISIONS).map(([divId, { label }]) => (
+              <button
+                key={divId}
+                onClick={() => handleTimeDivisionChange(divId)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  selectedTimeBlocks[divId]
+                    ? 'bg-[rgb(0,130,188)] text-white shadow-sm'
+                    : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Reset filters section */}
+        <div className="p-4">
+          <button 
+            onClick={clearAllFilters}
+            className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-all flex items-center justify-center"
           >
-            All Pools
-          </button>
-          <button
-            onClick={() => handlePoolLocationType('main')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              poolLocationType === 'main'
-                ? 'bg-[rgb(0,130,188)] text-white'
-                : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
-            }`}
-          >
-            Main Pool
-          </button>
-          <button
-            onClick={() => handlePoolLocationType('leisure')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              poolLocationType === 'leisure'
-                ? 'bg-[rgb(0,130,188)] text-white'
-                : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
-            }`}
-          >
-            Leisure/Learner Pool
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+            Reset Pool Filters
           </button>
         </div>
       </div>
     );
   };
 
-  // Let's add a custom filter panel for Pool classes
+  // Render fitness class specific filters
+  const renderFitnessFilters = () => {
+    return (
+      <div className="space-y-6">
+        {/* Days filter section */}
+        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+            </svg>
+            Days
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {days.map(day => (
+              <button
+                key={day}
+                onClick={() => handleDayChange(day)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  selectedDays[day]
+                    ? 'bg-[rgb(0,130,188)] text-white shadow-sm'
+                    : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20'
+                }`}
+              >
+                {dayAbbreviations[day]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Class types filter section */}
+        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            Class Type
+          </h3>
+          <div className="flex flex-wrap gap-2 items-center">
+            {Object.entries(classCategories).map(([categoryId, categoryName]) => (
+              <button
+                key={categoryId}
+                onClick={() => handleCategoryChange(categoryId)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  selectedCategory === categoryId
+                    ? `bg-[rgb(0,130,188)] text-white shadow-sm`
+                    : `bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20`
+                }`}
+              >
+                {categoryName}
+              </button>
+            ))}
+            <button
+              onClick={() => handleCategoryChange('')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                !selectedCategory
+                  ? `bg-[rgb(0,130,188)] text-white shadow-sm`
+                  : `bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20`
+              }`}
+            >
+              All
+            </button>
+          </div>
+        </div>
+
+        {/* Centers filter section */}
+        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clipRule="evenodd" />
+            </svg>
+            Centers
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            {centers.map(center => (
+              <label 
+                key={center} 
+                className="flex items-center space-x-2 cursor-pointer"
+              >
+                <input 
+                  type="checkbox" 
+                  checked={selectedCenters[center]}
+                  onChange={() => handleCenterChange(center)}
+                  className="form-checkbox h-4 w-4 text-[rgb(0,130,188)] rounded border-gray-300 focus:ring-[rgb(0,130,188)]"
+                />
+                <span className="text-sm text-gray-700">{center}</span>
+              </label>
+            ))}
+          </div>
+          <div className="flex justify-between mt-3">
+            <button 
+              onClick={() => handleCenterChange('all')}
+              className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
+            >
+              Select All
+            </button>
+            <button 
+              onClick={() => handleCenterChange('none')}
+              className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
+
+        {/* Time filter section */}
+        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+            </svg>
+            Time of Day
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(TIME_DIVISIONS).map(([divId, { label }]) => (
+              <button
+                key={divId}
+                onClick={() => handleTimeDivisionChange(divId)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  selectedTimeBlocks[divId]
+                    ? 'bg-[rgb(0,130,188)] text-white shadow-sm'
+                    : 'bg-[rgb(0,130,188)]/10 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/20'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Virtual class filter section */}
+        <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-700 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+              </svg>
+              Virtual Classes
+            </h3>
+            <label className="inline-flex items-center cursor-pointer">
+              <span className="mr-2 text-sm text-gray-700">{includeVirtual ? 'Show' : 'Hide'}</span>
+              <div className="relative">
+                <input 
+                  type="checkbox" 
+                  value="" 
+                  className="sr-only peer" 
+                  checked={includeVirtual} 
+                  onChange={() => handleVirtualChange(!includeVirtual)} 
+                />
+                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[rgb(0,130,188)]"></div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Reset filters section */}
+        <div className="p-4">
+          <button 
+            onClick={clearAllFilters}
+            className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-all flex items-center justify-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+            Reset Class Filters
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Render filter tabs and content based on current mode
   const renderFilterPanel = () => {
     return (
-      <>
-        {/* Filter mode tabs */}
-        <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
-          <div className="flex">
+      <div className="p-4">
+        {/* Mode Selection Tabs */}
+        <div className="mb-6">
+          <div className="bg-gray-100 p-1.5 rounded-xl flex">
             <button
               onClick={() => {
+                console.log("Setting mode to Fitness Classes");
                 setShowPoolClasses(false);
-                console.log("Switched to Fitness Classes mode");
               }}
-              className={`flex-1 py-3 text-sm font-medium ${
+              className={`flex-1 py-2.5 px-4 rounded-lg transition-all font-medium ${
                 !showPoolClasses 
-                  ? 'text-[rgb(0,130,188)] border-b-2 border-[rgb(0,130,188)]' 
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? "bg-white text-[rgb(0,130,188)] shadow-sm" 
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              Fitness Classes
+              <div className="flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                </svg>
+                <span>Fitness Classes</span>
+              </div>
             </button>
             <button
               onClick={() => {
+                console.log("Setting mode to Swimming");
                 setShowPoolClasses(true);
-                console.log("Switched to Swimming mode");
               }}
-              className={`flex-1 py-3 text-sm font-medium ${
+              className={`flex-1 py-2.5 px-4 rounded-lg transition-all font-medium ${
                 showPoolClasses 
-                  ? 'text-[rgb(0,130,188)] border-b-2 border-[rgb(0,130,188)]' 
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? "bg-white text-[rgb(0,130,188)] shadow-sm" 
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              Swimming
+              <div className="flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+                </svg>
+                <span>Swimming</span>
+              </div>
             </button>
           </div>
         </div>
-
-        {/* Filter content based on selected mode */}
-        <div className="bg-[rgb(0,130,188)]/5 py-2">
-          <div className="text-center text-sm font-medium text-[rgb(0,130,188)]">
-            {showPoolClasses ? 'Swimming Pool Filters' : 'Fitness Class Filters'}
-          </div>
-        </div>
-
-        {/* Mode-specific filters */}
-        {showPoolClasses ? (
-          // Pool filters
-          <>
-            {/* Pool instructions */}
-            <div className="px-4 py-2 bg-yellow-50 text-yellow-800 text-sm font-medium flex items-center">
-              <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Swimming Pool Filters
-            </div>
-
-            {/* Pool type filters */}
-            {renderPoolTypeFilters()}
-
-            {/* Days filter section */}
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Days</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {days.map(day => (
-                  <button
-                    key={day}
-                    onClick={() => handleDayChange(day)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                      selectedDays[day]
-                        ? 'bg-[rgb(0,130,188)] text-white'
-                        : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
-                    }`}
-                  >
-                    {dayAbbreviations[day]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Centers filter section */}
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Swimming Pools</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {centers.map(center => (
-                  <label 
-                    key={center} 
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
-                    <input 
-                      type="checkbox" 
-                      checked={selectedCenters[center]}
-                      onChange={() => handleCenterChange(center)}
-                      className="form-checkbox h-4 w-4 text-[rgb(0,130,188)] rounded border-gray-300 focus:ring-[rgb(0,130,188)]"
-                    />
-                    <span className="text-sm text-gray-700">{center}</span>
-                  </label>
-                ))}
-              </div>
-              <div className="flex justify-between mt-2">
-                <button 
-                  onClick={() => handleCenterChange('all')}
-                  className="text-xs text-[rgb(0,130,188)] hover:underline"
-                >
-                  Select All
-                </button>
-                <button 
-                  onClick={() => handleCenterChange('none')}
-                  className="text-xs text-[rgb(0,130,188)] hover:underline"
-                >
-                  Clear All
-                </button>
-              </div>
-            </div>
-
-            {/* Time filter section */}
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Time of Day</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {Object.entries(TIME_DIVISIONS).map(([divId, { label }]) => (
-                  <button
-                    key={divId}
-                    onClick={() => handleTimeDivisionChange(divId)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                      selectedTimeBlocks[divId]
-                        ? 'bg-[rgb(0,130,188)] text-white'
-                        : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Reset filters section */}
-            <div className="p-4">
-              <button 
-                onClick={clearAllFilters}
-                className="w-full px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition-colors"
-              >
-                Reset Pool Filters
-              </button>
-            </div>
-          </>
-        ) : (
-          // Fitness filters
-          <>
-            {/* Days filter section */}
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Days</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {days.map(day => (
-                  <button
-                    key={day}
-                    onClick={() => handleDayChange(day)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                      selectedDays[day]
-                        ? 'bg-[rgb(0,130,188)] text-white'
-                        : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
-                    }`}
-                  >
-                    {dayAbbreviations[day]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Class types filter section */}
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Class Type</h3>
-              <div className="flex flex-wrap gap-1 items-center">
-                {Object.entries(classCategories).map(([categoryId, categoryName]) => (
-                  <button
-                    key={categoryId}
-                    onClick={() => handleCategoryChange(categoryId)}
-                    className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors ${
-                      selectedCategory === categoryId
-                        ? `bg-[rgb(0,130,188)] text-white`
-                        : `bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30`
-                    }`}
-                  >
-                    {categoryName}
-                  </button>
-                ))}
-                <button
-                  onClick={() => handleCategoryChange('')}
-                  className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors ${
-                    !selectedCategory
-                      ? `bg-[rgb(0,130,188)] text-white`
-                      : `bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30`
-                  }`}
-                >
-                  All
-                </button>
-              </div>
-            </div>
-
-            {/* Centers filter section */}
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Centers</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {centers.map(center => (
-                  <label 
-                    key={center} 
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
-                    <input 
-                      type="checkbox" 
-                      checked={selectedCenters[center]}
-                      onChange={() => handleCenterChange(center)}
-                      className="form-checkbox h-4 w-4 text-[rgb(0,130,188)] rounded border-gray-300 focus:ring-[rgb(0,130,188)]"
-                    />
-                    <span className="text-sm text-gray-700">{center}</span>
-                  </label>
-                ))}
-              </div>
-              <div className="flex justify-between mt-2">
-                <button 
-                  onClick={() => handleCenterChange('all')}
-                  className="text-xs text-[rgb(0,130,188)] hover:underline"
-                >
-                  Select All
-                </button>
-                <button 
-                  onClick={() => handleCenterChange('none')}
-                  className="text-xs text-[rgb(0,130,188)] hover:underline"
-                >
-                  Clear All
-                </button>
-              </div>
-            </div>
-
-            {/* Time filter section */}
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Time of Day</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {Object.entries(TIME_DIVISIONS).map(([divId, { label }]) => (
-                  <button
-                    key={divId}
-                    onClick={() => handleTimeDivisionChange(divId)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                      selectedTimeBlocks[divId]
-                        ? 'bg-[rgb(0,130,188)] text-white'
-                        : 'bg-[rgb(0,130,188)]/20 text-[rgb(0,130,188)] hover:bg-[rgb(0,130,188)]/30'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Virtual class filter section */}
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-700">Virtual Classes</h3>
-                <label className="inline-flex items-center cursor-pointer">
-                  <span className="mr-2 text-sm text-gray-700">{includeVirtual ? 'Show' : 'Hide'}</span>
-                  <div className="relative">
-                    <input 
-                      type="checkbox" 
-                      value="" 
-                      className="sr-only peer" 
-                      checked={includeVirtual} 
-                      onChange={() => handleVirtualChange(!includeVirtual)} 
-                    />
-                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[rgb(0,130,188)]"></div>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            {/* Reset filters section */}
-            <div className="p-4">
-              <button 
-                onClick={clearAllFilters}
-                className="w-full px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition-colors"
-              >
-                Reset Class Filters
-              </button>
-            </div>
-          </>
-        )}
-      </>
+        
+        {/* Filter content */}
+        {showPoolClasses ? renderSwimmingFilters() : renderFitnessFilters()}
+      </div>
     );
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownOpen && !event.target.closest('.mode-dropdown')) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
+  // Handle opening the dropdown and calculate its position
+  const toggleModeDropdown = () => {
+    if (!dropdownOpen && dropdownButtonRef.current) {
+      const rect = dropdownButtonRef.current.getBoundingClientRect();
+      // Position dropdown to align with left edge of button and add a small margin below
+      setDropdownPosition({
+        top: rect.bottom + 5,
+        left: Math.min(rect.left, window.innerWidth - 176) // Ensure dropdown doesn't go off screen (44px width + some margin)
+      });
+    }
+    setDropdownOpen(!dropdownOpen);
   };
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      {/* Filter section - constrain its height */}
-      <div className="bg-white rounded-none shadow-none overflow-hidden flex flex-col">
-        {/* App bar with logo, filter buttons and count */}
-        <div className="bg-[rgb(0,130,188)] text-white p-3 flex flex-wrap justify-between items-center relative">
-          <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain" />
+      {/* App bar with logo, filter buttons and count */}
+      <div className="bg-[rgb(0,130,188)] text-white p-3 flex flex-wrap justify-between items-center shadow-md z-20 relative">
+        <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain" />
+        
+        {/* Mode toggle and filter buttons */}
+        <div className="flex items-center gap-2">
+          {/* Mode toggle button */}
+          <div className="relative inline-block mode-dropdown">
+            <button
+              ref={dropdownButtonRef}
+              onClick={toggleModeDropdown}
+              className="flex items-center bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition-all shadow-sm backdrop-blur-sm"
+            >
+              <div className="flex items-center">
+                {showPoolClasses ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8h1a4 4 0 010 8h-1"></path>
+                    <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
+                  </svg>
+                )}
+                <span className="text-sm font-medium mr-1">{showPoolClasses ? 'Swimming' : 'Fitness'}</span>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </button>
+            
+            {/* Dropdown menu */}
+            {dropdownOpen && (
+              <div 
+                className="fixed py-1 w-44 bg-white rounded-md shadow-lg border border-gray-200 z-[100]"
+                style={{
+                  top: `${dropdownPosition.top}px`,
+                  left: `${dropdownPosition.left}px`,
+                }}
+              >
+                <button 
+                  onClick={() => {
+                    setShowPoolClasses(false);
+                    setDropdownOpen(false);
+                  }}
+                  className={`w-full block px-4 py-2 text-sm text-left ${!showPoolClasses ? 'text-[rgb(0,130,188)] font-medium' : 'text-gray-700'} hover:bg-gray-100`}
+                >
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8h1a4 4 0 010 8h-1"></path>
+                      <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
+                    </svg>
+                    Fitness Classes
+                  </div>
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowPoolClasses(true);
+                    setDropdownOpen(false);
+                  }}
+                  className={`w-full block px-4 py-2 text-sm text-left ${showPoolClasses ? 'text-[rgb(0,130,188)] font-medium' : 'text-gray-700'} hover:bg-gray-100`}
+                >
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
+                    </svg>
+                    Swimming
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
           
           {/* Filter button */}
           <button 
             onClick={toggleFilters}
-            className="flex items-center space-x-1.5 px-3 py-1.5 bg-[rgb(0,130,188)]/80 hover:bg-[rgb(0,130,188)]/90 rounded-full transition-colors"
+            className="flex items-center bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-full transition-all shadow-sm backdrop-blur-sm"
           >
-            <span className="text-sm font-medium">Filters</span>
+            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+            </svg>
+            <span className="text-sm font-medium mr-1">Filters</span>
             {getActiveFilterCount() > 0 && 
-              <span className="bg-orange-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+              <span className="bg-orange-500 text-white text-xs min-w-5 h-5 flex items-center justify-center rounded-full px-1.5">
                 {getActiveFilterCount()}
               </span>
             }
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-            </svg>
           </button>
         </div>
       </div>
 
+      {/* Filter panel wrapper - slides over content */}
+      <div 
+        className={`fixed top-[52px] left-0 right-0 z-50 bg-white/95 backdrop-blur-md overflow-auto transition-all duration-300 ease-in-out shadow-lg border-b border-gray-200 ${
+          filtersExpanded ? 'max-h-[85vh] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="max-w-3xl mx-auto">
+          <div className="divide-y divide-gray-100">
+            {/* Render appropriate filter panel based on mode */}
+            {renderFilterPanel()}
+            
+            {/* Bottom close button */}
+            <div className="sticky bottom-0 bg-white/95 backdrop-blur-md py-3 px-4">
+              <button 
+                onClick={toggleFilters}
+                className="w-full bg-[rgb(0,130,188)] text-white px-4 py-2.5 rounded-lg font-medium hover:bg-[rgb(0,130,188)]/90 transition-all shadow-sm"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Timetable content - full screen scrollable area */}
-      <div className="flex-1 overflow-hidden bg-white mt-[52px]">
+      <div className="flex-1 overflow-hidden bg-white">
         <div className="h-full overflow-y-auto scrollbar-hide">
           {/* Mode indicator */}
-          <div className="sticky top-0 z-10 bg-gray-100 py-1 px-4 flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">
+          <div className="sticky top-0 z-10 bg-gray-100 py-1.5 px-4 flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-500">
               Showing: <span className="text-[rgb(0,130,188)]">{showPoolClasses ? 'Swimming Pool Sessions' : 'Fitness Classes'}</span>
             </span>
-            <span className="text-xs font-medium text-[rgb(0,130,188)]">
+            <span className="text-sm font-medium text-[rgb(0,130,188)]">
               Class Timetable
             </span>
           </div>
@@ -1348,7 +1516,7 @@ const FitnessTimetable = () => {
                           onClick={() => handleShowDescription(cls)}
                         >
                           <div className="w-28 flex flex-col text-left pr-4">
-                            <div className="font-medium text-gray-700 text-xs pt-0.5">{cls.time}</div>
+                            <div className="font-medium text-gray-700 text-sm pt-0.5">{cls.time}</div>
                           </div>
                           <div className="flex-1 text-left">
                             <div className="flex items-start justify-between">
@@ -1469,30 +1637,6 @@ const FitnessTimetable = () => {
           </div>
         </div>
       )}
-
-      {/* Filter panel wrapper - slides over content */}
-      <div 
-        className={`fixed top-[52px] left-0 right-0 z-50 bg-white overflow-auto transition-all duration-300 ease-in-out shadow-md ${
-          filtersExpanded ? 'h-[80vh] opacity-100' : 'h-0 opacity-0'
-        }`}
-      >
-        <div className="bg-white">
-          <div className="divide-y divide-[rgb(0,130,188)]/15">
-            {/* Render appropriate filter panel based on mode */}
-            {renderFilterPanel()}
-            
-            {/* Bottom close button */}
-            <div className="sticky bottom-0 bg-white shadow-md">
-              <button 
-                onClick={toggleFilters}
-                className="w-full px-4 py-2 text-[rgb(0,130,188)] font-medium hover:bg-gray-50 transition-colors"
-              >
-                Apply Filters
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Render all dropdowns at the root level to prevent clipping */}
       {openDropdown === 'centers' && (
