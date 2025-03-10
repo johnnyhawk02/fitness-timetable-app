@@ -14,22 +14,33 @@ const CENTERS_WITH_POOLS = ['Bootle', 'Meadows', 'Dunes'];
  * @returns {JSX.Element}
  */
 const CentersFilter = ({ centers, selected, isSwimmingMode, onChange }) => {
-  // Find the currently selected center (there should be only one)
-  const selectedCenter = centers.find(center => selected[center]) || '';
+  // Check if a specific center is selected (exclusive selection)
+  const selectedCenter = centers.find(center => selected[center] && 
+    centers.some(c => c !== center && !selected[c])) || '';
+  
+  // Check if all centers are selected
+  const isAllSelected = centers.every(center => selected[center]) || 
+    centers.every(center => !selected[center]);
   
   // Create options array with centers and their labels
-  const options = centers.map(center => ({
-    value: center,
-    label: center + (isSwimmingMode && CENTERS_WITH_POOLS.includes(center) ? ' (Pool)' : '')
-  }));
+  const options = [
+    { value: '', label: 'All Centers' },
+    ...centers.map(center => ({
+      value: center,
+      label: center + (isSwimmingMode && CENTERS_WITH_POOLS.includes(center) ? ' (Pool)' : '')
+    }))
+  ];
 
   // Handle selection change - always exclusive (only one center at a time)
   const handleChange = (e) => {
     const value = e.target.value;
     
-    if (value) {
+    if (value === '') {
+      // "All" option selected - set all centers to true
+      onChange('All');
+    } else if (value) {
       // Exclusive selection - only select the chosen center
-      onChange(value); // This will set just the selected center
+      onChange(value);
     }
   };
 
@@ -47,23 +58,22 @@ const CentersFilter = ({ centers, selected, isSwimmingMode, onChange }) => {
       <div className="px-2 py-1.5 sm:px-3 sm:py-2">
         <div className="relative">
           <select
-            value={selectedCenter}
+            value={selectedCenter || (isAllSelected ? '' : '')}
             onChange={handleChange}
             className="block w-full rounded-md border border-gray-200 bg-white py-1 sm:py-1.5 pl-2 pr-8 text-xs sm:text-sm text-gray-700 focus:border-[rgb(0,130,188)] focus:outline-none focus:ring-1 focus:ring-[rgb(0,130,188)]"
             style={{
-              color: selectedCenter ? 'rgb(0,130,188)' : 'inherit',
-              fontWeight: selectedCenter ? '500' : 'normal'
+              color: selectedCenter || isAllSelected ? 'rgb(0,130,188)' : 'inherit',
+              fontWeight: selectedCenter || isAllSelected ? '500' : 'normal'
             }}
           >
-            <option value="">Select a center</option>
             {options.map(option => (
               <option 
                 key={option.value} 
                 value={option.value}
                 style={{
-                  color: option.value === selectedCenter ? 'rgb(0,130,188)' : 'inherit',
-                  fontWeight: option.value === selectedCenter ? '500' : 'normal',
-                  backgroundColor: option.value === selectedCenter ? 'rgba(0,130,188,0.1)' : 'transparent'
+                  color: (option.value === selectedCenter || (option.value === '' && isAllSelected)) ? 'rgb(0,130,188)' : 'inherit',
+                  fontWeight: (option.value === selectedCenter || (option.value === '' && isAllSelected)) ? '500' : 'normal',
+                  backgroundColor: (option.value === selectedCenter || (option.value === '' && isAllSelected)) ? 'rgba(0,130,188,0.1)' : 'transparent'
                 }}
               >
                 {option.label}

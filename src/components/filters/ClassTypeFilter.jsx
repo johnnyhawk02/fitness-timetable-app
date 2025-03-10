@@ -19,6 +19,12 @@ const ClassTypeFilter = ({ value, onChange }) => {
     { value: 'spinning', label: 'Spinning' }
   ];
   
+  // Handle change to ensure "All Classes" is exclusive
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+    onChange(newValue); // Pass the new value to parent component
+  };
+  
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full flex flex-col">
       <div className="px-2 py-1.5 sm:px-3 sm:py-2 border-b border-gray-100">
@@ -34,7 +40,7 @@ const ClassTypeFilter = ({ value, onChange }) => {
         <div className="relative">
           <select
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={handleChange}
             className="block w-full rounded-md border border-gray-200 bg-white py-1 sm:py-1.5 pl-2 pr-8 text-xs sm:text-sm text-gray-700 focus:border-[rgb(0,130,188)] focus:outline-none focus:ring-1 focus:ring-[rgb(0,130,188)]"
             style={{
               color: value ? 'rgb(0,130,188)' : 'inherit',

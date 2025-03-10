@@ -256,12 +256,22 @@ const FitnessTimetableInner = () => {
               // When a center is selected, reset all centers to false
               // then set the selected one to true
               const newCenters = {};
-              centers.forEach(c => {
-                newCenters[c] = (c === center);
-              });
               
-              actions.setFilter('centers', newCenters);
-              showToast(`Showing ${center} only`);
+              if (center === 'All') {
+                // If 'All' is selected, set all centers to true to show all centers
+                centers.forEach(c => {
+                  newCenters[c] = true;
+                });
+                actions.setFilter('centers', newCenters);
+                showToast('Showing all centers');
+              } else {
+                // Otherwise set just the selected center
+                centers.forEach(c => {
+                  newCenters[c] = (c === center);
+                });
+                actions.setFilter('centers', newCenters);
+                showToast(`Showing ${center} only`);
+              }
             }}
             colors={COLORS}
             colorMode={colorMode}
@@ -294,12 +304,22 @@ const FitnessTimetableInner = () => {
               // When a center is selected, reset all centers to false
               // then set the selected one to true
               const newCenters = {};
-              centers.forEach(c => {
-                newCenters[c] = (c === center);
-              });
               
-              actions.setFilter('centers', newCenters);
-              showToast(`Showing ${center} only`);
+              if (center === 'All') {
+                // If 'All' is selected, set all centers to true to show all centers
+                centers.forEach(c => {
+                  newCenters[c] = true;
+                });
+                actions.setFilter('centers', newCenters);
+                showToast('Showing all centers');
+              } else {
+                // Otherwise set just the selected center
+                centers.forEach(c => {
+                  newCenters[c] = (c === center);
+                });
+                actions.setFilter('centers', newCenters);
+                showToast(`Showing ${center} only`);
+              }
             }}
             colors={COLORS}
             colorMode={colorMode}
