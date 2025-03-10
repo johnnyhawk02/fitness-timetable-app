@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { getClassCategory } from '../services/classService';
 
 /**
  * Custom hook to filter classes based on various criteria
@@ -131,6 +132,11 @@ function useFilteredClasses(allClasses, filters, isSwimmingMode) {
 function convertTimeToHours(timeString) {
   if (!timeString) return 0;
   
+  // Handle time range format (e.g., "09:00 - 10:00")
+  if (timeString.includes('-')) {
+    timeString = timeString.split('-')[0].trim();
+  }
+  
   // Extract hours, minutes and am/pm
   const match = timeString.match(/(\d+)(?::(\d+))?\s*([aApP][mM])?/);
   if (!match) return 0;
@@ -145,65 +151,6 @@ function convertTimeToHours(timeString) {
   
   // Return as decimal hours
   return hours + (minutes / 60);
-}
-
-// Helper function to determine class category
-function getClassCategory(activity) {
-  if (!activity) return 'other';
-  
-  const activityLower = activity.toLowerCase();
-  
-  // Skip placeholder entries
-  if (activityLower.includes('no classes') || 
-      activityLower === 'none' || 
-      activityLower === '-') 
-    return 'other';
-  
-  // Cardio classes
-  if (activityLower.includes('hiit') || 
-      activityLower.includes('spin') || 
-      activityLower.includes('zumba') || 
-      activityLower.includes('aerobic') || 
-      activityLower.includes('step') ||
-      activityLower.includes('cardio') ||
-      activityLower.includes('cycle') ||
-      activityLower.includes('combat') ||
-      activityLower.includes('box') ||
-      activityLower.includes('circuit')) 
-    return 'cardio';
-  
-  // Strength classes
-  if (activityLower.includes('pump') || 
-      activityLower.includes('kettlebell') || 
-      activityLower.includes('strength') || 
-      activityLower.includes('tone') || 
-      activityLower.includes('conditioning') ||
-      activityLower.includes('bodytone') ||
-      activityLower.includes('body tone'))
-    return 'strength';
-  
-  // Mind & body classes
-  if (activityLower.includes('yoga') || 
-      activityLower.includes('pilates') || 
-      activityLower.includes('balance') || 
-      activityLower.includes('flex') ||
-      activityLower.includes('stretch') ||
-      activityLower.includes('relax'))
-    return 'mind-body';
-  
-  // Core classes
-  if (activityLower.includes('abs') || 
-      activityLower.includes('core'))
-    return 'core';
-  
-  // Spinning classes
-  if (activityLower.includes('spin') || 
-      activityLower.includes('cycle') ||
-      activityLower.includes('rpm'))
-    return 'spinning';
-  
-  // Default category
-  return 'other';
 }
 
 export default useFilteredClasses; 
