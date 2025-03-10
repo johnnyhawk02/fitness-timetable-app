@@ -3,7 +3,7 @@ const dunesPoolData = [
   {
     "center": "Dunes",
     "day": "Monday",
-    "time": "7:00 - 19:00",
+    "time": "07:00 - 19:00",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -11,7 +11,7 @@ const dunesPoolData = [
   {
     "center": "Dunes",
     "day": "Monday",
-    "time": "9:00 - 10:00",
+    "time": "09:00 - 10:00",
     "activity": "£1 Swim",
     "location": "Main Pool",
     "virtual": false
@@ -37,7 +37,7 @@ const dunesPoolData = [
   {
     "center": "Dunes",
     "day": "Tuesday",
-    "time": "7:00 - 19:30",
+    "time": "07:00 - 19:30",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -63,7 +63,7 @@ const dunesPoolData = [
   {
     "center": "Dunes",
     "day": "Wednesday",
-    "time": "7:00 - 19:30",
+    "time": "07:00 - 19:30",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -89,7 +89,7 @@ const dunesPoolData = [
   {
     "center": "Dunes",
     "day": "Thursday",
-    "time": "7:00 - 19:30",
+    "time": "07:00 - 19:30",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -115,7 +115,7 @@ const dunesPoolData = [
   {
     "center": "Dunes",
     "day": "Friday",
-    "time": "7:00 - 21:30",
+    "time": "07:00 - 21:30",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -167,7 +167,7 @@ const dunesPoolData = [
   {
     "center": "Dunes",
     "day": "Sunday",
-    "time": "9:00 - 16:00",
+    "time": "09:00 - 16:00",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -239,7 +239,7 @@ const dunesPoolData = [
   {
     "center": "Dunes",
     "day": "Sunday",
-    "time": "9:00 - 16:00",
+    "time": "09:00 - 16:00",
     "activity": "Public Swim",
     "location": "Small Pool",
     "virtual": false

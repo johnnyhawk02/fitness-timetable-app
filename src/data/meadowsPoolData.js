@@ -3,7 +3,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Monday",
-    "time": "6:30 - 12:00",
+    "time": "06:30 - 12:00",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -11,7 +11,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Monday",
-    "time": "6:30 - 8:30",
+    "time": "06:30 - 08:30",
     "activity": "£2 Swim over 60s",
     "location": "Main Pool",
     "virtual": false
@@ -77,7 +77,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Tuesday",
-    "time": "6:30 - 12:00",
+    "time": "06:30 - 12:00",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -85,7 +85,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Tuesday",
-    "time": "8:00 - 9:00",
+    "time": "08:00 - 09:00",
     "activity": "Calm Waters",
     "location": "Main Pool",
     "virtual": false
@@ -93,7 +93,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Tuesday",
-    "time": "9:00 - 12:00",
+    "time": "09:00 - 12:00",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -151,7 +151,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Wednesday",
-    "time": "6:30 - 12:00",
+    "time": "06:30 - 12:00",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -159,7 +159,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Wednesday",
-    "time": "6:30 - 8:30",
+    "time": "06:30 - 08:30",
     "activity": "£2 Swim over 60s",
     "location": "Main Pool",
     "virtual": false
@@ -217,7 +217,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Thursday",
-    "time": "6:30 - 12:00",
+    "time": "06:30 - 12:00",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -225,7 +225,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Thursday",
-    "time": "8:00 - 9:00",
+    "time": "08:00 - 09:00",
     "activity": "Calm Waters",
     "location": "Main Pool",
     "virtual": false
@@ -291,7 +291,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Friday",
-    "time": "6:30 - 12:00",
+    "time": "06:30 - 12:00",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -299,7 +299,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Friday",
-    "time": "6:30 - 8:30",
+    "time": "06:30 - 08:30",
     "activity": "£2 Swim over 60s",
     "location": "Main Pool",
     "virtual": false
@@ -341,7 +341,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Saturday",
-    "time": "8:30 - 17:00",
+    "time": "08:30 - 17:00",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -349,7 +349,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Saturday",
-    "time": "8:30 - 12:00",
+    "time": "08:30 - 12:00",
     "activity": "Lessons (2 Lanes)",
     "location": "Main Pool",
     "virtual": false
@@ -367,7 +367,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Sunday",
-    "time": "8:30 - 15:00",
+    "time": "08:30 - 15:00",
     "activity": "Public Swim",
     "location": "Main Pool",
     "virtual": false
@@ -375,7 +375,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Sunday",
-    "time": "8:30 - 12:00",
+    "time": "08:30 - 12:00",
     "activity": "Lessons (2 Lanes)",
     "location": "Main Pool",
     "virtual": false
@@ -393,7 +393,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Monday",
-    "time": "6:30 - 9:00",
+    "time": "06:30 - 09:00",
     "activity": "Public Swim",
     "location": "Learner Pool",
     "virtual": false
@@ -411,7 +411,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Tuesday",
-    "time": "6:30 - 9:00",
+    "time": "06:30 - 09:00",
     "activity": "Public Swim",
     "location": "Learner Pool",
     "virtual": false
@@ -437,7 +437,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Wednesday",
-    "time": "6:30 - 9:00",
+    "time": "06:30 - 09:00",
     "activity": "Public Swim",
     "location": "Learner Pool",
     "virtual": false
@@ -463,7 +463,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Thursday",
-    "time": "6:30 - 9:00",
+    "time": "06:30 - 09:00",
     "activity": "Public Swim",
     "location": "Learner Pool",
     "virtual": false
@@ -481,7 +481,7 @@ const meadowsLeisureCentreData = [
   {
     "center": "Meadows",
     "day": "Friday",
-    "time": "6:30 - 9:00",
+    "time": "06:30 - 09:00",
     "activity": "Public Swim",
     "location": "Learner Pool",
     "virtual": false
