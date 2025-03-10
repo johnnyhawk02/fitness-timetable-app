@@ -4,8 +4,6 @@ import useLocalStorage from '../hooks/useLocalStorage';
 import useFilteredClasses from '../hooks/useFilteredClasses';
 
 // Component imports
-import ModeToggle from './ui/ModeToggle';
-import FilterButton from './ui/FilterButton';
 import NowButton from './ui/NowButton';
 import ClassList from './ui/ClassList';
 import ClassDetails from './ui/ClassDetails';
@@ -274,145 +272,34 @@ const FitnessTimetableInner = () => {
     showToast(`Switching to ${newMode} mode`);
   };
   
-  // Render swimming specific filters
-  const renderSwimmingFilters = () => (
-    <div>
-      {/* Single row for swimming filters, including on mobile */}
-      <div className="flex flex-row gap-2">
-        <div className="flex-1 min-w-0">
-          <PoolTypeFilter
-            value={state.filters.poolLocationType}
-            onChange={(value) => actions.setFilter('poolLocationType', value)}
-            colors={COLORS}
-          />
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <CentersFilter
-            centers={centers}
-            selected={state.filters.centers}
-            isSwimmingMode={isSwimmingMode}
-            onChange={(center) => {
-              // When a center is selected, reset all centers to false
-              // then set the selected one to true
-              const newCenters = {};
-              
-              if (center === 'All') {
-                // If 'All' is selected, set all centers to true to show all centers
-                centers.forEach(c => {
-                  newCenters[c] = true;
-                });
-                actions.setFilter('centers', newCenters);
-                showToast('Showing all centers');
-              } else {
-                // Otherwise set just the selected center
-                centers.forEach(c => {
-                  newCenters[c] = (c === center);
-                });
-                actions.setFilter('centers', newCenters);
-                showToast(`Showing ${center} only`);
-              }
-            }}
-            colors={COLORS}
-            colorMode={colorMode}
-          />
-        </div>
-      </div>
-    </div>
-  );
-  
-  // Render fitness class specific filters
-  const renderFitnessFilters = () => (
-    <div>
-      {/* Single row for fitness filters, including on mobile */}
-      <div className="flex flex-row gap-2">
-        <div className="flex-1 min-w-0">
-          <ClassTypeFilter
-            value={state.filters.category}
-            onChange={(value) => actions.setFilter('category', value)}
-            colors={COLORS}
-            colorMode={colorMode}
-          />
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <CentersFilter
-            centers={centers}
-            selected={state.filters.centers}
-            isSwimmingMode={isSwimmingMode}
-            onChange={(center) => {
-              // When a center is selected, reset all centers to false
-              // then set the selected one to true
-              const newCenters = {};
-              
-              if (center === 'All') {
-                // If 'All' is selected, set all centers to true to show all centers
-                centers.forEach(c => {
-                  newCenters[c] = true;
-                });
-                actions.setFilter('centers', newCenters);
-                showToast('Showing all centers');
-              } else {
-                // Otherwise set just the selected center
-                centers.forEach(c => {
-                  newCenters[c] = (c === center);
-                });
-                actions.setFilter('centers', newCenters);
-                showToast(`Showing ${center} only`);
-              }
-            }}
-            colors={COLORS}
-            colorMode={colorMode}
-          />
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <VirtualClassToggle
-            value={state.filters.includeVirtual}
-            onChange={(value) => actions.setFilter('includeVirtual', value)}
-            colors={COLORS}
-          />
-        </div>
-      </div>
-    </div>
-  );
-  
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Loading screen */}
       <LoadingScreen show={loading} colors={COLORS} />
       
-      {/* App bar with logo, filter buttons and count - always Sefton blue */}
+      {/* Combined app bar with logo, mode switcher, and action buttons - always Sefton blue */}
       <div 
-        className="bg-[rgb(0,130,188)]/95 backdrop-blur-sm text-white px-4 py-2.5 shadow-lg z-20 sticky top-0"
+        className="bg-[rgb(0,130,188)]/95 backdrop-blur-sm text-white px-3 py-2 shadow-lg z-20 sticky top-0"
       >
-        {/* Single row for app bar with all elements */}
         <div className="flex items-center justify-between">
-          {/* Logo only - removed redundant mode indicator */}
-          <div className="flex items-center">
-            <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain rounded shadow-sm" />
+          {/* Left section with logo and mode switch */}
+          <div className="flex items-center gap-2">
+            <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-7 object-contain rounded shadow-sm" />
+            <button
+              onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
+              className={`ml-2 px-2 py-1 text-white hover:opacity-90 rounded-md text-xs font-medium transition-all shadow-sm ${
+                isSwimmingMode ? 'bg-orange-600' : 'bg-blue-600'
+              }`}
+            >
+              {isSwimmingMode ? 'Swimming' : 'Fitness'} Mode
+            </button>
           </div>
           
-          {/* Action buttons group */}
+          {/* Right section with action buttons */}
           <div className="flex items-center gap-2">
-            {/* Mode toggle button */}
-            <ModeToggle
-              isSwimmingMode={isSwimmingMode}
-              onToggle={(value) => handleModeSwitch(value ? 'swimming' : 'fitness')}
-              colors={COLORS}
-            />
-            
-            {/* Filter button */}
-            <FilterButton
-              onClick={() => actions.toggleFiltersExpanded()}
-              activeCount={getActiveFilterCount()}
-              colors={COLORS}
-            />
-            
-            {/* Now button */}
             <NowButton onClick={scrollToCurrentTime} colors={COLORS} />
             
-            {/* Color mode toggle - redesigned to be distinct */}
+            {/* Color mode toggle */}
             <button
               onClick={toggleColorMode}
               className="flex items-center justify-center bg-white/5 hover:bg-white/15 rounded w-7 h-7 transition-all shadow-sm focus:outline-none"
@@ -439,59 +326,104 @@ const FitnessTimetableInner = () => {
       {/* Toast notification */}
       <Toast show={toast.show} message={toast.message} colors={COLORS} />
       
-      {/* Filter panel - slides down when expanded with mode-specific colors */}
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out border-b border-gray-300 shadow-lg relative z-10 ${
-          state.ui.filtersExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        <div className={`${isSwimmingMode ? 'bg-blue-50' : 'bg-orange-50'}`}>
-          <div className="max-w-5xl mx-auto">
-            <div className="divide-y divide-gray-200">
-              {/* Filter header with mode info and switch button - mode-specific styling */}
-              <div className={`px-2 py-1.5 sm:px-3 sm:py-2 border-b ${
-                isSwimmingMode 
-                  ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200' 
-                  : 'bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs sm:text-sm font-medium text-gray-800 flex items-center">
-                    <svg className={`w-4 h-4 mr-1 ${isSwimmingMode ? 'text-blue-600' : 'text-orange-600'}`} 
-                      fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                    </svg>
-                    {isSwimmingMode ? 'Swimming Pool Filters' : 'Fitness Class Filters'}
-                  </h3>
-                  <button
-                    onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
-                    className={`px-2 py-1 text-white hover:opacity-90 rounded-md text-xs sm:text-sm font-medium transition-all shadow-sm ${
-                      isSwimmingMode ? 'bg-orange-600' : 'bg-blue-600'
-                    }`}
-                  >
-                    Switch to {isSwimmingMode ? 'Fitness' : 'Swimming'}
-                  </button>
-                </div>
-              </div>
-              
-              {/* Filter section wrapper with padding and background */}
-              <div className="p-2 sm:p-4 bg-white">
-                {/* Render appropriate filter panel based on mode */}
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-visible min-h-[180px]">
-                  <div className="p-2 sm:p-4">
-                    {isSwimmingMode ? renderSwimmingFilters() : renderFitnessFilters()}
+      {/* Compact filter section - just dropdowns without labels */}
+      <div className={`py-1 px-2 border-b border-gray-200 shadow-sm ${isSwimmingMode ? 'bg-blue-50' : 'bg-orange-50'}`}>
+        <div className="max-w-5xl mx-auto">
+          {/* Just the dropdowns without any label */}
+          <div className="overflow-x-auto">
+            <div className="flex gap-2 py-1">
+              {isSwimmingMode ? (
+                <>
+                  <div className="flex-1 min-w-[120px]">
+                    <PoolTypeFilter
+                      value={state.filters.poolLocationType}
+                      onChange={(value) => actions.setFilter('poolLocationType', value)}
+                      colors={COLORS}
+                    />
                   </div>
-                </div>
-              </div>
-              
-              {/* Bottom close button - mode-specific styling */}
-              <div className="sticky bottom-0 py-3 px-4 bg-gradient-to-b from-gray-50/80 to-gray-50 backdrop-blur-md border-t border-gray-200 shadow-[0_-2px_5px_rgba(0,0,0,0.05)]">
-                <button 
-                  onClick={() => actions.toggleFiltersExpanded()}
-                  className="w-full text-white px-4 py-2.5 rounded-lg font-medium hover:opacity-90 transition-all shadow-sm bg-[rgb(0,130,188)]"
-                >
-                  Apply Filters
-                </button>
-              </div>
+                  
+                  <div className="flex-1 min-w-[120px]">
+                    <CentersFilter
+                      centers={centers}
+                      selected={state.filters.centers}
+                      isSwimmingMode={isSwimmingMode}
+                      onChange={(center) => {
+                        // When a center is selected, reset all centers to false
+                        // then set the selected one to true
+                        const newCenters = {};
+                        
+                        if (center === 'All') {
+                          // If 'All' is selected, set all centers to true to show all centers
+                          centers.forEach(c => {
+                            newCenters[c] = true;
+                          });
+                          actions.setFilter('centers', newCenters);
+                          showToast('Showing all centers');
+                        } else {
+                          // Otherwise set just the selected center
+                          centers.forEach(c => {
+                            newCenters[c] = (c === center);
+                          });
+                          actions.setFilter('centers', newCenters);
+                          showToast(`Showing ${center} only`);
+                        }
+                      }}
+                      colors={COLORS}
+                      colorMode={colorMode}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex-1 min-w-[120px]">
+                    <ClassTypeFilter
+                      value={state.filters.category}
+                      onChange={(value) => actions.setFilter('category', value)}
+                      colors={COLORS}
+                      colorMode={colorMode}
+                    />
+                  </div>
+                  
+                  <div className="flex-1 min-w-[120px]">
+                    <CentersFilter
+                      centers={centers}
+                      selected={state.filters.centers}
+                      isSwimmingMode={isSwimmingMode}
+                      onChange={(center) => {
+                        // When a center is selected, reset all centers to false
+                        // then set the selected one to true
+                        const newCenters = {};
+                        
+                        if (center === 'All') {
+                          // If 'All' is selected, set all centers to true to show all centers
+                          centers.forEach(c => {
+                            newCenters[c] = true;
+                          });
+                          actions.setFilter('centers', newCenters);
+                          showToast('Showing all centers');
+                        } else {
+                          // Otherwise set just the selected center
+                          centers.forEach(c => {
+                            newCenters[c] = (c === center);
+                          });
+                          actions.setFilter('centers', newCenters);
+                          showToast(`Showing ${center} only`);
+                        }
+                      }}
+                      colors={COLORS}
+                      colorMode={colorMode}
+                    />
+                  </div>
+                  
+                  <div className="flex-1 min-w-[120px]">
+                    <VirtualClassToggle
+                      value={state.filters.includeVirtual}
+                      onChange={(value) => actions.setFilter('includeVirtual', value)}
+                      colors={COLORS}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -502,21 +434,7 @@ const FitnessTimetableInner = () => {
         isSwimmingMode ? 'bg-blue-50' : 'bg-orange-50'
       }`}>
         <div className="h-full overflow-y-auto scrollbar-hide">
-          {/* Mode indicator in scrollable area */}
-          <div className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between py-2 px-4">
-              <span className="text-sm font-medium text-gray-700 flex items-center">
-                <span 
-                  className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                    isSwimmingMode ? 'bg-cyan-500' : 'bg-orange-500'
-                  }`}
-                ></span>
-                {isSwimmingMode ? 'Pool Sessions' : 'Fitness Classes'}
-              </span>
-            </div>
-          </div>
-          
-          {/* Class list component */}
+          {/* Class list component - removed redundant mode indicator */}
           <ClassList 
             classesByDay={classesByDay}
             onClassClick={handleClassClick}
