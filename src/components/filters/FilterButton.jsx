@@ -29,7 +29,7 @@ const FilterButton = ({
     >
       <div className="flex items-center">
         {icon}
-        <span className="hidden sm:inline">{label}</span>
+        <span className="ml-1.5">{label}</span>
       </div>
       {isSelected && (
         <svg

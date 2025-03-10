@@ -53,13 +53,15 @@ const ClassList = ({ classes, onClassClick, colors = {}, colorMode = 'standard' 
     return colors.categoryColors?.[category] || colors.primary || 'rgb(0,130,188)';
   };
   
-  // Get background color for a day header
+  // Get color for a day header
   const getDayHeaderColor = (day) => {
     if (colorMode === 'standard') {
-      return colors.primaryMedium || 'rgb(0,130,188, 0.6)';
+      // Use a darker shade for standard mode to ensure good contrast
+      return 'rgb(0,99,165)'; // Darker blue for better contrast
     }
     
-    return colors.dayColors?.[day] || colors.primaryMedium || 'rgb(0,130,188, 0.6)';
+    // Make sure color is dark enough for white text
+    return colors.dayColors?.[day] || colors.primaryMedium || 'rgb(0,99,165)';
   };
   
   // Get color for a center badge
@@ -84,7 +86,8 @@ const ClassList = ({ classes, onClassClick, colors = {}, colorMode = 'standard' 
   return (
     <div className="grid grid-cols-1 gap-6">
       {Object.entries(classesByDay).map(([day, dayClasses]) => {
-        if (dayClasses.length === 0) return null;
+        // Always render the day, even if no classes
+        // Just remove the early return
         
         return (
           <div 
@@ -94,12 +97,13 @@ const ClassList = ({ classes, onClassClick, colors = {}, colorMode = 'standard' 
           >
             {/* Day header with enhanced styling */}
             <div 
-              className="py-3 px-4 flex items-center border-b border-gray-200"
+              className="py-3 px-4 flex items-center border-b border-gray-200 sticky top-0 z-10 shadow-sm"
               style={{ 
-                background: `linear-gradient(to right, ${getDayHeaderColor(day)}, ${getDayHeaderColor(day)}CC)`,
+                background: getDayHeaderColor(day),
+                color: 'white'
               }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-white opacity-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
                 <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -111,7 +115,7 @@ const ClassList = ({ classes, onClassClick, colors = {}, colorMode = 'standard' 
             {/* Classes container */}
             <div className="divide-y divide-gray-100">
               {dayClasses.length === 0 ? (
-                <div className="p-4 text-gray-500">No classes available</div>
+                <div className="p-4 text-gray-500 text-sm italic">No classes on {day}</div>
               ) : (
                 dayClasses.map((cls, idx) => {
                   const classColor = getClassColor(cls.activity);

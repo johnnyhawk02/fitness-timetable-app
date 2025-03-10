@@ -10,12 +10,12 @@ import FilterButton from './FilterButton';
  * @returns {JSX.Element}
  */
 const PoolTypeFilter = ({ value, onChange }) => {
-  // Icons for each pool type
+  // Icons for each pool type - updated with consistent margin
   const poolTypeIcons = {
     all: (
       <svg 
         xmlns="http://www.w3.org/2000/svg" 
-        className="h-4 w-4 sm:mr-1.5" 
+        className="h-4 w-4" 
         viewBox="0 0 24 24" 
         fill="none" 
         stroke="currentColor" 
@@ -29,7 +29,7 @@ const PoolTypeFilter = ({ value, onChange }) => {
     main: (
       <svg 
         xmlns="http://www.w3.org/2000/svg" 
-        className="h-4 w-4 sm:mr-1.5" 
+        className="h-4 w-4" 
         viewBox="0 0 24 24" 
         fill="none" 
         stroke="currentColor" 
@@ -45,7 +45,7 @@ const PoolTypeFilter = ({ value, onChange }) => {
     leisure: (
       <svg 
         xmlns="http://www.w3.org/2000/svg" 
-        className="h-4 w-4 sm:mr-1.5" 
+        className="h-4 w-4" 
         viewBox="0 0 24 24" 
         fill="none" 
         stroke="currentColor" 

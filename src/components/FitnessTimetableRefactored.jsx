@@ -39,15 +39,15 @@ const COLORS = {
   info: 'rgb(3,169,244)', // Light Blue
   infoLight: 'rgb(3,169,244, 0.1)',
   
-  // Day colors (more subtle)
+  // Day colors (darker for better contrast with white text)
   dayColors: {
-    'Monday': 'rgb(3,169,244, 0.7)', // Light Blue
-    'Tuesday': 'rgb(156,39,176, 0.7)', // Purple
-    'Wednesday': 'rgb(76,175,80, 0.7)', // Green
-    'Thursday': 'rgb(255,152,0, 0.7)', // Orange
-    'Friday': 'rgb(233,30,99, 0.7)', // Pink
-    'Saturday': 'rgb(0,188,212, 0.7)', // Cyan
-    'Sunday': 'rgb(121,85,72, 0.7)', // Brown
+    'Monday': 'rgb(3,119,194)', // Darker Blue
+    'Tuesday': 'rgb(126,29,156)', // Darker Purple
+    'Wednesday': 'rgb(46,125,50)', // Darker Green
+    'Thursday': 'rgb(230,122,0)', // Darker Orange
+    'Friday': 'rgb(183,28,78)', // Darker Pink
+    'Saturday': 'rgb(0,138,162)', // Darker Cyan
+    'Sunday': 'rgb(91,55,42)', // Darker Brown
   },
   
   // Category colors
@@ -144,8 +144,11 @@ const FitnessTimetableInner = () => {
     
     const todayElement = document.getElementById(`day-${dayOfWeek}`);
     if (todayElement) {
-      todayElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      showToast(`Scrolled to ${dayOfWeek}`);
+      // Add a small delay to ensure layout is complete
+      setTimeout(() => {
+        todayElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        showToast(`Scrolled to ${dayOfWeek}`);
+      }, 100);
     } else {
       showToast('No classes available for today');
     }
@@ -438,7 +441,7 @@ const FitnessTimetableInner = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[rgb(0,130,188)]"></div>
             </div>
           ) : (
-            <div className="p-4">
+            <div className="p-4 h-[calc(100%-48px)] overflow-y-auto">
               {/* Class list */}
               <ClassList
                 classes={filteredClasses}
@@ -446,6 +449,17 @@ const FitnessTimetableInner = () => {
                 colors={COLORS}
                 colorMode={colorMode}
               />
+              
+              {/* Empty state message if no classes */}
+              {filteredClasses.length === 0 && (
+                <div className="mt-10 text-center p-6 bg-white rounded-lg shadow">
+                  <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-1">No Classes Found</h3>
+                  <p className="text-gray-500">Try adjusting your filters to see more classes.</p>
+                </div>
+              )}
             </div>
           )}
         </div>

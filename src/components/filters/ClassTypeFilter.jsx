@@ -13,7 +13,7 @@ const classCategories = {
 // Icons for each category
 const categoryIcons = {
   cardio: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20.4 3.6a2 2 0 0 0-2.8 0l-8.5 8.5a2 2 0 0 0 0 2.8l3.4 3.4a2 2 0 0 0 2.8 0l8.5-8.5a2 2 0 0 0 0-2.8l-3.4-3.4Z" />
       <path d="m2 22 3-3" />
       <path d="M18 2 6 14" />
@@ -22,7 +22,7 @@ const categoryIcons = {
     </svg>
   ),
   strength: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 5v14" />
       <path d="M18 5v14" />
       <path d="M6 9h12" />
@@ -32,19 +32,19 @@ const categoryIcons = {
     </svg>
   ),
   'mind-body': (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2a10 10 0 1 0 10 10 4 4 0 1 1-8 0 4 4 0 1 1 8 0" />
     </svg>
   ),
   core: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
       <path d="M12 2a4.2 4.2 0 0 0 4 4 4.2 4.2 0 0 1 4 4 4.2 4.2 0 0 1-4 4 4.2 4.2 0 0 0-4 4" />
       <path d="M12 22a4.2 4.2 0 0 1-4-4 4.2 4.2 0 0 0-4-4 4.2 4.2 0 0 0 4-4 4.2 4.2 0 0 1 4-4" />
     </svg>
   ),
   spinning: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3" />
       <path d="M3 12h3" />
       <path d="M15 12h3" />
@@ -55,7 +55,7 @@ const categoryIcons = {
     </svg>
   ),
   all: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h1" />
       <path d="M17 3h1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1" />
       <path d="M12 12v9" />
