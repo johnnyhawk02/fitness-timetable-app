@@ -6,7 +6,7 @@ import useFilteredClasses from '../hooks/useFilteredClasses';
 // Component imports
 import ModeToggle from './ui/ModeToggle';
 import FilterButton from './ui/FilterButton';
-import TodayButton from './ui/TodayButton';
+import NowButton from './ui/NowButton';
 import ClassList from './ui/ClassList';
 import ClassDetails from './ui/ClassDetails';
 import Toast from './ui/Toast';
@@ -180,20 +180,60 @@ const FitnessTimetableInner = () => {
     }, {});
   }, [filteredClasses]); // Removed days from dependencies
   
-  // Function to scroll to today's classes
-  const scrollToToday = () => {
-    const today = new Date();
-    const dayOfWeek = today.toLocaleDateString('en-US', { weekday: 'long' });
+  // Function to scroll to current time
+  const scrollToCurrentTime = () => {
+    const now = new Date();
+    const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' });
     
+    // Get current hour
+    const currentHour = now.getHours();
+    
+    console.log(`Scrolling to current time: ${dayOfWeek} at ${currentHour}:00`);
+    
+    // First find the day section
     const todayElement = document.getElementById(`day-${dayOfWeek}`);
     if (todayElement) {
       // Add a small delay to ensure layout is complete
       setTimeout(() => {
-        todayElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        showToast(`Scrolled to ${dayOfWeek}`);
+        // Try to find a class around the current hour on the current day
+        let targetElement = null;
+        
+        // Look for classes starting at the current hour, or slightly before/after
+        // Check current hour first, then expand search window if needed
+        for (let offset = 0; offset <= 2; offset++) {
+          // Try current hour first, then current hour - offset, then current hour + offset
+          const hourOptions = [currentHour];
+          if (offset > 0) {
+            // Add hours before and after current hour to search window
+            const hourBefore = Math.max(currentHour - offset, 0);
+            const hourAfter = Math.min(currentHour + offset, 23);
+            hourOptions.push(hourBefore, hourAfter);
+          }
+          
+          // Check each potential hour but only on the current day
+          for (const hour of hourOptions) {
+            // Look specifically within today's section
+            const hourElements = todayElement.querySelectorAll(`[data-hour="${hour}"]`);
+            if (hourElements.length > 0) {
+              targetElement = hourElements[0];
+              break;
+            }
+          }
+          
+          if (targetElement) break;
+        }
+        
+        // If no specific class found, just scroll to the day
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          showToast(`Scrolled to current time (${currentHour}:00)`);
+        } else {
+          todayElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          showToast(`Scrolled to ${dayOfWeek}`);
+        }
       }, 100);
     } else {
-      showToast('No classes available for today');
+      showToast(`No classes available for ${dayOfWeek}`);
     }
   };
   
@@ -369,8 +409,8 @@ const FitnessTimetableInner = () => {
               colors={COLORS}
             />
             
-            {/* Today button */}
-            <TodayButton onClick={scrollToToday} colors={COLORS} />
+            {/* Now button */}
+            <NowButton onClick={scrollToCurrentTime} colors={COLORS} />
             
             {/* Color mode toggle - redesigned to be distinct */}
             <button

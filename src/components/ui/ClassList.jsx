@@ -108,6 +108,22 @@ const ClassList = ({
     return timeString;
   };
   
+  // Extract hour from time string (format: "HH:MM" or "HH:MM-HH:MM")
+  const extractHour = (timeString) => {
+    if (!timeString) return 0;
+    
+    // Get the first part (start time)
+    const startTime = timeString.split('-')[0].trim();
+    
+    // Extract hour
+    const hourMatch = startTime.match(/^(\d+):/);
+    if (hourMatch && hourMatch[1]) {
+      return parseInt(hourMatch[1], 10);
+    }
+    
+    return 0;
+  };
+  
   // Check if we have any classes across all days
   const hasAnyClasses = days.some(day => classesByDay[day]?.length > 0);
   
@@ -161,6 +177,7 @@ const ClassList = ({
                     key={`${day}-${idx}`}
                     className={`p-3.5 hover:bg-gray-50 cursor-pointer transition-colors ${idx % 2 === 0 ? 'bg-gray-50/40' : ''}`}
                     onClick={() => onClassClick(cls)}
+                    data-hour={extractHour(cls.time)}
                   >
                     <div className="grid grid-cols-12 gap-2">
                       {/* Time column */}
