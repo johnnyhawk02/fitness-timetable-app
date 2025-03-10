@@ -8,12 +8,7 @@ const initialState = {
     days: {},
     category: '',
     includeVirtual: true,
-    poolLocationType: 'all',
-    timeBlocks: {
-      morning: false,
-      afternoon: false,
-      evening: false
-    }
+    poolLocationType: 'all'
   },
   ui: {
     filtersExpanded: false,

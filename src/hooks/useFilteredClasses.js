@@ -132,25 +132,41 @@ function useFilteredClasses(allClasses, filters, isSwimmingMode) {
 function convertTimeToHours(timeString) {
   if (!timeString) return 0;
   
-  // Handle time range format (e.g., "09:00 - 10:00")
+  // Add debug logging
+  console.log('Converting time:', timeString);
+  
+  // Handle time range format (e.g., "09:00 - 10:00" or "06:35-07:05")
   if (timeString.includes('-')) {
     timeString = timeString.split('-')[0].trim();
+    console.log('Extracted start time:', timeString);
   }
   
-  // Extract hours, minutes and am/pm
+  // Extract hours, minutes and am/pm (if present)
   const match = timeString.match(/(\d+)(?::(\d+))?\s*([aApP][mM])?/);
-  if (!match) return 0;
+  if (!match) {
+    console.log('Failed to parse time:', timeString);
+    return 0;
+  }
   
   let hours = parseInt(match[1], 10);
   const minutes = match[2] ? parseInt(match[2], 10) : 0;
   const isPM = match[3] && match[3].toLowerCase() === 'pm';
   
-  // Convert to 24-hour format
-  if (isPM && hours < 12) hours += 12;
-  if (!isPM && hours === 12) hours = 0;
+  console.log('Parsed time components:', { hours, minutes, isPM, hasAmPm: !!match[3] });
   
-  // Return as decimal hours
-  return hours + (minutes / 60);
+  // Only apply AM/PM conversion if AM/PM is actually specified
+  if (match[3]) {
+    // Convert to 24-hour format if AM/PM is specified
+    if (isPM && hours < 12) hours += 12;
+    if (!isPM && hours === 12) hours = 0;
+  }
+  
+  // For times without AM/PM, assume they're already in 24-hour format
+  // This is the case for our data files (e.g., "06:35-07:05")
+  
+  const result = hours + (minutes / 60);
+  console.log('Converted to decimal hours:', result);
+  return result;
 }
 
 export default useFilteredClasses; 
