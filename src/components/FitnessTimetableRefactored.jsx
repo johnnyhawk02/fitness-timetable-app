@@ -303,54 +303,11 @@ const FitnessTimetableInner = () => {
     <div className="flex flex-col h-screen overflow-hidden">
       {/* App bar with logo, filter buttons and count */}
       <div className="bg-[rgb(0,130,188)]/95 backdrop-blur-sm text-white px-4 py-2.5 shadow-lg z-20 sticky top-0">
-        {/* First row for logo and mode indicator */}
-        <div className="flex items-center justify-between mb-2">
+        {/* Single row for app bar with all elements */}
+        <div className="flex items-center justify-between">
+          {/* Logo only - removed redundant mode indicator */}
           <div className="flex items-center">
             <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain rounded shadow-sm" />
-            <div className="ml-3 flex items-center">
-              <div className={`text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1.5 transition-colors duration-200 ${isSwimmingMode ? 'bg-cyan-500/20' : 'bg-orange-500/20'}`}>
-                {isSwimmingMode ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 8h1a4 4 0 010 8h-1"></path>
-                    <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
-                  </svg>
-                )}
-                <span className="font-semibold">{isSwimmingMode ? 'Swimming' : 'Fitness'}</span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Color mode toggle */}
-          <button
-            onClick={toggleColorMode}
-            className="flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-all shadow-sm backdrop-blur-sm h-7 px-2.5 focus:ring-2 focus:ring-white/30 focus:outline-none"
-            title={`Switch to ${colorMode === 'standard' ? 'vibrant' : 'standard'} colors`}
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-3.5 w-3.5 mr-1" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="5" />
-              <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
-            </svg>
-            <span className="text-xs font-medium">{colorMode === 'standard' ? 'Vibrant' : 'Standard'}</span>
-          </button>
-        </div>
-        
-        {/* Second row for action buttons */}
-        <div className="flex items-center justify-between">
-          <div className="text-xs opacity-70">
-            Fitness Timetable
           </div>
           
           {/* Action buttons group */}
@@ -371,6 +328,27 @@ const FitnessTimetableInner = () => {
             
             {/* Today button */}
             <TodayButton onClick={scrollToToday} colors={COLORS} />
+            
+            {/* Color mode toggle - redesigned to be distinct */}
+            <button
+              onClick={toggleColorMode}
+              className="flex items-center justify-center bg-white/5 hover:bg-white/15 rounded w-7 h-7 transition-all shadow-sm focus:outline-none"
+              title={`Switch to ${colorMode === 'standard' ? 'vibrant' : 'standard'} colors`}
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className={`h-4 w-4 transition-colors ${colorMode === 'vibrant' ? 'text-yellow-300' : 'text-white'}`}
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="5" />
+                <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -387,24 +365,15 @@ const FitnessTimetableInner = () => {
         <div className="bg-gray-50">
           <div className="max-w-3xl mx-auto">
             <div className="divide-y divide-gray-200">
-              {/* Current mode indicator */}
+              {/* Filter header with mode info and switch button */}
               <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    {isSwimmingMode ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 8h1a4 4 0 010 8h-1"></path>
-                        <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
-                      </svg>
-                    )}
-                    <span className="font-semibold text-gray-800">
-                      Current Mode: <span className="text-blue-600">{isSwimmingMode ? 'Swimming' : 'Fitness'}</span>
-                    </span>
-                  </div>
+                  <h3 className="font-semibold text-gray-800 flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                    </svg>
+                    {isSwimmingMode ? 'Swimming Pool Filters' : 'Fitness Class Filters'}
+                  </h3>
                   <button
                     onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
                     className="px-3 py-1 bg-blue-600 text-white hover:bg-blue-700 rounded-md text-sm font-medium transition-all shadow-sm"
@@ -419,12 +388,6 @@ const FitnessTimetableInner = () => {
                 {/* Render appropriate filter panel based on mode */}
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                   <div className="p-4">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                      <svg className="w-4 h-4 mr-1.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                      </svg>
-                      {isSwimmingMode ? 'Swimming Pool Filters' : 'Fitness Class Filters'}
-                    </h3>
                     {isSwimmingMode ? renderSwimmingFilters() : renderFitnessFilters()}
                   </div>
                 </div>
@@ -450,44 +413,21 @@ const FitnessTimetableInner = () => {
           {/* Mode indicator in scrollable area */}
           <div className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
             <div className="flex items-center justify-between py-2 px-4">
-              <div className="flex items-center">
-                {isSwimmingMode ? (
-                  <div className="flex items-center px-2.5 py-1 bg-cyan-100 text-cyan-800 rounded-full mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
-                    </svg>
-                    <span className="text-xs font-medium">Swimming</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center px-2.5 py-1 bg-orange-100 text-orange-800 rounded-full mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M18 8h1a4 4 0 010 8h-1"></path>
-                      <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
-                    </svg>
-                    <span className="text-xs font-medium">Fitness</span>
-                  </div>
-                )}
-                <span className="text-sm font-medium text-gray-700">
-                  Showing all {isSwimmingMode ? 'pool sessions' : 'fitness classes'}
-                </span>
-              </div>
+              <span className="text-sm font-medium text-gray-700 flex items-center">
+                <span 
+                  className={`inline-block w-2 h-2 rounded-full mr-2 ${isSwimmingMode ? 'bg-cyan-500' : 'bg-orange-500'}`}
+                ></span>
+                {isSwimmingMode ? 'Pool Sessions' : 'Fitness Classes'}
+              </span>
               
               <button
                 onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
                 className="text-xs py-1 px-2.5 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded font-medium flex items-center transition-colors"
               >
                 <span className="mr-1">Switch to</span>
-                {isSwimmingMode ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 8h1a4 4 0 010 8h-1"></path>
-                    <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
-                  </svg>
-                )}
-                <span>{isSwimmingMode ? 'Fitness' : 'Swimming'}</span>
+                <span className={isSwimmingMode ? 'text-orange-600' : 'text-cyan-600'}>
+                  {isSwimmingMode ? 'Fitness' : 'Swimming'}
+                </span>
               </button>
             </div>
           </div>
