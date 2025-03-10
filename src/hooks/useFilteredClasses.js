@@ -32,21 +32,34 @@ function useFilteredClasses(allClasses, filters, isSwimmingMode) {
       // In swimming mode, only show pool classes
       const poolClasses = allClasses.filter(cls => 
         cls.location && (
-          cls.location.includes('Pool') || 
-          cls.location.includes('Splash') || 
-          cls.location.includes('Swimming')
+          cls.location.toLowerCase().includes('pool') || 
+          cls.location.toLowerCase().includes('splash') || 
+          cls.location.toLowerCase().includes('swimming') ||
+          // Also check activity names for swim-related activities
+          (cls.activity && (
+            cls.activity.toLowerCase().includes('swim') ||
+            cls.activity.toLowerCase().includes('aqua') ||
+            cls.activity.toLowerCase().includes('water')
+          ))
         )
       );
       console.log('Pool classes found:', poolClasses.length);
       return poolClasses;
     } else {
-      // In fitness mode, exclude pool classes
+      // In fitness mode, exclude pool classes and swim-related activities
       const nonPoolClasses = allClasses.filter(cls => 
-        !cls.location || (
-          !cls.location.includes('Pool') && 
-          !cls.location.includes('Splash') && 
-          !cls.location.includes('Swimming')
-        )
+        // Exclude classes with pool-related locations
+        (!cls.location || (
+          !cls.location.toLowerCase().includes('pool') && 
+          !cls.location.toLowerCase().includes('splash') && 
+          !cls.location.toLowerCase().includes('swimming')
+        )) && 
+        // Exclude classes with swim-related activities
+        (!cls.activity || (
+          !cls.activity.toLowerCase().includes('swim') &&
+          !cls.activity.toLowerCase().includes('aqua') &&
+          !cls.activity.toLowerCase().includes('water')
+        ))
       );
       console.log('Non-pool classes found:', nonPoolClasses.length);
       return nonPoolClasses;
@@ -58,12 +71,12 @@ function useFilteredClasses(allClasses, filters, isSwimmingMode) {
     if (isSwimmingMode && filters.poolLocationType !== 'all') {
       return filteredByMode.filter(cls => {
         if (filters.poolLocationType === 'main') {
-          return cls.location && cls.location.includes('Main Pool');
+          return cls.location && cls.location.toLowerCase().includes('main pool');
         } else if (filters.poolLocationType === 'leisure') {
           return cls.location && (
-            cls.location.includes('Leisure Pool') || 
-            cls.location.includes('Small Pool') || 
-            cls.location.includes('Learner Pool')
+            cls.location.toLowerCase().includes('leisure pool') || 
+            cls.location.toLowerCase().includes('small pool') || 
+            cls.location.toLowerCase().includes('learner pool')
           );
         }
         return true;
@@ -85,8 +98,8 @@ function useFilteredClasses(allClasses, filters, isSwimmingMode) {
       // Virtual filter
       if (!filters.includeVirtual && cls.virtual) return false;
       
-      // Category filter
-      if (filters.category && getClassCategory(cls.activity) !== filters.category) return false;
+      // Category filter (only apply in fitness mode)
+      if (!isSwimmingMode && filters.category && getClassCategory(cls.activity) !== filters.category) return false;
       
       // If all filters pass, include the class
       return true;
@@ -107,7 +120,8 @@ function useFilteredClasses(allClasses, filters, isSwimmingMode) {
     filters.centers, 
     filters.days, 
     filters.includeVirtual,
-    filters.category
+    filters.category,
+    isSwimmingMode
   ]);
 
   return filteredAndSortedClasses;

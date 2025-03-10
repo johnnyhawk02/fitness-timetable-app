@@ -3,64 +3,8 @@ import React from 'react';
 // Centers with pools
 const CENTERS_WITH_POOLS = ['Bootle', 'Meadows', 'Dunes'];
 
-// Icons for each center
-const centerIcons = {
-  Bootle: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
-      <path d="M3 9V5a2 2 0 0 1 2-2h2L8 7" />
-      <path d="M13 5V3h6v6" />
-      <path d="M21 9V3" />
-    </svg>
-  ),
-  Meadows: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-      <path d="m2 12 10 5 10-5" />
-      <path d="m2 12 10-5 10 5" />
-      <path d="M12 22V12" />
-      <path d="M12 12 7.5 6.5" />
-      <path d="M12 12l4.5-5.5" />
-    </svg>
-  ),
-  Dunes: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 22 12 2l10 20" />
-      <path d="M12 22V2" />
-      <path d="M17 22V6" />
-      <path d="M7 22v-8" />
-    </svg>
-  ),
-  Netherton: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
-      <path d="M9 22V12h6v10" />
-      <path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4" />
-    </svg>
-  ),
-  Crosby: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z" />
-      <path d="m9 16 .348-.24c1.465-1.013 3.84-1.013 5.304 0L15 16" />
-      <path d="M8 7h.01" />
-      <path d="M16 7h.01" />
-      <path d="M12 7h.01" />
-      <path d="M12 11h.01" />
-      <path d="M16 11h.01" />
-      <path d="M8 11h.01" />
-      <path d="M10 22v-6.5m4 0V22" />
-    </svg>
-  ),
-  Litherland: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-      <path d="m7 10 3 3 7-7" />
-    </svg>
-  )
-};
-
 /**
- * Component for center selection
+ * Component for center selection using a simple dropdown
  * 
  * @param {Object} props Component props
  * @param {Array} props.centers List of all centers
@@ -70,74 +14,97 @@ const centerIcons = {
  * @returns {JSX.Element}
  */
 const CentersFilter = ({ centers, selected, isSwimmingMode, onChange }) => {
+  // Calculate number of selected centers
+  const selectedCount = Object.values(selected).filter(Boolean).length;
+  
+  // Determine which center is currently selected
+  // If multiple centers are selected, we'll show "Multiple"
+  // If all centers are selected, we'll show "All centers"
+  let currentValue = "";
+  
+  if (selectedCount === 0) {
+    currentValue = "";
+  } else if (selectedCount === centers.length) {
+    currentValue = "all";
+  } else if (selectedCount === 1) {
+    // Find the single selected center
+    currentValue = centers.find(center => selected[center]) || "";
+  } else {
+    currentValue = "multiple";
+  }
+
+  // Create options array
+  const options = [
+    { value: "", label: "Select a center" },
+    { value: "all", label: "All centers" },
+    { value: "none", label: "None" },
+    { value: "multiple", label: `${selectedCount} centers selected` },
+    ...centers.map(center => ({
+      value: center,
+      label: center + (isSwimmingMode && CENTERS_WITH_POOLS.includes(center) ? ' (Pool)' : '')
+    }))
+  ];
+
+  // Only show "multiple" option if multiple centers are selected
+  const filteredOptions = options.filter(option => 
+    option.value !== "multiple" || currentValue === "multiple"
+  );
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    
+    if (value === "all") {
+      onChange('all');
+    } else if (value === "none") {
+      onChange('none');
+    } else if (value) {
+      // When selecting a single center, we'll exclusively select it
+      onChange(value);
+    }
+  };
+
   return (
-    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-      <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clipRule="evenodd" />
-        </svg>
-        Centers
-      </h3>
-      
-      <div className="grid grid-cols-2 gap-2">
-        {centers.map(center => {
-          const hasPool = CENTERS_WITH_POOLS.includes(center);
-          const isSelected = selected[center];
-          
-          return (
-            <button 
-              key={center} 
-              onClick={() => onChange(center)}
-              className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md text-left hover:bg-gray-50 ${
-                isSelected ? 'bg-[rgb(0,130,188)]/5' : ''
-              }`}
-            >
-              <div className="flex items-center">
-                {centerIcons[center] || (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                )}
-                <span className="text-sm text-gray-700">{center}</span>
-                {isSwimmingMode && (
-                  <span className={`ml-1.5 text-xs font-medium ${hasPool ? 'text-[rgb(0,130,188)]' : 'text-red-500'}`}>
-                    {hasPool ? '(Pool)' : '(No Pool)'}
-                  </span>
-                )}
-              </div>
-              {isSelected && (
-                <svg className="w-4 h-4 text-[rgb(0,130,188)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-              )}
-            </button>
-          );
-        })}
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full flex flex-col">
+      <div className="px-2 py-1.5 sm:px-3 sm:py-2 border-b border-gray-100">
+        <h3 className="text-xs sm:text-sm font-medium text-gray-700 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-[rgb(0,130,188)]" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clipRule="evenodd" />
+          </svg>
+          Centers
+        </h3>
       </div>
       
-      <div className="flex justify-between mt-3">
-        <button 
-          onClick={() => onChange('all')}
-          className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors flex items-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 3h18v18H3z" />
-            <path d="m9 13 2 2 4-4" />
-          </svg>
-          <span>Select All</span>
-        </button>
-        <button 
-          onClick={() => onChange('none')}
-          className="px-2 py-1 text-xs font-medium text-[rgb(0,130,188)] bg-[rgb(0,130,188)]/5 hover:bg-[rgb(0,130,188)]/10 rounded-md transition-colors flex items-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 3h18v18H3z" />
-            <path d="m15 9-6 6" />
-            <path d="m9 9 6 6" />
-          </svg>
-          <span>Clear All</span>
-        </button>
+      <div className="px-2 py-1.5 sm:px-3 sm:py-2">
+        <div className="relative">
+          <select
+            value={currentValue}
+            onChange={handleChange}
+            className="block w-full rounded-md border border-gray-200 bg-white py-1 sm:py-1.5 pl-2 pr-8 text-xs sm:text-sm text-gray-700 focus:border-[rgb(0,130,188)] focus:outline-none focus:ring-1 focus:ring-[rgb(0,130,188)]"
+            style={{
+              color: currentValue && currentValue !== "none" ? 'rgb(0,130,188)' : 'inherit',
+              fontWeight: currentValue && currentValue !== "none" ? '500' : 'normal'
+            }}
+          >
+            {filteredOptions.map(option => (
+              <option 
+                key={option.value} 
+                value={option.value}
+                style={{
+                  color: option.value === currentValue ? 'rgb(0,130,188)' : 'inherit',
+                  fontWeight: option.value === currentValue ? '500' : 'normal',
+                  backgroundColor: option.value === currentValue ? 'rgba(0,130,188,0.1)' : 'transparent'
+                }}
+              >
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 sm:px-2 text-gray-500">
+            <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
   );
