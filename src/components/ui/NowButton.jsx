@@ -12,7 +12,7 @@ const NowButton = ({ onClick, colors = {} }) => {
   return (
     <button 
       onClick={onClick}
-      className="flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-all shadow-sm backdrop-blur-sm h-8 px-3"
+      className="flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-all shadow-sm border border-white/30 backdrop-blur-sm h-8 px-4"
       title="Scroll to current time"
     >
       <svg 
@@ -29,7 +29,7 @@ const NowButton = ({ onClick, colors = {} }) => {
           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
         ></path>
       </svg>
-      <span className="text-sm font-medium">Now</span>
+      <span className="text-xs font-medium">Now</span>
     </button>
   );
 };

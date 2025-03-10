@@ -277,18 +277,22 @@ const FitnessTimetableInner = () => {
       {/* Loading screen */}
       <LoadingScreen show={loading} colors={COLORS} />
       
-      {/* Combined app bar with logo, mode switcher, and action buttons - always Sefton blue */}
+      {/* Enhanced app bar with modern styling and gradient */}
       <div 
-        className="bg-[rgb(0,130,188)]/95 backdrop-blur-sm text-white px-3 py-2 shadow-lg z-20 sticky top-0"
+        className="bg-gradient-to-r from-[rgb(0,120,178)] to-[rgb(0,150,210)] text-white px-3 py-3 shadow-md z-20 sticky top-0"
       >
-        <div className="flex items-center justify-between">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
           {/* Left section with logo and mode switch */}
-          <div className="flex items-center gap-2">
-            <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-7 object-contain rounded shadow-sm" />
+          <div className="flex items-center gap-3">
+            <div className="bg-white p-1 rounded-md shadow-sm">
+              <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-6 object-contain rounded-sm" />
+            </div>
             <button
               onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
-              className={`ml-2 px-2 py-1 text-white hover:opacity-90 rounded-md text-xs font-medium transition-all shadow-sm ${
-                isSwimmingMode ? 'bg-orange-600' : 'bg-blue-600'
+              className={`px-3 py-1.5 text-white text-xs font-medium transition-all shadow-sm rounded-full border border-white/30 backdrop-blur-sm ${
+                isSwimmingMode 
+                  ? 'bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500' 
+                  : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500'
               }`}
             >
               {isSwimmingMode ? 'Swimming' : 'Fitness'} Mode
@@ -302,7 +306,7 @@ const FitnessTimetableInner = () => {
             {/* Color mode toggle */}
             <button
               onClick={toggleColorMode}
-              className="flex items-center justify-center bg-white/5 hover:bg-white/15 rounded w-7 h-7 transition-all shadow-sm focus:outline-none"
+              className="flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full w-8 h-8 transition-all shadow-sm focus:outline-none border border-white/20"
               title={`Switch to ${colorMode === 'standard' ? 'vibrant' : 'standard'} colors`}
             >
               <svg 
@@ -326,23 +330,28 @@ const FitnessTimetableInner = () => {
       {/* Toast notification */}
       <Toast show={toast.show} message={toast.message} colors={COLORS} />
       
-      {/* Compact filter section - just dropdowns without labels */}
-      <div className={`py-1 px-2 border-b border-gray-200 shadow-sm ${isSwimmingMode ? 'bg-blue-50' : 'bg-orange-50'}`}>
+      {/* Stylish filter section */}
+      <div className={`py-2 px-3 border-b border-gray-200 ${
+        isSwimmingMode 
+          ? 'bg-gradient-to-r from-blue-50 to-blue-100/80' 
+          : 'bg-gradient-to-r from-orange-50 to-orange-100/80'
+      }`}>
         <div className="max-w-5xl mx-auto">
-          {/* Just the dropdowns without any label */}
-          <div className="overflow-x-auto">
-            <div className="flex gap-2 py-1">
+          {/* Just the dropdowns in a stylish row */}
+          <div className="overflow-x-auto py-0.5">
+            <div className="flex gap-3">
               {isSwimmingMode ? (
                 <>
-                  <div className="flex-1 min-w-[120px]">
+                  <div className="flex-1 min-w-[140px]">
                     <PoolTypeFilter
                       value={state.filters.poolLocationType}
                       onChange={(value) => actions.setFilter('poolLocationType', value)}
                       colors={COLORS}
+                      isSwimmingMode={isSwimmingMode}
                     />
                   </div>
                   
-                  <div className="flex-1 min-w-[120px]">
+                  <div className="flex-1 min-w-[140px]">
                     <CentersFilter
                       centers={centers}
                       selected={state.filters.centers}
@@ -375,16 +384,17 @@ const FitnessTimetableInner = () => {
                 </>
               ) : (
                 <>
-                  <div className="flex-1 min-w-[120px]">
+                  <div className="flex-1 min-w-[140px]">
                     <ClassTypeFilter
                       value={state.filters.category}
                       onChange={(value) => actions.setFilter('category', value)}
                       colors={COLORS}
                       colorMode={colorMode}
+                      isSwimmingMode={isSwimmingMode}
                     />
                   </div>
                   
-                  <div className="flex-1 min-w-[120px]">
+                  <div className="flex-1 min-w-[140px]">
                     <CentersFilter
                       centers={centers}
                       selected={state.filters.centers}
@@ -415,11 +425,12 @@ const FitnessTimetableInner = () => {
                     />
                   </div>
                   
-                  <div className="flex-1 min-w-[120px]">
+                  <div className="flex-1 min-w-[160px]">
                     <VirtualClassToggle
                       value={state.filters.includeVirtual}
                       onChange={(value) => actions.setFilter('includeVirtual', value)}
                       colors={COLORS}
+                      isSwimmingMode={isSwimmingMode}
                     />
                   </div>
                 </>

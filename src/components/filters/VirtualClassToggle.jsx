@@ -6,9 +6,10 @@ import React from 'react';
  * @param {Object} props Component props
  * @param {boolean} props.value Whether virtual classes are included
  * @param {function} props.onChange Handler for change
+ * @param {boolean} props.isSwimmingMode Whether swimming mode is active (defaults to false)
  * @returns {JSX.Element}
  */
-const VirtualClassToggle = ({ value, onChange }) => {
+const VirtualClassToggle = ({ value, onChange, isSwimmingMode = false }) => {
   const options = [
     { value: 'true', label: 'Include virtual classes' },
     { value: 'false', label: 'Exclude virtual classes' }
@@ -21,15 +22,17 @@ const VirtualClassToggle = ({ value, onChange }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-      <div className="p-2">
+    <div className={`bg-white rounded-lg shadow-sm border ${isSwimmingMode ? 'border-blue-200' : 'border-orange-200'} overflow-hidden`}>
+      <div className="p-1.5">
         <div className="relative">
           <select
             value={currentValue}
             onChange={handleChange}
-            className="block w-full rounded-md border border-gray-200 bg-white py-1.5 pl-2 pr-8 text-sm text-gray-700 focus:border-[rgb(0,130,188)] focus:outline-none focus:ring-1 focus:ring-[rgb(0,130,188)]"
+            className={`block w-full rounded-md border ${isSwimmingMode ? 'border-blue-100 focus:border-blue-400' : 'border-orange-100 focus:border-orange-400'} bg-white py-1.5 pl-2 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-1 ${isSwimmingMode ? 'focus:ring-blue-400' : 'focus:ring-orange-400'} appearance-none`}
             style={{
-              color: value ? 'rgb(0,130,188)' : 'inherit',
+              color: value 
+                ? (isSwimmingMode ? 'rgb(3,105,161)' : 'rgb(234,88,12)') 
+                : 'inherit',
               fontWeight: value ? '500' : 'normal'
             }}
           >
@@ -38,9 +41,13 @@ const VirtualClassToggle = ({ value, onChange }) => {
                 key={option.value} 
                 value={option.value}
                 style={{
-                  color: option.value === currentValue ? 'rgb(0,130,188)' : 'inherit',
+                  color: option.value === currentValue 
+                    ? (isSwimmingMode ? 'rgb(3,105,161)' : 'rgb(234,88,12)') 
+                    : 'inherit',
                   fontWeight: option.value === currentValue ? '500' : 'normal',
-                  backgroundColor: option.value === currentValue ? 'rgba(0,130,188,0.1)' : 'transparent'
+                  backgroundColor: option.value === currentValue 
+                    ? (isSwimmingMode ? 'rgba(3,105,161,0.08)' : 'rgba(234,88,12,0.08)') 
+                    : 'transparent'
                 }}
               >
                 {option.label}
