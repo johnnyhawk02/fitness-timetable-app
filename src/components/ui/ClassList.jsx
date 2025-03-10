@@ -22,6 +22,17 @@ const CENTER_ABBREVIATIONS = {
  * @returns {JSX.Element}
  */
 const ClassList = ({ classes, onClassClick, colors = {}, colorMode = 'standard' }) => {
+  // Debug logging
+  console.log('ClassList rendering with', classes.length, 'classes');
+  const poolClasses = classes.filter(c => 
+    c.location && (
+      c.location.includes('Pool') || 
+      c.location.includes('Splash') || 
+      c.location.includes('Swimming')
+    )
+  );
+  console.log('Pool classes count:', poolClasses.length);
+  
   // Group classes by day
   const classesByDay = useMemo(() => {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -71,7 +82,7 @@ const ClassList = ({ classes, onClassClick, colors = {}, colorMode = 'standard' 
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 p-4">
+    <div className="grid grid-cols-1 gap-6">
       {Object.entries(classesByDay).map(([day, dayClasses]) => {
         if (dayClasses.length === 0) return null;
         
@@ -79,14 +90,25 @@ const ClassList = ({ classes, onClassClick, colors = {}, colorMode = 'standard' 
           <div 
             key={day}
             id={`day-${day}`}
-            className="bg-white rounded-lg overflow-hidden shadow"
+            className="bg-white rounded-xl overflow-hidden shadow-md"
           >
+            {/* Day header with enhanced styling */}
             <div 
-              className="text-white font-semibold py-2 px-4 text-sm"
-              style={{ backgroundColor: getDayHeaderColor(day) }}
+              className="py-3 px-4 flex items-center border-b border-gray-200"
+              style={{ 
+                background: `linear-gradient(to right, ${getDayHeaderColor(day)}, ${getDayHeaderColor(day)}CC)`,
+              }}
             >
-              {day}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-white opacity-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <h2 className="text-sm font-bold text-white">{day}</h2>
             </div>
+            
+            {/* Classes container */}
             <div className="divide-y divide-gray-100">
               {dayClasses.length === 0 ? (
                 <div className="p-4 text-gray-500">No classes available</div>
@@ -96,65 +118,66 @@ const ClassList = ({ classes, onClassClick, colors = {}, colorMode = 'standard' 
                   const centerBgColor = getCenterColor(cls.center);
                   const centerTextColor = getCenterTextColor(cls.center);
                   
+                  // Add slightly different background for alternating items for better readability
+                  const isEven = idx % 2 === 0;
+                  
                   return (
                     <div 
                       key={`${day}-${idx}`} 
-                      className="flex items-start p-3 hover:bg-gray-50 cursor-pointer transition-colors group"
+                      className={`flex items-start p-3.5 hover:bg-gray-50 cursor-pointer transition-colors group ${isEven ? 'bg-gray-50/50' : 'bg-white'}`}
                       onClick={() => onClassClick(cls)}
                     >
+                      {/* Time column with subtle styling */}
                       <div className="w-28 flex flex-col text-left pr-4">
                         <div className="font-medium text-gray-700 text-sm pt-0.5">{cls.time}</div>
                       </div>
                       <div className="flex-1 text-left">
                         <div className="flex items-start justify-between">
-                          <div className="font-medium text-sm flex items-center" style={{ color: classColor }}>
-                            {cls.activity}
-                            <svg 
-                              className="w-4 h-4 ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24" 
-                              xmlns="http://www.w3.org/2000/svg"
+                          <div>
+                            <h3 
+                              className="text-sm font-semibold mb-0.5 transition-colors"
+                              style={{ color: classColor }}
                             >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+                              {cls.activity}
+                            </h3>
+                            
+                            {cls.instructor && (
+                              <div className="text-xs text-gray-500 mb-1">
+                                {cls.instructor}
+                              </div>
+                            )}
+                            
+                            {/* Location information if available */}
+                            {cls.location && (
+                              <div className="text-xs text-gray-500 italic mt-1">
+                                {cls.location}
+                              </div>
+                            )}
                           </div>
-                          <span
-                            className="ml-2 w-fit px-1.5 py-0.5 text-xs font-medium rounded"
-                            style={{ 
-                              backgroundColor: centerBgColor,
-                              color: centerTextColor
-                            }}
-                          >
-                            {CENTER_ABBREVIATIONS[cls.center] || cls.center}
-                          </span>
-                        </div>
-                        <div className="flex items-center mt-1">
-                          <svg 
-                            className="w-3 h-3 text-gray-400 mr-1" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24" 
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1 1 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                          </svg>
-                          <span className="text-xs text-gray-500">{cls.location}</span>
-                        </div>
-                        {cls.virtual && (
-                          <div className="mt-1">
-                            <span 
-                              className="text-xs px-1.5 py-0.5 rounded"
-                              style={{ 
-                                backgroundColor: `${colors.info || 'rgb(3,169,244)'}/5`,
-                                color: colors.info || 'rgb(3,169,244)'
+                          
+                          <div className="flex items-center">
+                            {/* Virtual indicator */}
+                            {cls.virtual && (
+                              <div className="mr-2 px-1.5 py-0.5 rounded text-xs border border-green-200 bg-green-50 text-green-700 flex items-center">
+                                <svg className="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                Virtual
+                              </div>
+                            )}
+                            
+                            {/* Center badge */}
+                            <div
+                              className="px-2 py-0.5 rounded-full text-xs font-medium"
+                              style={{
+                                backgroundColor: centerBgColor,
+                                color: centerTextColor
                               }}
                             >
-                              Virtual
-                            </span>
+                              {CENTER_ABBREVIATIONS[cls.center] || cls.center}
+                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   );

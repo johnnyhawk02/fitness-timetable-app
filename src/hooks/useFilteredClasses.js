@@ -8,28 +8,50 @@ import { useMemo } from 'react';
  * @returns {Array} Filtered and sorted array of classes
  */
 function useFilteredClasses(allClasses, filters, isSwimmingMode) {
-  // Step 1: Filter by pool/regular classes
+  // Add debug logging
+  console.log('useFilteredClasses called with isSwimmingMode:', isSwimmingMode);
+  console.log('Total classes before filtering:', allClasses.length);
+  
+  // Find pool classes for debugging
+  const poolClassesTotal = allClasses.filter(cls => 
+    cls.location && (
+      cls.location.includes('Pool') || 
+      cls.location.includes('Splash') || 
+      cls.location.includes('Swimming')
+    )
+  ).length;
+  console.log('Total pool classes in dataset:', poolClassesTotal);
+  
+  // Step 1: Filter by pool/regular classes - force explicit boolean check
   const filteredByMode = useMemo(() => {
-    if (isSwimmingMode) {
+    console.log('Filtering by mode, isSwimmingMode:', isSwimmingMode);
+    const swimMode = isSwimmingMode === true; // Force boolean evaluation
+    console.log('Evaluated swim mode:', swimMode);
+    
+    if (swimMode) {
       // In swimming mode, only show pool classes
-      return allClasses.filter(cls => 
+      const poolClasses = allClasses.filter(cls => 
         cls.location && (
           cls.location.includes('Pool') || 
           cls.location.includes('Splash') || 
           cls.location.includes('Swimming')
         )
       );
+      console.log('Pool classes found:', poolClasses.length);
+      return poolClasses;
     } else {
       // In fitness mode, exclude pool classes
-      return allClasses.filter(cls => 
+      const nonPoolClasses = allClasses.filter(cls => 
         !cls.location || (
           !cls.location.includes('Pool') && 
           !cls.location.includes('Splash') && 
           !cls.location.includes('Swimming')
         )
       );
+      console.log('Non-pool classes found:', nonPoolClasses.length);
+      return nonPoolClasses;
     }
-  }, [allClasses, isSwimmingMode]);
+  }, [allClasses, isSwimmingMode]); // Make sure this recomputes when isSwimmingMode changes
 
   // Step 2: Apply pool location filter if applicable
   const filteredByPoolLocation = useMemo(() => {

@@ -77,6 +77,15 @@ const FitnessTimetableInner = () => {
   // Get values from context
   const { state, actions, isSwimmingMode } = useTimetable();
   
+  // Add debug logging
+  console.log('Current mode:', state.mode);
+  console.log('isSwimmingMode:', isSwimmingMode);
+  
+  useEffect(() => {
+    console.log('Mode changed:', state.mode);
+    console.log('isSwimmingMode updated:', isSwimmingMode);
+  }, [state.mode, isSwimmingMode]);
+  
   // Local state
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -84,13 +93,14 @@ const FitnessTimetableInner = () => {
   const [selectedClass, setSelectedClass] = useState(null);
   const [colorMode, setColorMode] = useLocalStorage('color_mode', 'standard'); // 'standard' or 'vibrant'
   
-  // Load classes on mount
+  // Load classes on mount and when mode changes
   useEffect(() => {
     const loadClasses = async () => {
       setLoading(true);
       try {
         const data = await classService.getAllClasses();
         setClasses(data);
+        console.log('Classes reloaded, total count:', data.length);
       } catch (error) {
         console.error('Error loading classes:', error);
         showToast('Error loading classes');
@@ -100,7 +110,17 @@ const FitnessTimetableInner = () => {
     };
     
     loadClasses();
-  }, []);
+  }, [isSwimmingMode]); // Re-run when mode changes
+  
+  // Add explicit effect to handle mode changes
+  useEffect(() => {
+    console.log('Mode effect triggered, current mode:', state.mode);
+    console.log('isSwimmingMode in effect:', isSwimmingMode);
+    
+    // Force UI update by showing toast with mode
+    showToast(`Mode: ${isSwimmingMode ? 'Swimming' : 'Fitness'}`);
+    
+  }, [state.mode, isSwimmingMode]);
   
   // Filter classes based on current filters
   const filteredClasses = useFilteredClasses(
@@ -156,6 +176,21 @@ const FitnessTimetableInner = () => {
   // Function to handle class selection
   const handleClassClick = (classInfo) => {
     setSelectedClass(classInfo);
+  };
+  
+  // Add explicit handler for mode switching
+  const handleModeSwitch = (newMode) => {
+    console.log('Manual mode switch to:', newMode);
+    // Show loading state while switching
+    setLoading(true);
+    // Set mode after a brief delay to ensure UI updates
+    setTimeout(() => {
+      actions.setMode(newMode);
+      // Add a small delay before turning off loading for better UX
+      setTimeout(() => {
+        setLoading(false);
+      }, 300);
+    }, 100);
   };
   
   // Render swimming specific filters
@@ -267,15 +302,33 @@ const FitnessTimetableInner = () => {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* App bar with logo, filter buttons and count */}
-      <div className="bg-[rgb(0,130,188)] text-white p-3 flex flex-wrap justify-between items-center shadow-md z-20 relative">
-        <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-8 object-contain" />
+      <div className="bg-[rgb(0,130,188)]/95 backdrop-blur-sm text-white px-4 py-2.5 flex justify-between items-center shadow-lg z-20 sticky top-0">
+        <div className="flex items-center">
+          <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-9 object-contain rounded shadow-sm" />
+          {/* Current mode indicator */}
+          <div className="hidden md:flex ml-4 items-center">
+            <div className={`text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-colors duration-200 ${isSwimmingMode ? 'bg-cyan-500/20' : 'bg-orange-500/20'}`}>
+              {isSwimmingMode ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8h1a4 4 0 010 8h-1"></path>
+                  <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
+                </svg>
+              )}
+              <span className="font-semibold">{isSwimmingMode ? 'Swimming' : 'Fitness'}</span>
+            </div>
+          </div>
+        </div>
         
-        {/* Mode toggle and filter buttons */}
-        <div className="flex items-center gap-2">
+        {/* Action buttons group */}
+        <div className="flex items-center gap-2.5">
           {/* Mode toggle button */}
           <ModeToggle
             isSwimmingMode={isSwimmingMode}
-            onToggle={(value) => actions.setMode(value ? 'swimming' : 'fitness')}
+            onToggle={(value) => handleModeSwitch(value ? 'swimming' : 'fitness')}
             colors={COLORS}
           />
           
@@ -292,7 +345,7 @@ const FitnessTimetableInner = () => {
           {/* Color mode toggle */}
           <button
             onClick={toggleColorMode}
-            className="flex items-center bg-white/10 hover:bg-white/20 px-2 py-1.5 rounded-full transition-all shadow-sm backdrop-blur-sm ml-1"
+            className="flex items-center justify-center bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full transition-all shadow-sm backdrop-blur-sm focus:ring-2 focus:ring-white/30 focus:outline-none"
             title={`Switch to ${colorMode === 'standard' ? 'vibrant' : 'standard'} colors`}
           >
             <svg 
@@ -317,52 +370,133 @@ const FitnessTimetableInner = () => {
       
       {/* Filter panel - slides down when expanded */}
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+        className={`overflow-hidden transition-all duration-300 ease-in-out border-b border-gray-300 shadow-lg relative z-10 ${
           state.ui.filtersExpanded ? 'max-h-[85vh] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        <div className="max-w-3xl mx-auto">
-          <div className="divide-y divide-gray-100">
-            {/* Render appropriate filter panel based on mode */}
-            {isSwimmingMode ? renderSwimmingFilters() : renderFitnessFilters()}
-            
-            {/* Bottom close button */}
-            <div className="sticky bottom-0 bg-white/95 backdrop-blur-md py-3 px-4">
-              <button 
-                onClick={() => actions.toggleFiltersExpanded()}
-                className="w-full bg-[rgb(0,130,188)] text-white px-4 py-2.5 rounded-lg font-medium hover:bg-[rgb(0,130,188)]/90 transition-all shadow-sm"
-              >
-                Apply Filters
-              </button>
+        <div className="bg-gray-50">
+          <div className="max-w-3xl mx-auto">
+            <div className="divide-y divide-gray-200">
+              {/* Current mode indicator */}
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    {isSwimmingMode ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8h1a4 4 0 010 8h-1"></path>
+                        <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
+                      </svg>
+                    )}
+                    <span className="font-semibold text-gray-800">
+                      Current Mode: <span className="text-blue-600">{isSwimmingMode ? 'Swimming' : 'Fitness'}</span>
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
+                    className="px-3 py-1 bg-blue-600 text-white hover:bg-blue-700 rounded-md text-sm font-medium transition-all shadow-sm"
+                  >
+                    Switch to {isSwimmingMode ? 'Fitness' : 'Swimming'}
+                  </button>
+                </div>
+              </div>
+              
+              {/* Filter section wrapper with padding and background */}
+              <div className="p-4 bg-white">
+                {/* Render appropriate filter panel based on mode */}
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="p-4">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                      <svg className="w-4 h-4 mr-1.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                      </svg>
+                      {isSwimmingMode ? 'Swimming Pool Filters' : 'Fitness Class Filters'}
+                    </h3>
+                    {isSwimmingMode ? renderSwimmingFilters() : renderFitnessFilters()}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Bottom close button */}
+              <div className="sticky bottom-0 py-3 px-4 bg-gradient-to-b from-gray-50/80 to-gray-50 backdrop-blur-md border-t border-gray-200 shadow-[0_-2px_5px_rgba(0,0,0,0.05)]">
+                <button 
+                  onClick={() => actions.toggleFiltersExpanded()}
+                  className="w-full bg-[rgb(0,130,188)] text-white px-4 py-2.5 rounded-lg font-medium hover:bg-[rgb(0,130,188)]/90 transition-all shadow-sm"
+                >
+                  Apply Filters
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Timetable content - full screen scrollable area */}
-      <div className="flex-1 overflow-hidden bg-white">
+      <div className="flex-1 overflow-hidden bg-gray-100">
         <div className="h-full overflow-y-auto scrollbar-hide">
-          {/* Mode indicator */}
-          <div className="sticky top-0 z-10 bg-gray-100 py-1.5 px-4 flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-500">
-              Showing: <span className="text-[rgb(0,130,188)]">{isSwimmingMode ? 'Swimming Pool Sessions' : 'Fitness Classes'}</span>
-            </span>
-            <span className="text-sm font-medium text-[rgb(0,130,188)]">
-              Class Timetable
-            </span>
+          {/* Mode indicator in scrollable area */}
+          <div className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between py-2 px-4">
+              <div className="flex items-center">
+                {isSwimmingMode ? (
+                  <div className="flex items-center px-2.5 py-1 bg-cyan-100 text-cyan-800 rounded-full mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
+                    </svg>
+                    <span className="text-xs font-medium">Swimming</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center px-2.5 py-1 bg-orange-100 text-orange-800 rounded-full mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8h1a4 4 0 010 8h-1"></path>
+                      <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
+                    </svg>
+                    <span className="text-xs font-medium">Fitness</span>
+                  </div>
+                )}
+                <span className="text-sm font-medium text-gray-700">
+                  Showing all {isSwimmingMode ? 'pool sessions' : 'fitness classes'}
+                </span>
+              </div>
+              
+              <button
+                onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
+                className="text-xs py-1 px-2.5 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded font-medium flex items-center transition-colors"
+              >
+                <span className="mr-1">Switch to</span>
+                {isSwimmingMode ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8h1a4 4 0 010 8h-1"></path>
+                    <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
+                  </svg>
+                )}
+                <span>{isSwimmingMode ? 'Fitness' : 'Swimming'}</span>
+              </button>
+            </div>
           </div>
           
+          {/* Loading indicator */}
           {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[rgb(0,130,188)]"></div>
+            <div className="h-full flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[rgb(0,130,188)]"></div>
             </div>
           ) : (
-            <ClassList
-              classes={filteredClasses}
-              onClassClick={handleClassClick}
-              colors={COLORS}
-              colorMode={colorMode}
-            />
+            <div className="p-4">
+              {/* Class list */}
+              <ClassList
+                classes={filteredClasses}
+                onClassClick={handleClassClick}
+                colors={COLORS}
+                colorMode={colorMode}
+              />
+            </div>
           )}
         </div>
       </div>

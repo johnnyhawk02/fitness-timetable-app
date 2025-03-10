@@ -5,16 +5,18 @@ import React from 'react';
  * 
  * @param {Object} props Component props
  * @param {function} props.onClick Handler for click
+ * @param {Object} props.colors Color theme object
  * @returns {JSX.Element}
  */
-const TodayButton = ({ onClick }) => {
+const TodayButton = ({ onClick, colors = {} }) => {
   return (
     <button 
       onClick={onClick}
-      className="flex items-center bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-full transition-all shadow-sm backdrop-blur-sm"
+      className="flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-all shadow-sm backdrop-blur-sm h-8 w-8 sm:w-auto sm:px-3"
+      title="Scroll to today's classes"
     >
       <svg 
-        className="w-4 h-4 mr-1.5" 
+        className="w-4 h-4 sm:mr-1.5" 
         fill="none" 
         stroke="currentColor" 
         viewBox="0 0 24 24" 

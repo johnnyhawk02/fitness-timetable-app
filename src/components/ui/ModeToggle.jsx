@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 
 /**
  * Toggle between swimming and fitness modes
@@ -6,104 +6,65 @@ import React, { useState, useRef, useEffect } from 'react';
  * @param {Object} props Component props
  * @param {boolean} props.isSwimmingMode Whether swimming mode is active
  * @param {function} props.onToggle Handler for mode toggle
+ * @param {Object} props.colors Color theme object
  * @returns {JSX.Element}
  */
-const ModeToggle = ({ isSwimmingMode, onToggle }) => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
-  const dropdownButtonRef = useRef(null);
+const ModeToggle = ({ isSwimmingMode, onToggle, colors = {} }) => {
+  const [isAnimating, setIsAnimating] = useState(false);
   
-  const toggleDropdown = () => {
-    if (!dropdownOpen && dropdownButtonRef.current) {
-      const rect = dropdownButtonRef.current.getBoundingClientRect();
-      // Position dropdown to align with left edge of button and add a small margin below
-      setDropdownPosition({
-        top: rect.bottom + 5,
-        left: Math.min(rect.left, window.innerWidth - 176) // Ensure dropdown doesn't go off screen
-      });
-    }
-    setDropdownOpen(!dropdownOpen);
+  // Function to directly toggle mode with animation
+  const directToggleMode = () => {
+    const newMode = !isSwimmingMode;
+    console.log(`Directly toggling mode to ${newMode ? 'swimming' : 'fitness'}`);
+    
+    // Trigger animation
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 500);
+    
+    // Toggle mode
+    onToggle(newMode);
   };
   
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownOpen && dropdownButtonRef.current && !dropdownButtonRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [dropdownOpen]);
-  
   return (
-    <div className="relative inline-block mode-dropdown">
+    <div className="relative inline-block mode-toggle">
+      {/* Direct toggle button */}
       <button
-        ref={dropdownButtonRef}
-        onClick={toggleDropdown}
-        className="flex items-center bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition-all shadow-sm backdrop-blur-sm"
+        onClick={directToggleMode}
+        className={`flex items-center justify-center bg-white/15 hover:bg-white/25 rounded-full transition-all duration-300 shadow-sm backdrop-blur-sm h-8 sm:w-auto sm:px-3.5 focus:ring-2 focus:ring-white/30 focus:outline-none ${isAnimating ? 'scale-[0.98] bg-white/20' : ''}`}
+        title={`Switch to ${isSwimmingMode ? 'Fitness' : 'Swimming'} mode`}
       >
         <div className="flex items-center">
-          {isSwimmingMode ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8h1a4 4 0 010 8h-1"></path>
-              <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
-            </svg>
-          )}
-          <span className="text-sm font-medium mr-1 hidden sm:inline">{isSwimmingMode ? 'Swimming' : 'Fitness'}</span>
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-          </svg>
-        </div>
-      </button>
-      
-      {/* Dropdown menu */}
-      {dropdownOpen && (
-        <div 
-          className="fixed py-1 w-44 bg-white rounded-md shadow-lg border border-gray-200 z-[100]"
-          style={{
-            top: `${dropdownPosition.top}px`,
-            left: `${dropdownPosition.left}px`,
-          }}
-        >
-          <button 
-            onClick={() => {
-              onToggle(false);
-              setDropdownOpen(false);
-            }}
-            className={`w-full block px-4 py-2 text-sm text-left ${!isSwimmingMode ? 'text-[rgb(0,130,188)] font-medium' : 'text-gray-700'} hover:bg-gray-100`}
-          >
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {/* Icons container with fixed width for proper alignment */}
+          <div className="relative w-4 h-4 sm:mr-1.5 flex-shrink-0">
+            {/* Swimming icon with crossfade transition */}
+            <div className={`absolute inset-0 transition-all duration-500 ease-in-out ${isSwimmingMode ? 'opacity-100 transform-none' : 'opacity-0 -translate-y-1'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
+              </svg>
+            </div>
+            
+            {/* Fitness icon with crossfade transition */}
+            <div className={`absolute inset-0 transition-all duration-500 ease-in-out ${!isSwimmingMode ? 'opacity-100 transform-none' : 'opacity-0 translate-y-1'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 8h1a4 4 0 010 8h-1"></path>
                 <path d="M5 8h8a7 7 0 017 7v1a7 7 0 01-7 7H6a4 4 0 01-4-4v-8a4 4 0 014-4z"></path>
               </svg>
-              Fitness Classes
             </div>
-          </button>
-          <button 
-            onClick={() => {
-              onToggle(true);
-              setDropdownOpen(false);
-            }}
-            className={`w-full block px-4 py-2 text-sm text-left ${isSwimmingMode ? 'text-[rgb(0,130,188)] font-medium' : 'text-gray-700'} hover:bg-gray-100`}
-          >
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 12h20M2 12c0 5 4 8 10 8s10-3 10-8M2 12c0-5 4-8 10-8s10 3 10 8M12 4v16" />
-              </svg>
+          </div>
+          
+          {/* Text label with crossfade */}
+          <span className="text-sm font-medium hidden sm:inline relative w-[70px]">
+            <span className={`absolute left-0 whitespace-nowrap transition-all duration-500 ease-in-out ${isSwimmingMode ? 'opacity-100 transform-none' : 'opacity-0'}`}>
               Swimming
-            </div>
-          </button>
+            </span>
+            <span className={`absolute left-0 whitespace-nowrap transition-all duration-500 ease-in-out ${!isSwimmingMode ? 'opacity-100 transform-none' : 'opacity-0'}`}>
+              Fitness
+            </span>
+            {/* Invisible spacer with the longer text to maintain consistent width */}
+            <span className="invisible">Swimming</span>
+          </span>
         </div>
-      )}
+      </button>
     </div>
   );
 };

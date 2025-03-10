@@ -37,6 +37,8 @@ const ActionTypes = {
 function timetableReducer(state, action) {
   switch (action.type) {
     case ActionTypes.SET_MODE:
+      console.log('SET_MODE reducer called with payload:', action.payload);
+      console.log('Previous mode:', state.mode);
       return {
         ...state,
         mode: action.payload
@@ -129,7 +131,10 @@ export function TimetableProvider({ children, defaultCenters = {}, defaultDays =
   
   // Create action creators
   const actions = {
-    setMode: (mode) => dispatch({ type: ActionTypes.SET_MODE, payload: mode }),
+    setMode: (mode) => {
+      console.log('setMode action called with:', mode);
+      dispatch({ type: ActionTypes.SET_MODE, payload: mode });
+    },
     setFilter: (filterType, value) => dispatch({ 
       type: ActionTypes.SET_FILTER, 
       payload: { filterType, value } 
