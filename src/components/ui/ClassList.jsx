@@ -121,6 +121,22 @@ const ClassList = ({
   
   // If no classes at all, show a message
   if (!hasAnyClasses) {
+    // Show a swimming-specific message if in swimming mode
+    if (isSwimmingMode) {
+      return (
+        <div className="p-4">
+          <div className="mt-10 text-center p-6 bg-white rounded-lg shadow">
+            <svg className="w-12 h-12 mx-auto text-blue-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            <h3 className="text-lg font-semibold text-gray-700 mb-1">No Pool at this Centre</h3>
+            <p className="text-gray-500">Try Bootle, Meadows or Dunes</p>
+          </div>
+        </div>
+      );
+    }
+    
+    // Default message for fitness mode
     return (
       <div className="p-4">
         <div className="mt-10 text-center p-6 bg-white rounded-lg shadow">

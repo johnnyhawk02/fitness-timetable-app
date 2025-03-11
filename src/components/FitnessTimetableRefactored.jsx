@@ -197,7 +197,7 @@ const FitnessTimetableInner = () => {
     // Find the day section
     const dayElement = document.getElementById(`day-${targetDay}`);
     if (dayElement) {
-      // Scroll to the day section
+      // Scroll to the day section - ensure header is visible at top
       dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
     } else {
       showToast(`Could not find ${targetDay} section`);
@@ -217,6 +217,7 @@ const FitnessTimetableInner = () => {
     // Find today's section
     const todayElement = document.getElementById(`day-${today}`);
     if (todayElement) {
+      // Scroll to the day section - ensure header is visible at top
       todayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
       showToast(`Viewing today (${today})`);
     } else {
@@ -228,13 +229,21 @@ const FitnessTimetableInner = () => {
   const handleModeSwitch = (newMode) => {
     console.log('Manual mode switch to:', newMode);
     
-    // Set mode immediately
+    // Set mode
     actions.setMode(newMode);
     showToast(`Switching to ${newMode} mode`);
     
-    // After mode switch, scroll to the selected day
-    // This will use the existing selected day or default to today if none selected
-    scrollToSelectedDay();
+    // Give a small delay for the mode to change before scrolling
+    setTimeout(() => {
+      // Find the day section again and scroll to it
+      const targetDay = selectedDay || (new Date()).toLocaleDateString('en-US', { weekday: 'long' });
+      const dayElement = document.getElementById(`day-${targetDay}`);
+      
+      if (dayElement) {
+        // Scroll to the day section - ensure header is visible at top
+        dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+      }
+    }, 50);
   };
   
   return (
