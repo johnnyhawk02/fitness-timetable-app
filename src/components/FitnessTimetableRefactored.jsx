@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TimetableProvider, useTimetable } from '../context/TimetableContext';
-import useLocalStorage from '../hooks/useLocalStorage';
 import useFilteredClasses from '../hooks/useFilteredClasses';
 
 // Component imports
@@ -121,7 +120,9 @@ const FitnessTimetableInner = () => {
   const [initialLoad, setInitialLoad] = useState(true); // Track if this is the first load
   const [toast, setToast] = useState({ show: false, message: '' });
   const [selectedClass, setSelectedClass] = useState(null);
-  const [colorMode, setColorMode] = useLocalStorage('color_mode', 'standard'); // 'standard' or 'vibrant'
+  
+  // State to track which day is currently selected in the day navigator
+  const [selectedDay, setSelectedDay] = useState(null);
   
   // Function to show toast notifications - moved up before it's used
   const showToast = (message) => {
@@ -178,210 +179,62 @@ const FitnessTimetableInner = () => {
     }, {});
   }, [filteredClasses]); // Removed days from dependencies
   
-  // Function to scroll to current time
-  const scrollToCurrentTime = () => {
-    const now = new Date();
-    const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' });
+  // Function to scroll to the currently selected day or default to today if none selected
+  const scrollToSelectedDay = () => {
+    // Determine which day to scroll to (selected day or default to today)
+    let targetDay = selectedDay;
     
-    // Get current hour
-    const currentHour = now.getHours();
-    
-    console.log(`Scrolling to current time: ${dayOfWeek} at ${currentHour}:00`);
-    
-    // First find the day section
-    const todayElement = document.getElementById(`day-${dayOfWeek}`);
-    if (todayElement) {
-      // Add a small delay to ensure layout is complete
-      setTimeout(() => {
-        // Try to find a class around the current hour on the current day
-        let targetElement = null;
-        
-        // Look for classes starting at the current hour, or slightly before/after
-        // Check current hour first, then expand search window if needed
-        for (let offset = 0; offset <= 2; offset++) {
-          // Try current hour first, then current hour - offset, then current hour + offset
-          const hourOptions = [currentHour];
-          if (offset > 0) {
-            // Add hours before and after current hour to search window
-            const hourBefore = Math.max(currentHour - offset, 0);
-            const hourAfter = Math.min(currentHour + offset, 23);
-            hourOptions.push(hourBefore, hourAfter);
-          }
-          
-          // Check each potential hour but only on the current day
-          for (const hour of hourOptions) {
-            // Look specifically within today's section
-            const hourElements = todayElement.querySelectorAll(`[data-hour="${hour}"]`);
-            if (hourElements.length > 0) {
-              targetElement = hourElements[0];
-              break;
-            }
-          }
-          
-          if (targetElement) break;
-        }
-        
-        // If no specific class found, just scroll to the day
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          showToast(`Scrolled to current time (${currentHour}:00)`);
-        } else {
-          todayElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          showToast(`Scrolled to ${dayOfWeek}`);
-        }
-      }, 100);
-    } else {
-      showToast(`No classes available for ${dayOfWeek}`);
+    // If no day is selected, use today as default
+    if (!targetDay) {
+      const now = new Date();
+      targetDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+      // Update the selected day in the UI
+      setSelectedDay(targetDay);
     }
-  };
-  
-  // Function to get active filter count
-  const getActiveFilterCount = () => {
-    let count = 0;
     
-    // Count centers that are not selected
-    const unselectedCenters = centers.filter(center => !state.filters.centers[center]).length;
-    if (unselectedCenters > 0) count++;
+    console.log(`Scrolling to selected day: ${targetDay}`);
     
-    // Count other active filters
-    if (state.filters.category) count++;
-    if (!state.filters.includeVirtual) count++;
-    if (isSwimmingMode && state.filters.poolLocationType !== 'all') count++;
-    
-    return count;
-  };
-  
-  // Function to toggle color mode
-  const toggleColorMode = () => {
-    setColorMode(colorMode === 'standard' ? 'vibrant' : 'standard');
-    showToast(`Color mode: ${colorMode === 'standard' ? 'Vibrant' : 'Standard'}`);
-  };
-  
-  // Function to handle class selection
-  const handleClassClick = (classInfo) => {
-    setSelectedClass(classInfo);
-  };
-  
-  // Helper function to scroll to a specific day and time
-  const scrollToDayAndTime = (day, hour) => {
-    console.log(`Scrolling to ${day} at ${hour}:00`);
-    
-    // First find the day section
-    const dayElement = document.getElementById(`day-${day}`);
+    // Find the day section
+    const dayElement = document.getElementById(`day-${targetDay}`);
     if (dayElement) {
-      // Add a small delay to ensure layout is rendered after mode switch
-      setTimeout(() => {
-        // Try to find a class around the specified hour on the specified day
-        let targetElement = null;
-        
-        // Look for classes starting at the specified hour, or slightly before/after
-        for (let offset = 0; offset <= 2; offset++) {
-          // Try specified hour first, then expand search window
-          const hourOptions = [hour];
-          if (offset > 0) {
-            // Add hours before and after specified hour to search window
-            const hourBefore = Math.max(hour - offset, 0);
-            const hourAfter = Math.min(hour + offset, 23);
-            hourOptions.push(hourBefore, hourAfter);
-          }
-          
-          // Check each potential hour
-          for (const h of hourOptions) {
-            // Look specifically within the day's section
-            const hourElements = dayElement.querySelectorAll(`[data-hour="${h}"]`);
-            if (hourElements.length > 0) {
-              targetElement = hourElements[0];
-              break;
-            }
-          }
-          
-          if (targetElement) break;
-        }
-        
-        // If no specific class found, just scroll to the day
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-        } else {
-          dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-        }
-      }, 300); // Wait for new mode data to render
+      // Scroll to the day section
+      dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+    } else {
+      showToast(`Could not find ${targetDay} section`);
     }
   };
   
-  // Helper function to check if an element is in the viewport
-  const isElementInViewport = (el) => {
-    if (!el) return false;
+  // Function to scroll to the current day
+  const scrollToNow = () => {
+    const now = new Date();
+    const today = now.toLocaleDateString('en-US', { weekday: 'long' });
     
-    const rect = el.getBoundingClientRect();
-    // Consider the element in viewport if it's at least partially visible
-    // (top is above bottom of viewport AND bottom is below top of viewport)
-    return (
-      rect.top < (window.innerHeight || document.documentElement.clientHeight) &&
-      rect.bottom > 0
-    );
-  };
-  
-  // Improved function to find which day is most visible in the viewport
-  const findVisibleDay = () => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    let mostVisibleDay = days[0]; // Default to Monday
-    let mostVisibleArea = 0;
+    console.log(`Scrolling to now (${today})`);
     
-    // Find which day has the most visible area in the viewport
-    for (const day of days) {
-      const dayElement = document.getElementById(`day-${day}`);
-      if (!dayElement) continue;
-      
-      const rect = dayElement.getBoundingClientRect();
-      // Skip if element is not visible at all
-      if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
-      
-      // Calculate visible area
-      const visibleTop = Math.max(0, rect.top);
-      const visibleBottom = Math.min(window.innerHeight, rect.bottom);
-      const visibleHeight = visibleBottom - visibleTop;
-      
-      if (visibleHeight > mostVisibleArea) {
-        mostVisibleArea = visibleHeight;
-        mostVisibleDay = day;
-      }
+    // Update selected day to today
+    setSelectedDay(today);
+    
+    // Find today's section
+    const todayElement = document.getElementById(`day-${today}`);
+    if (todayElement) {
+      todayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+      showToast(`Viewing today (${today})`);
+    } else {
+      showToast(`Could not find today's section`);
     }
-    
-    console.log(`Most visible day detected: ${mostVisibleDay}`);
-    return mostVisibleDay;
   };
   
-  // Function to handle mode switching - updated to preserve day/time position
+  // Function to handle mode switching - preserve selected day when possible
   const handleModeSwitch = (newMode) => {
     console.log('Manual mode switch to:', newMode);
     
-    // Find the most visible day in the viewport before switching
-    const targetDay = findVisibleDay();
-    console.log(`Switching modes - will maintain position at ${targetDay}`);
-    
-    // Get the scroll container
-    const scrollContainer = document.querySelector('.overflow-y-auto');
-    if (!scrollContainer) return;
-    
-    // Instead of fading, use a simpler approach - just hide instantly
-    scrollContainer.style.visibility = 'hidden';
-    
-    // Set mode and show toast
+    // Set mode immediately
     actions.setMode(newMode);
-    showToast(`Switching to ${newMode} mode, staying on ${targetDay}`);
+    showToast(`Switching to ${newMode} mode`);
     
-    // Use a single timeout with enough delay to let React render the new content
-    setTimeout(() => {
-      // Try to find and scroll to the target day
-      const dayElement = document.getElementById(`day-${targetDay}`);
-      if (dayElement) {
-        // Scroll to the element without animation
-        dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-      }
-      
-      // Show the content again after position is set
-      scrollContainer.style.visibility = 'visible';
-    }, 150); // Single delay that's long enough for rendering but short enough to feel responsive
+    // After mode switch, scroll to the selected day
+    // This will use the existing selected day or default to today if none selected
+    scrollToSelectedDay();
   };
   
   return (
@@ -402,38 +255,65 @@ const FitnessTimetableInner = () => {
           <div className="flex items-center">
             <button
               onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
-              className="text-4xl transition-transform hover:scale-110 focus:outline-none p-1"
+              className="text-4xl focus:outline-none p-1"
               title={`Switch to ${isSwimmingMode ? 'Fitness' : 'Swimming'} Mode`}
             >
               {isSwimmingMode ? '🏊‍♂️' : '🏋️‍♂️'}
             </button>
           </div>
           
-          {/* Right section with action buttons */}
-          <div className="flex items-center gap-2">
-            <NowButton onClick={scrollToCurrentTime} colors={COLORS} />
-            
-            {/* Color mode toggle */}
-            <button
-              onClick={toggleColorMode}
-              className="flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full w-8 h-8 transition-all shadow-sm focus:outline-none border border-white/20"
-              title={`Switch to ${colorMode === 'standard' ? 'vibrant' : 'standard'} colors`}
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className={`h-4 w-4 transition-colors ${colorMode === 'vibrant' ? 'text-yellow-300' : 'text-white'}`}
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="5" />
-                <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
-              </svg>
-            </button>
+          {/* Day navigator in the center */}
+          <div className="flex items-center justify-center">
+            <div className="flex space-x-1 bg-white/10 rounded-full px-1 py-0.5">
+              {days.map((day, index) => {
+                // Get the abbreviated day name (Mo, Tu, We, etc.)
+                const shortDay = day.substring(0, 2);
+                
+                // Check if this day is selected or is today
+                const isSelected = day === selectedDay;
+                const now = new Date();
+                const today = now.toLocaleDateString('en-US', { weekday: 'long' });
+                const isToday = day === today;
+                
+                // Determine button styling based on selection status
+                let buttonStyle = 'hover:bg-white/20'; // Default hover effect
+                
+                // Selection styling for background/ring
+                if (isSelected) {
+                  buttonStyle = isSwimmingMode 
+                    ? 'bg-blue-600 text-white ring-2 ring-white' 
+                    : 'bg-orange-600 text-white ring-2 ring-white';
+                }
+                
+                return (
+                  <div key={day} className="relative flex flex-col items-center">
+                    <button
+                      onClick={() => {
+                        setSelectedDay(day);
+                        
+                        // Find the day section and scroll to it
+                        const dayElement = document.getElementById(`day-${day}`);
+                        if (dayElement) {
+                          dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+                          showToast(`Viewing ${day}`);
+                        } else {
+                          showToast(`Could not find ${day} section`);
+                        }
+                      }}
+                      className={`rounded-full w-8 h-8 flex items-center justify-center text-sm focus:outline-none ${buttonStyle}`}
+                      title={day}
+                    >
+                      {shortDay}
+                    </button>
+                    {isToday && <span className="absolute bottom-0 text-xs leading-none">-</span>}
+                  </div>
+                );
+              })}
+            </div>
           </div>
+          
+          {/* Right section - empty */}
+          <div className="w-10"></div>
         </div>
       </div>
       
@@ -455,7 +335,12 @@ const FitnessTimetableInner = () => {
                   <div className="flex-1 min-w-[140px]">
                     <PoolTypeFilter
                       value={state.filters.poolLocationType}
-                      onChange={(value) => actions.setFilter('poolLocationType', value)}
+                      onChange={(value) => {
+                        actions.setFilter('poolLocationType', value);
+                        
+                        // Scroll to selected day (respecting current selection)
+                        scrollToSelectedDay();
+                      }}
                       colors={COLORS}
                       isSwimmingMode={isSwimmingMode}
                     />
@@ -486,9 +371,11 @@ const FitnessTimetableInner = () => {
                           actions.setFilter('centers', newCenters);
                           showToast(`Showing ${center} only`);
                         }
+                        
+                        // Scroll to selected day (respecting current selection)
+                        scrollToSelectedDay();
                       }}
                       colors={COLORS}
-                      colorMode={colorMode}
                     />
                   </div>
                 </>
@@ -497,9 +384,13 @@ const FitnessTimetableInner = () => {
                   <div className="flex-1 min-w-[140px]">
                     <ClassTypeFilter
                       value={state.filters.category}
-                      onChange={(value) => actions.setFilter('category', value)}
+                      onChange={(value) => {
+                        actions.setFilter('category', value);
+                        
+                        // Scroll to selected day (respecting current selection)
+                        scrollToSelectedDay();
+                      }}
                       colors={COLORS}
-                      colorMode={colorMode}
                       isSwimmingMode={isSwimmingMode}
                     />
                   </div>
@@ -529,16 +420,23 @@ const FitnessTimetableInner = () => {
                           actions.setFilter('centers', newCenters);
                           showToast(`Showing ${center} only`);
                         }
+                        
+                        // Scroll to selected day (respecting current selection)
+                        scrollToSelectedDay();
                       }}
                       colors={COLORS}
-                      colorMode={colorMode}
                     />
                   </div>
                   
                   <div className="flex-1 min-w-[160px]">
                     <VirtualClassToggle
                       value={state.filters.includeVirtual}
-                      onChange={(value) => actions.setFilter('includeVirtual', value)}
+                      onChange={(value) => {
+                        actions.setFilter('includeVirtual', value);
+                        
+                        // Scroll to selected day (respecting current selection)
+                        scrollToSelectedDay();
+                      }}
                       colors={COLORS}
                       isSwimmingMode={isSwimmingMode}
                     />
@@ -558,9 +456,8 @@ const FitnessTimetableInner = () => {
           {/* Class list component - removed redundant mode indicator */}
           <ClassList 
             classesByDay={classesByDay}
-            onClassClick={handleClassClick}
+            onClassClick={setSelectedClass}
             mode={state.mode}
-            colorMode={colorMode}
             days={days}
             colors={COLORS}
             isSwimmingMode={isSwimmingMode}
@@ -586,9 +483,9 @@ const FitnessTimetableInner = () => {
  */
 const FitnessTimetable = () => {
   // Initialize state for centers and days
-  const [centerStateInitialized] = useLocalStorage('centers_initialized', false);
-  const [centersState, setCentersState] = useLocalStorage('selected_centers', null);
-  const [daysState, setDaysState] = useLocalStorage('selected_days', null);
+  const [centerStateInitialized, setCenterStateInitialized] = useState(false);
+  const [centersState, setCentersState] = useState(null);
+  const [daysState, setDaysState] = useState(null);
   
   // Initialize center and day states if needed
   useEffect(() => {
@@ -598,6 +495,7 @@ const FitnessTimetable = () => {
         return acc;
       }, {});
       setCentersState(initialCenters);
+      setCenterStateInitialized(true);
     }
     
     if (!daysState) {

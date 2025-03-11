@@ -18,7 +18,6 @@ const CENTER_ABBREVIATIONS = {
  * @param {Object} props.classesByDay Classes grouped by day
  * @param {function} props.onClassClick Handler for when a class is clicked
  * @param {Object} props.colors Color theme
- * @param {string} props.colorMode 'standard' or 'vibrant'
  * @param {Array} props.days Array of day names
  * @param {boolean} props.isSwimmingMode Whether swimming mode is active
  * @returns {JSX.Element}
@@ -27,7 +26,6 @@ const ClassList = ({
   classesByDay, 
   onClassClick, 
   colors = {}, 
-  colorMode = 'standard',
   days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
   isSwimmingMode = false
 }) => {
@@ -43,16 +41,10 @@ const ClassList = ({
   
   // Get color for a class based on its category
   const getClassColor = (activity) => {
-    if (colorMode === 'standard') {
-      // Use mode-specific primary colors
-      return isSwimmingMode 
-        ? colors.swimming.primary || 'rgb(3,105,161)'
-        : colors.fitness.primary || 'rgb(233,84,32)';
-    }
-    
-    // For vibrant mode, use the category color
-    const category = getClassCategory(activity);
-    return colors.categoryColors[category] || colors.categoryColors.other || 'gray';
+    // Use mode-specific primary colors
+    return isSwimmingMode 
+      ? colors.swimming.primary || 'rgb(3,105,161)'
+      : colors.fitness.primary || 'rgb(233,84,32)';
   };
   
   // Get color for day header based on the day and mode
