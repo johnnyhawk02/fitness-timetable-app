@@ -427,6 +427,7 @@ const FitnessTimetableInner = () => {
           
           {/* Day navigator on the right */}
           <div className="flex items-center justify-end">
+            {/* Day navigator */}
             <div className="flex space-x-1 bg-white/10 rounded-full px-1 py-0.5">
               {days.map((day, index) => {
                 // Get the abbreviated day name (Mo, Tu, We, etc.)
