@@ -124,7 +124,10 @@ const FitnessTimetableInner = () => {
   // State to track which day is currently selected in the day navigator
   const [selectedDay, setSelectedDay] = useState(null);
   
-  // Function to show toast notifications - moved up before it's used
+  // Track previous state to detect transitions
+  const [prevHasAnyClasses, setPrevHasAnyClasses] = useState(false);
+  
+  // Function to show toast notifications
   const showToast = (message) => {
     setToast({ show: true, message });
     setTimeout(() => {
@@ -178,6 +181,40 @@ const FitnessTimetableInner = () => {
       return acc;
     }, {});
   }, [filteredClasses]); // Removed days from dependencies
+  
+  // Check if any classes are available
+  const hasAnyClasses = useMemo(() => {
+    return days.some(day => {
+      const dayClasses = classesByDay[day] || [];
+      return dayClasses.length > 0;
+    });
+  }, [days, classesByDay]);
+   
+  // Detect transition from no classes to having classes and scroll to selected day
+  useEffect(() => {
+    // If we previously had no classes but now we do, scroll to selected day
+    if (!prevHasAnyClasses && hasAnyClasses) {
+      console.log('Detected transition from no classes to having classes - scrolling to selected day');
+       
+      // Small delay to ensure DOM is fully updated
+      setTimeout(() => {
+        // Find the day section and scroll to it
+        const targetDay = selectedDay || (new Date()).toLocaleDateString('en-US', { weekday: 'long' });
+        const dayElement = document.getElementById(`day-${targetDay}`);
+         
+        if (dayElement) {
+          // Scroll to the day section - ensure header is visible at top
+          dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+          console.log(`Scrolled to ${targetDay} after classes became available`);
+        } else {
+          console.log(`Could not find ${targetDay} section after classes became available`);
+        }
+      }, 100);
+    }
+     
+    // Update previous state for next comparison
+    setPrevHasAnyClasses(hasAnyClasses);
+  }, [hasAnyClasses, prevHasAnyClasses, selectedDay, showToast]);
   
   // Function to scroll to the currently selected day or default to today if none selected
   const scrollToSelectedDay = () => {
@@ -233,17 +270,26 @@ const FitnessTimetableInner = () => {
     actions.setMode(newMode);
     showToast(`Switching to ${newMode} mode`);
     
-    // Give a small delay for the mode to change before scrolling
+    // Give a larger delay for the mode to change before scrolling
     setTimeout(() => {
-      // Find the day section again and scroll to it
-      const targetDay = selectedDay || (new Date()).toLocaleDateString('en-US', { weekday: 'long' });
-      const dayElement = document.getElementById(`day-${targetDay}`);
-      
-      if (dayElement) {
-        // Scroll to the day section - ensure header is visible at top
-        dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+      // Use the same check as hasAnyClasses
+      if (hasAnyClasses) {
+        console.log('Classes are available after mode switch - scrolling to selected day');
+        
+        // Find the day section again and scroll to it
+        const targetDay = selectedDay || (new Date()).toLocaleDateString('en-US', { weekday: 'long' });
+        const dayElement = document.getElementById(`day-${targetDay}`);
+        
+        if (dayElement) {
+          // Scroll to the day section - ensure header is visible at top
+          dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+        } else {
+          console.log(`Could not find ${targetDay} section after mode switch`);
+        }
+      } else {
+        console.log('No classes available after mode switch - skipping scroll');
       }
-    }, 50);
+    }, 150); // Increased delay to ensure data is fully processed
   };
   
   return (
