@@ -34,15 +34,15 @@ const COLORS = {
     accent: 'rgb(249,115,22)', // Burnt orange
     background: 'rgb(254,226,226)', // Light red/pink
     
-    // Warm day colors for fitness
+    // Simplified day colors for fitness - just two alternating colors
     dayColors: {
-      'Monday': 'rgb(220,38,38)', // Red
+      'Monday': 'rgb(239,68,68)', // Red
       'Tuesday': 'rgb(234,88,12)', // Orange
-      'Wednesday': 'rgb(245,158,11)', // Amber
-      'Thursday': 'rgb(252,211,77)', // Yellow
-      'Friday': 'rgb(217,70,0)', // Deep orange
-      'Saturday': 'rgb(194,65,12)', // Rust
-      'Sunday': 'rgb(153,27,27)', // Dark red
+      'Wednesday': 'rgb(239,68,68)', // Red
+      'Thursday': 'rgb(234,88,12)', // Orange
+      'Friday': 'rgb(239,68,68)', // Red
+      'Saturday': 'rgb(234,88,12)', // Orange
+      'Sunday': 'rgb(239,68,68)', // Red
     }
   },
   
@@ -53,15 +53,15 @@ const COLORS = {
     accent: 'rgb(14,165,233)', // Sky blue
     background: 'rgb(236,254,255)', // Light cyan
     
-    // Aqua day colors for swimming
+    // Simplified day colors for swimming - just two alternating colors
     dayColors: {
       'Monday': 'rgb(20,184,166)', // Teal
-      'Tuesday': 'rgb(8,145,178)', // Cyan
-      'Wednesday': 'rgb(13,148,136)', // Teal-green
-      'Thursday': 'rgb(6,182,212)', // Bright cyan
-      'Friday': 'rgb(14,116,144)', // Dark cyan
-      'Saturday': 'rgb(59,130,246)', // Blue
-      'Sunday': 'rgb(16,185,129)', // Emerald
+      'Tuesday': 'rgb(6,182,212)', // Cyan
+      'Wednesday': 'rgb(20,184,166)', // Teal
+      'Thursday': 'rgb(6,182,212)', // Cyan
+      'Friday': 'rgb(20,184,166)', // Teal
+      'Saturday': 'rgb(6,182,212)', // Cyan
+      'Sunday': 'rgb(20,184,166)', // Teal
     }
   },
   

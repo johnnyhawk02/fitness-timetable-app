@@ -56,29 +56,29 @@ const ClassList = ({
     
     // Fallback if helper function not available
     if (isSwimmingMode) {
-      // Default swimming colors (blues)
+      // Simplified swimming colors - just two alternating colors
       const dayColors = {
-        'Monday': 'rgb(3,105,161)',
-        'Tuesday': 'rgb(8,145,178)',
-        'Wednesday': 'rgb(13,148,136)',
-        'Thursday': 'rgb(6,95,70)',
-        'Friday': 'rgb(7,89,133)',
-        'Saturday': 'rgb(30,64,175)',
-        'Sunday': 'rgb(91,33,182)'
+        'Monday': 'rgb(20,184,166)', // Teal
+        'Tuesday': 'rgb(6,182,212)', // Cyan
+        'Wednesday': 'rgb(20,184,166)', // Teal
+        'Thursday': 'rgb(6,182,212)', // Cyan
+        'Friday': 'rgb(20,184,166)', // Teal
+        'Saturday': 'rgb(6,182,212)', // Cyan
+        'Sunday': 'rgb(20,184,166)', // Teal
       };
-      return dayColors[day] || 'rgb(3,105,161)';
+      return dayColors[day] || 'rgb(20,184,166)';
     } else {
-      // Default fitness colors (warm colors)
+      // Simplified fitness colors - just two alternating colors
       const dayColors = {
-        'Monday': 'rgb(220,38,38)',
-        'Tuesday': 'rgb(234,88,12)',
-        'Wednesday': 'rgb(217,119,6)',
-        'Thursday': 'rgb(202,138,4)',
-        'Friday': 'rgb(180,83,9)',
-        'Saturday': 'rgb(194,65,12)',
-        'Sunday': 'rgb(153,27,27)'
+        'Monday': 'rgb(239,68,68)', // Red
+        'Tuesday': 'rgb(234,88,12)', // Orange
+        'Wednesday': 'rgb(239,68,68)', // Red
+        'Thursday': 'rgb(234,88,12)', // Orange
+        'Friday': 'rgb(239,68,68)', // Red
+        'Saturday': 'rgb(234,88,12)', // Orange
+        'Sunday': 'rgb(239,68,68)', // Red
       };
-      return dayColors[day] || 'rgb(233,84,32)';
+      return dayColors[day] || 'rgb(239,68,68)';
     }
   };
   
