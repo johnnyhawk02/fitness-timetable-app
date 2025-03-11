@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { TimetableProvider, useTimetable } from '../context/TimetableContext';
 import useFilteredClasses from '../hooks/useFilteredClasses';
 
@@ -135,6 +135,14 @@ const FitnessTimetableInner = () => {
     }, 3000);
   };
   
+  // Initialize selected day to today on component mount
+  useEffect(() => {
+    const now = new Date();
+    const today = now.toLocaleDateString('en-US', { weekday: 'long' });
+    setSelectedDay(today);
+    console.log('Selected day initialized to today:', today);
+  }, []);
+  
   // Load classes on mount and when mode changes
   useEffect(() => {
     const loadClasses = async () => {
@@ -217,7 +225,7 @@ const FitnessTimetableInner = () => {
   }, [hasAnyClasses, prevHasAnyClasses, selectedDay, showToast]);
   
   // Function to scroll to the currently selected day or default to today if none selected
-  const scrollToSelectedDay = () => {
+  const scrollToSelectedDay = useCallback(() => {
     // Determine which day to scroll to (selected day or default to today)
     let targetDay = selectedDay;
     
@@ -234,15 +242,43 @@ const FitnessTimetableInner = () => {
     // Find the day section
     const dayElement = document.getElementById(`day-${targetDay}`);
     if (dayElement) {
-      // Scroll to the day section - ensure header is visible at top
-      dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+      // Get the scroll container
+      const scrollContainer = document.querySelector('.h-full.overflow-y-auto');
+      if (scrollContainer) {
+        // First scroll - initial positioning
+        const doScroll = () => {
+          // Get the element's position (needs to be recalculated each time)
+          const rect = dayElement.getBoundingClientRect();
+          const containerRect = scrollContainer.getBoundingClientRect();
+          
+          // Fine-tuned offset to position the header perfectly at the top (1px reduces chance of header being cut off)
+          const scrollPosition = Math.round(scrollContainer.scrollTop + rect.top - containerRect.top - 1);
+          
+          // Scroll to the position
+          scrollContainer.scrollTo({
+            top: scrollPosition,
+            behavior: 'auto'
+          });
+        };
+        
+        // Do the initial scroll
+        doScroll();
+        
+        // Second scroll after a brief delay to adjust for any layout shifts
+        setTimeout(() => {
+          doScroll();
+        }, 50);
+      } else {
+        // Fallback to standard scrollIntoView if container not found
+        dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+      }
     } else {
       showToast(`Could not find ${targetDay} section`);
     }
-  };
+  }, [selectedDay, setSelectedDay, showToast]);
   
   // Function to scroll to the current day
-  const scrollToNow = () => {
+  const scrollToNow = useCallback(() => {
     const now = new Date();
     const today = now.toLocaleDateString('en-US', { weekday: 'long' });
     
@@ -252,15 +288,45 @@ const FitnessTimetableInner = () => {
     setSelectedDay(today);
     
     // Find today's section
-    const todayElement = document.getElementById(`day-${today}`);
-    if (todayElement) {
-      // Scroll to the day section - ensure header is visible at top
-      todayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-      showToast(`Viewing today (${today})`);
+    const dayElement = document.getElementById(`day-${today}`);
+    if (dayElement) {
+      // Get the scroll container
+      const scrollContainer = document.querySelector('.h-full.overflow-y-auto');
+      if (scrollContainer) {
+        // First scroll - initial positioning
+        const doScroll = () => {
+          // Get the element's position (needs to be recalculated each time)
+          const rect = dayElement.getBoundingClientRect();
+          const containerRect = scrollContainer.getBoundingClientRect();
+          
+          // Fine-tuned offset to position the header perfectly at the top
+          const scrollPosition = Math.round(scrollContainer.scrollTop + rect.top - containerRect.top - 1);
+          
+          // Scroll to the position
+          scrollContainer.scrollTo({
+            top: scrollPosition,
+            behavior: 'auto'
+          });
+        };
+        
+        // Do the initial scroll
+        doScroll();
+        
+        // Second scroll after a brief delay to adjust for any layout shifts
+        setTimeout(() => {
+          doScroll();
+        }, 50);
+        
+        showToast(`Viewing today (${today})`);
+      } else {
+        // Fallback to standard scrollIntoView if container not found
+        dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+        showToast(`Viewing today (${today})`);
+      }
     } else {
       showToast(`Could not find today's section`);
     }
-  };
+  }, [setSelectedDay, showToast]);
   
   // Function to handle mode switching - preserve selected day when possible
   const handleModeSwitch = (newMode) => {
@@ -281,8 +347,36 @@ const FitnessTimetableInner = () => {
         const dayElement = document.getElementById(`day-${targetDay}`);
         
         if (dayElement) {
-          // Scroll to the day section - ensure header is visible at top
-          dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+          // Get the scroll container
+          const scrollContainer = document.querySelector('.h-full.overflow-y-auto');
+          if (scrollContainer) {
+            // Define scroll function for reuse
+            const doScroll = () => {
+              // Get the element's position (needs to be recalculated each time)
+              const rect = dayElement.getBoundingClientRect();
+              const containerRect = scrollContainer.getBoundingClientRect();
+              
+              // Fine-tuned offset to position the header perfectly at the top
+              const scrollPosition = Math.round(scrollContainer.scrollTop + rect.top - containerRect.top - 1);
+              
+              // Scroll to the position
+              scrollContainer.scrollTo({
+                top: scrollPosition,
+                behavior: 'auto'
+              });
+            };
+            
+            // Do the initial scroll
+            doScroll();
+            
+            // Second scroll after a brief delay to adjust for any layout shifts
+            setTimeout(() => {
+              doScroll();
+            }, 50);
+          } else {
+            // Fallback to standard scrollIntoView if container not found
+            dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+          }
         } else {
           console.log(`Could not find ${targetDay} section after mode switch`);
         }
@@ -291,6 +385,17 @@ const FitnessTimetableInner = () => {
       }
     }, 150); // Increased delay to ensure data is fully processed
   };
+  
+  // Use effect to scroll to selected day after classes are loaded and filtered
+  useEffect(() => {
+    // If classes are loaded and we have filtered classes
+    if (!loading && classesByDay) {
+      // Slight delay to ensure DOM is updated
+      setTimeout(() => {
+        scrollToSelectedDay();
+      }, 200);
+    }
+  }, [loading, classesByDay, scrollToSelectedDay]);
   
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -317,8 +422,11 @@ const FitnessTimetableInner = () => {
             </button>
           </div>
           
-          {/* Day navigator in the center */}
-          <div className="flex items-center justify-center">
+          {/* Empty middle section for balance */}
+          <div className="flex-1"></div>
+          
+          {/* Day navigator on the right */}
+          <div className="flex items-center justify-end">
             <div className="flex space-x-1 bg-white/10 rounded-full px-1 py-0.5">
               {days.map((day, index) => {
                 // Get the abbreviated day name (Mo, Tu, We, etc.)
@@ -336,8 +444,8 @@ const FitnessTimetableInner = () => {
                 // Selection styling for background/ring
                 if (isSelected) {
                   buttonStyle = isSwimmingMode 
-                    ? 'bg-blue-600 text-white ring-2 ring-white' 
-                    : 'bg-orange-600 text-white ring-2 ring-white';
+                    ? 'bg-teal-500 text-white ring-2 ring-white shadow-sm shadow-teal-400/50' 
+                    : 'bg-orange-600 text-white ring-2 ring-white shadow-sm shadow-orange-400/50';
                 }
                 
                 return (
@@ -349,8 +457,39 @@ const FitnessTimetableInner = () => {
                         // Find the day section and scroll to it
                         const dayElement = document.getElementById(`day-${day}`);
                         if (dayElement) {
-                          dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-                          showToast(`Viewing ${day}`);
+                          // Get the scroll container
+                          const scrollContainer = document.querySelector('.h-full.overflow-y-auto');
+                          if (scrollContainer) {
+                            // Define scroll function for reuse
+                            const doScroll = () => {
+                              // Get the element's position (needs to be recalculated each time)
+                              const rect = dayElement.getBoundingClientRect();
+                              const containerRect = scrollContainer.getBoundingClientRect();
+                              
+                              // Fine-tuned offset to position the header perfectly at the top
+                              const scrollPosition = Math.round(scrollContainer.scrollTop + rect.top - containerRect.top - 1);
+                              
+                              // Scroll to the position
+                              scrollContainer.scrollTo({
+                                top: scrollPosition,
+                                behavior: 'auto'
+                              });
+                            };
+                            
+                            // Do the initial scroll
+                            doScroll();
+                            
+                            // Second scroll after a brief delay to adjust for any layout shifts
+                            setTimeout(() => {
+                              doScroll();
+                            }, 50);
+                            
+                            showToast(`Viewing ${day}`);
+                          } else {
+                            // Fallback to standard scrollIntoView if container not found
+                            dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+                            showToast(`Viewing ${day}`);
+                          }
                         } else {
                           showToast(`Could not find ${day} section`);
                         }
@@ -366,9 +505,6 @@ const FitnessTimetableInner = () => {
               })}
             </div>
           </div>
-          
-          {/* Right section - empty */}
-          <div className="w-10"></div>
         </div>
       </div>
       
