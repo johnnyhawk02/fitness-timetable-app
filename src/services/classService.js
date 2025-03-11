@@ -90,14 +90,19 @@ export function getClassCategory(activity) {
       activityLower.includes('water'))
     return 'swimming';
   
-  // Cardio classes
+  // Spinning classes - moved up before cardio to prioritize this check
+  if (activityLower.includes('spin') || 
+      activityLower.includes('cycle') ||
+      activityLower.includes('rpm') ||
+      activityLower.includes('trip'))
+    return 'spinning';
+  
+  // Cardio classes - removed 'spin' from this check
   if (activityLower.includes('hiit') || 
-      activityLower.includes('spin') || 
       activityLower.includes('zumba') || 
       activityLower.includes('aerobic') || 
       activityLower.includes('step') ||
       activityLower.includes('cardio') ||
-      activityLower.includes('cycle') ||
       activityLower.includes('combat') ||
       activityLower.includes('box') ||
       activityLower.includes('circuit')) 
@@ -126,12 +131,6 @@ export function getClassCategory(activity) {
   if (activityLower.includes('abs') || 
       activityLower.includes('core'))
     return 'core';
-  
-  // Spinning classes
-  if (activityLower.includes('spin') || 
-      activityLower.includes('cycle') ||
-      activityLower.includes('rpm'))
-    return 'spinning';
   
   // Default category
   return 'other';

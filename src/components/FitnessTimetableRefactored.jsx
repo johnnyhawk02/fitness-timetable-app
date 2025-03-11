@@ -30,39 +30,39 @@ const COLORS = {
   
   // Fitness mode colors (warm)
   fitness: {
-    primary: 'rgb(233,84,32)', // Warm orange/red
-    secondary: 'rgb(255,152,0)', // Orange
+    primary: 'rgb(239,68,68)', // Warmer red
+    secondary: 'rgb(234,88,12)', // Bright orange
     accent: 'rgb(249,115,22)', // Burnt orange
-    background: 'rgb(255,237,213)', // Light peach
+    background: 'rgb(254,226,226)', // Light red/pink
     
     // Warm day colors for fitness
     dayColors: {
       'Monday': 'rgb(220,38,38)', // Red
       'Tuesday': 'rgb(234,88,12)', // Orange
-      'Wednesday': 'rgb(217,119,6)', // Amber
-      'Thursday': 'rgb(202,138,4)', // Yellow
-      'Friday': 'rgb(180,83,9)', // Burnt orange
+      'Wednesday': 'rgb(245,158,11)', // Amber
+      'Thursday': 'rgb(252,211,77)', // Yellow
+      'Friday': 'rgb(217,70,0)', // Deep orange
       'Saturday': 'rgb(194,65,12)', // Rust
       'Sunday': 'rgb(153,27,27)', // Dark red
     }
   },
   
-  // Swimming mode colors (cool blues)
+  // Swimming mode colors (beautiful aqua)
   swimming: {
-    primary: 'rgb(3,105,161)', // Medium blue
+    primary: 'rgb(20,184,166)', // Teal
     secondary: 'rgb(6,182,212)', // Cyan
     accent: 'rgb(14,165,233)', // Sky blue
-    background: 'rgb(224,242,254)', // Light blue
+    background: 'rgb(236,254,255)', // Light cyan
     
-    // Cool day colors for swimming
+    // Aqua day colors for swimming
     dayColors: {
-      'Monday': 'rgb(3,105,161)', // Blue
+      'Monday': 'rgb(20,184,166)', // Teal
       'Tuesday': 'rgb(8,145,178)', // Cyan
-      'Wednesday': 'rgb(13,148,136)', // Teal
-      'Thursday': 'rgb(6,95,70)', // Green
-      'Friday': 'rgb(7,89,133)', // Blue-green
-      'Saturday': 'rgb(30,64,175)', // Indigo
-      'Sunday': 'rgb(91,33,182)', // Purple
+      'Wednesday': 'rgb(13,148,136)', // Teal-green
+      'Thursday': 'rgb(6,182,212)', // Bright cyan
+      'Friday': 'rgb(14,116,144)', // Dark cyan
+      'Saturday': 'rgb(59,130,246)', // Blue
+      'Sunday': 'rgb(16,185,129)', // Emerald
     }
   },
   
@@ -73,7 +73,7 @@ const COLORS = {
     'mind-body': 'rgb(121,85,72)', // Brown
     'core': 'rgb(255,152,0)', // Orange
     'spinning': 'rgb(0,188,212)', // Cyan
-    'swimming': 'rgb(3,169,244)', // Light Blue
+    'swimming': 'rgb(20,184,166)', // Teal
   },
   
   // Shared colors for centers regardless of mode
@@ -262,14 +262,126 @@ const FitnessTimetableInner = () => {
     setSelectedClass(classInfo);
   };
   
-  // Function to handle mode switching - updated to not use loading screen
+  // Helper function to scroll to a specific day and time
+  const scrollToDayAndTime = (day, hour) => {
+    console.log(`Scrolling to ${day} at ${hour}:00`);
+    
+    // First find the day section
+    const dayElement = document.getElementById(`day-${day}`);
+    if (dayElement) {
+      // Add a small delay to ensure layout is rendered after mode switch
+      setTimeout(() => {
+        // Try to find a class around the specified hour on the specified day
+        let targetElement = null;
+        
+        // Look for classes starting at the specified hour, or slightly before/after
+        for (let offset = 0; offset <= 2; offset++) {
+          // Try specified hour first, then expand search window
+          const hourOptions = [hour];
+          if (offset > 0) {
+            // Add hours before and after specified hour to search window
+            const hourBefore = Math.max(hour - offset, 0);
+            const hourAfter = Math.min(hour + offset, 23);
+            hourOptions.push(hourBefore, hourAfter);
+          }
+          
+          // Check each potential hour
+          for (const h of hourOptions) {
+            // Look specifically within the day's section
+            const hourElements = dayElement.querySelectorAll(`[data-hour="${h}"]`);
+            if (hourElements.length > 0) {
+              targetElement = hourElements[0];
+              break;
+            }
+          }
+          
+          if (targetElement) break;
+        }
+        
+        // If no specific class found, just scroll to the day
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+        } else {
+          dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+      }, 300); // Wait for new mode data to render
+    }
+  };
+  
+  // Helper function to check if an element is in the viewport
+  const isElementInViewport = (el) => {
+    if (!el) return false;
+    
+    const rect = el.getBoundingClientRect();
+    // Consider the element in viewport if it's at least partially visible
+    // (top is above bottom of viewport AND bottom is below top of viewport)
+    return (
+      rect.top < (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.bottom > 0
+    );
+  };
+  
+  // Improved function to find which day is most visible in the viewport
+  const findVisibleDay = () => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    let mostVisibleDay = days[0]; // Default to Monday
+    let mostVisibleArea = 0;
+    
+    // Find which day has the most visible area in the viewport
+    for (const day of days) {
+      const dayElement = document.getElementById(`day-${day}`);
+      if (!dayElement) continue;
+      
+      const rect = dayElement.getBoundingClientRect();
+      // Skip if element is not visible at all
+      if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
+      
+      // Calculate visible area
+      const visibleTop = Math.max(0, rect.top);
+      const visibleBottom = Math.min(window.innerHeight, rect.bottom);
+      const visibleHeight = visibleBottom - visibleTop;
+      
+      if (visibleHeight > mostVisibleArea) {
+        mostVisibleArea = visibleHeight;
+        mostVisibleDay = day;
+      }
+    }
+    
+    console.log(`Most visible day detected: ${mostVisibleDay}`);
+    return mostVisibleDay;
+  };
+  
+  // Function to handle mode switching - updated to preserve day/time position
   const handleModeSwitch = (newMode) => {
     console.log('Manual mode switch to:', newMode);
-    // Don't show loading screen for mode switches
-    // Just set the mode directly
+    
+    // Find the most visible day in the viewport before switching
+    const targetDay = findVisibleDay();
+    console.log(`Switching modes - will maintain position at ${targetDay}`);
+    
+    // Get the scroll container
+    const scrollContainer = document.querySelector('.overflow-y-auto');
+    if (!scrollContainer) return;
+    
+    // Instead of fading, use a simpler approach - just hide instantly
+    scrollContainer.style.visibility = 'hidden';
+    
+    // Set mode and show toast
     actions.setMode(newMode);
-    // Show a toast to indicate the mode change
-    showToast(`Switching to ${newMode} mode`);
+    showToast(`Switching to ${newMode} mode, staying on ${targetDay}`);
+    
+    // Use a single timeout with enough delay to let React render the new content
+    setTimeout(() => {
+      // Try to find and scroll to the target day
+      const dayElement = document.getElementById(`day-${targetDay}`);
+      if (dayElement) {
+        // Scroll to the element without animation
+        dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+      }
+      
+      // Show the content again after position is set
+      scrollContainer.style.visibility = 'visible';
+    }, 150); // Single delay that's long enough for rendering but short enough to feel responsive
   };
   
   return (
@@ -277,19 +389,20 @@ const FitnessTimetableInner = () => {
       {/* Loading screen */}
       <LoadingScreen show={loading} colors={COLORS} />
       
-      {/* Enhanced app bar with modern styling and gradient */}
+      {/* Enhanced app bar with modern styling and gradient - dynamic based on mode */}
       <div 
-        className="bg-gradient-to-r from-[rgb(0,120,178)] to-[rgb(0,150,210)] text-white px-3 py-3 shadow-md z-20 sticky top-0"
+        className={`${
+          isSwimmingMode 
+            ? 'bg-gradient-to-r from-teal-600 to-cyan-500' 
+            : 'bg-gradient-to-r from-red-500 to-orange-500'
+        } text-white px-3 py-3 shadow-md z-20 sticky top-0`}
       >
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          {/* Left section with logo and mode switch */}
-          <div className="flex items-center gap-3">
-            <div className="bg-white p-1 rounded-md shadow-sm">
-              <img src="/images/logo.jpg" alt="Active Sefton Fitness" className="h-6 object-contain rounded-sm" />
-            </div>
+          {/* Left section with mode switch only (logo removed) */}
+          <div className="flex items-center">
             <button
               onClick={() => handleModeSwitch(isSwimmingMode ? 'fitness' : 'swimming')}
-              className="text-4xl transition-transform hover:scale-110 focus:outline-none ml-2 p-1"
+              className="text-4xl transition-transform hover:scale-110 focus:outline-none p-1"
               title={`Switch to ${isSwimmingMode ? 'Fitness' : 'Swimming'} Mode`}
             >
               {isSwimmingMode ? '🏊‍♂️' : '🏋️‍♂️'}
@@ -330,8 +443,8 @@ const FitnessTimetableInner = () => {
       {/* Stylish filter section */}
       <div className={`py-2 px-3 border-b border-gray-200 ${
         isSwimmingMode 
-          ? 'bg-gradient-to-r from-blue-50 to-blue-100/80' 
-          : 'bg-gradient-to-r from-orange-50 to-orange-100/80'
+          ? 'bg-gradient-to-r from-cyan-50 to-teal-100/80' 
+          : 'bg-gradient-to-r from-red-50 to-orange-100/80'
       }`}>
         <div className="max-w-5xl mx-auto">
           {/* Just the dropdowns in a stylish row */}
@@ -439,7 +552,7 @@ const FitnessTimetableInner = () => {
 
       {/* Timetable content - full screen scrollable area with mode-specific background */}
       <div className={`flex-1 overflow-hidden ${
-        isSwimmingMode ? 'bg-blue-50' : 'bg-orange-50'
+        isSwimmingMode ? 'bg-cyan-50' : 'bg-red-50'
       }`}>
         <div className="h-full overflow-y-auto scrollbar-hide">
           {/* Class list component - removed redundant mode indicator */}

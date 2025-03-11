@@ -12,7 +12,7 @@ const Toast = ({ show, message }) => {
   if (!show) return null;
   
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-[rgb(0,130,188)] text-white px-4 py-2 rounded-lg shadow-lg z-[200] flex items-center">
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg shadow-lg z-[200] flex items-center">
       <span>{message}</span>
     </div>
   );
