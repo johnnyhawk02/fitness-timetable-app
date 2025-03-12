@@ -6,7 +6,6 @@ import useFilteredClasses from '../hooks/useFilteredClasses';
 import NowButton from './ui/NowButton';
 import ClassList from './ui/ClassList';
 import ClassDetails from './ui/ClassDetails';
-import Toast from './ui/Toast';
 import LoadingScreen from './ui/LoadingScreen';
 import PoolTypeFilter from './filters/PoolTypeFilter';
 import ClassTypeFilter from './filters/ClassTypeFilter';
@@ -118,7 +117,6 @@ const FitnessTimetableInner = () => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true); // This will start as true for initial load
   const [initialLoad, setInitialLoad] = useState(true); // Track if this is the first load
-  const [toast, setToast] = useState({ show: false, message: '' });
   const [selectedClass, setSelectedClass] = useState(null);
   
   // State to track which day is currently selected in the day navigator
@@ -126,14 +124,6 @@ const FitnessTimetableInner = () => {
   
   // Track previous state to detect transitions
   const [prevHasAnyClasses, setPrevHasAnyClasses] = useState(false);
-  
-  // Function to show toast notifications
-  const showToast = (message) => {
-    setToast({ show: true, message });
-    setTimeout(() => {
-      setToast({ show: false, message: '' });
-    }, 3000);
-  };
   
   // Initialize selected day to today on component mount
   useEffect(() => {
@@ -151,7 +141,7 @@ const FitnessTimetableInner = () => {
         setLoading(true);
       } else {
         // For mode switches, just show a toast instead of full loading screen
-        showToast(`Switching to ${isSwimmingMode ? 'Swimming' : 'Fitness'} mode...`);
+        console.log('Switching to mode:', isSwimmingMode ? 'Swimming' : 'Fitness');
       }
       
       try {
@@ -165,7 +155,7 @@ const FitnessTimetableInner = () => {
         }
       } catch (error) {
         console.error('Error loading classes:', error);
-        showToast('Error loading classes');
+        console.log('Error loading classes');
       } finally {
         setLoading(false);
       }
@@ -217,12 +207,12 @@ const FitnessTimetableInner = () => {
         } else {
           console.log(`Could not find ${targetDay} section after classes became available`);
         }
-      }, 100);
+      }, 150);
     }
      
     // Update previous state for next comparison
     setPrevHasAnyClasses(hasAnyClasses);
-  }, [hasAnyClasses, prevHasAnyClasses, selectedDay, showToast]);
+  }, [hasAnyClasses, prevHasAnyClasses, selectedDay]);
   
   // Function to scroll to the currently selected day or default to today if none selected
   const scrollToSelectedDay = useCallback(() => {
@@ -267,15 +257,15 @@ const FitnessTimetableInner = () => {
         // Second scroll after a brief delay to adjust for any layout shifts
         setTimeout(() => {
           doScroll();
-        }, 50);
+        }, 120);
       } else {
         // Fallback to standard scrollIntoView if container not found
         dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
       }
     } else {
-      showToast(`Could not find ${targetDay} section`);
+      console.log(`Could not find ${targetDay} section`);
     }
-  }, [selectedDay, setSelectedDay, showToast]);
+  }, [selectedDay, setSelectedDay]);
   
   // Function to scroll to the current day
   const scrollToNow = useCallback(() => {
@@ -315,18 +305,18 @@ const FitnessTimetableInner = () => {
         // Second scroll after a brief delay to adjust for any layout shifts
         setTimeout(() => {
           doScroll();
-        }, 50);
+        }, 120);
         
-        showToast(`Viewing today (${today})`);
+        console.log(`Viewing today (${today})`);
       } else {
         // Fallback to standard scrollIntoView if container not found
         dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-        showToast(`Viewing today (${today})`);
+        console.log(`Viewing today (${today})`);
       }
     } else {
-      showToast(`Could not find today's section`);
+      console.log(`Could not find today's section`);
     }
-  }, [setSelectedDay, showToast]);
+  }, [setSelectedDay]);
   
   // Function to handle mode switching - preserve selected day when possible
   const handleModeSwitch = (newMode) => {
@@ -334,7 +324,7 @@ const FitnessTimetableInner = () => {
     
     // Set mode
     actions.setMode(newMode);
-    showToast(`Switching to ${newMode} mode`);
+    console.log(`Switching to ${newMode} mode`);
     
     // Give a larger delay for the mode to change before scrolling
     setTimeout(() => {
@@ -372,7 +362,7 @@ const FitnessTimetableInner = () => {
             // Second scroll after a brief delay to adjust for any layout shifts
             setTimeout(() => {
               doScroll();
-            }, 50);
+            }, 120);
           } else {
             // Fallback to standard scrollIntoView if container not found
             dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
@@ -483,16 +473,16 @@ const FitnessTimetableInner = () => {
                             // Second scroll after a brief delay to adjust for any layout shifts
                             setTimeout(() => {
                               doScroll();
-                            }, 50);
+                            }, 120);
                             
-                            showToast(`Viewing ${day}`);
+                            console.log(`Viewing ${day}`);
                           } else {
                             // Fallback to standard scrollIntoView if container not found
                             dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-                            showToast(`Viewing ${day}`);
+                            console.log(`Viewing ${day}`);
                           }
                         } else {
-                          showToast(`Could not find ${day} section`);
+                          console.log(`Could not find ${day} section`);
                         }
                       }}
                       className={`rounded-full w-8 h-8 flex items-center justify-center text-sm focus:outline-none ${buttonStyle}`}
@@ -508,9 +498,6 @@ const FitnessTimetableInner = () => {
           </div>
         </div>
       </div>
-      
-      {/* Toast notification */}
-      <Toast show={toast.show} message={toast.message} colors={COLORS} />
       
       {/* Stylish filter section */}
       <div className={`py-2 px-3 border-b border-gray-200 ${
@@ -554,14 +541,14 @@ const FitnessTimetableInner = () => {
                             newCenters[c] = true;
                           });
                           actions.setFilter('centers', newCenters);
-                          showToast('Showing all centers');
+                          console.log('Showing all centers');
                         } else {
                           // Otherwise set just the selected center
                           centers.forEach(c => {
                             newCenters[c] = (c === center);
                           });
                           actions.setFilter('centers', newCenters);
-                          showToast(`Showing ${center} only`);
+                          console.log(`Showing ${center} only`);
                         }
                         
                         // Scroll to selected day (respecting current selection)
@@ -603,14 +590,14 @@ const FitnessTimetableInner = () => {
                             newCenters[c] = true;
                           });
                           actions.setFilter('centers', newCenters);
-                          showToast('Showing all centers');
+                          console.log('Showing all centers');
                         } else {
                           // Otherwise set just the selected center
                           centers.forEach(c => {
                             newCenters[c] = (c === center);
                           });
                           actions.setFilter('centers', newCenters);
-                          showToast(`Showing ${center} only`);
+                          console.log(`Showing ${center} only`);
                         }
                         
                         // Scroll to selected day (respecting current selection)
