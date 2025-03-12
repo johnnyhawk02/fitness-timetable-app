@@ -125,13 +125,79 @@ const FitnessTimetableInner = () => {
   // Track previous state to detect transitions
   const [prevHasAnyClasses, setPrevHasAnyClasses] = useState(false);
   
+  // Utility function to get the current day name
+  const getCurrentDay = useCallback(() => {
+    const now = new Date();
+    return now.toLocaleDateString('en-US', { weekday: 'long' });
+  }, []);
+  
+  // Utility function to handle scrolling to a day element - moved up to fix initialization order
+  const scrollToDayElement = useCallback((dayElement) => {
+    if (!dayElement) {
+      console.log('No day element provided for scrolling');
+      return;
+    }
+    
+    // Get the scroll container
+    const scrollContainer = document.querySelector('.h-full.overflow-y-auto');
+    if (scrollContainer) {
+      // Define scroll function for reuse
+      const doScroll = () => {
+        // Get the element's position (needs to be recalculated each time)
+        const rect = dayElement.getBoundingClientRect();
+        const containerRect = scrollContainer.getBoundingClientRect();
+        
+        // Fine-tuned offset to position the header perfectly at the top (ensure header is visible) KEEP '+ 2'
+        const scrollPosition = Math.round(scrollContainer.scrollTop + rect.top - containerRect.top + 2);
+        
+        // Scroll to the position
+        scrollContainer.scrollTo({
+          top: scrollPosition,
+          behavior: 'auto'
+        });
+      };
+      
+      // Do the initial scroll
+      doScroll();
+      
+      // Second scroll after a brief delay to adjust for any layout shifts
+      setTimeout(() => {
+        doScroll();
+      }, 120);
+    } else {
+      // Fallback to standard scrollIntoView if container not found
+      dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  }, []);
+  
+  // Utility function to find a day element by day name and scroll to it
+  const scrollToDay = useCallback((day) => {
+    const targetDay = day || getCurrentDay();
+    console.log(`Attempting to scroll to day: ${targetDay}`);
+    
+    const dayElement = document.getElementById(`day-${targetDay}`);
+    if (dayElement) {
+      scrollToDayElement(dayElement);
+      console.log(`Viewing ${targetDay}`);
+      return true;
+    } else {
+      console.log(`Could not find ${targetDay} section`);
+      return false;
+    }
+  }, [getCurrentDay, scrollToDayElement]);
+  
   // Initialize selected day to today on component mount
   useEffect(() => {
-    const now = new Date();
-    const today = now.toLocaleDateString('en-US', { weekday: 'long' });
+    const today = getCurrentDay();
     setSelectedDay(today);
     console.log('Selected day initialized to today:', today);
-  }, []);
+  }, [getCurrentDay, setSelectedDay]);
+  
+  // Ensure virtual classes are included when component mounts
+  useEffect(() => {
+    actions.setFilter('includeVirtual', true);
+    console.log('Ensuring virtual classes are included');
+  }, [actions]);
   
   // Load classes on mount and when mode changes
   useEffect(() => {
@@ -197,61 +263,16 @@ const FitnessTimetableInner = () => {
       // Small delay to ensure DOM is fully updated
       setTimeout(() => {
         // Find the day section and scroll to it
-        const targetDay = selectedDay || (new Date()).toLocaleDateString('en-US', { weekday: 'long' });
-        const dayElement = document.getElementById(`day-${targetDay}`);
-         
-        if (dayElement) {
-          // Scroll to the day section - ensure header is visible at top
-          dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-          console.log(`Scrolled to ${targetDay} after classes became available`);
-        } else {
-          console.log(`Could not find ${targetDay} section after classes became available`);
-        }
+        const targetDay = selectedDay || getCurrentDay();
+        
+        // Use the scrollToDay utility function
+        scrollToDay(targetDay);
       }, 150);
     }
      
     // Update previous state for next comparison
     setPrevHasAnyClasses(hasAnyClasses);
-  }, [hasAnyClasses, prevHasAnyClasses, selectedDay]);
-  
-  // Utility function to handle scrolling to a day element
-  const scrollToDayElement = useCallback((dayElement) => {
-    if (!dayElement) {
-      console.log('No day element provided for scrolling');
-      return;
-    }
-    
-    // Get the scroll container
-    const scrollContainer = document.querySelector('.h-full.overflow-y-auto');
-    if (scrollContainer) {
-      // Define scroll function for reuse
-      const doScroll = () => {
-        // Get the element's position (needs to be recalculated each time)
-        const rect = dayElement.getBoundingClientRect();
-        const containerRect = scrollContainer.getBoundingClientRect();
-        
-        // Fine-tuned offset to position the header perfectly at the top (ensure header is visible)
-        const scrollPosition = Math.round(scrollContainer.scrollTop + rect.top - containerRect.top + 2);
-        
-        // Scroll to the position
-        scrollContainer.scrollTo({
-          top: scrollPosition,
-          behavior: 'auto'
-        });
-      };
-      
-      // Do the initial scroll
-      doScroll();
-      
-      // Second scroll after a brief delay to adjust for any layout shifts
-      setTimeout(() => {
-        doScroll();
-      }, 120);
-    } else {
-      // Fallback to standard scrollIntoView if container not found
-      dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-    }
-  }, []);
+  }, [hasAnyClasses, prevHasAnyClasses, selectedDay, getCurrentDay, scrollToDay]);
   
   // Function to scroll to the currently selected day or default to today if none selected
   const scrollToSelectedDay = useCallback(() => {
@@ -260,42 +281,29 @@ const FitnessTimetableInner = () => {
     
     // If no day is selected, use today as default
     if (!targetDay) {
-      const now = new Date();
-      targetDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+      targetDay = getCurrentDay();
       // Update the selected day in the UI
       setSelectedDay(targetDay);
     }
     
     console.log(`Scrolling to selected day: ${targetDay}`);
     
-    // Find the day section
-    const dayElement = document.getElementById(`day-${targetDay}`);
-    if (dayElement) {
-      scrollToDayElement(dayElement);
-    } else {
-      console.log(`Could not find ${targetDay} section`);
-    }
-  }, [selectedDay, setSelectedDay, scrollToDayElement]);
+    // Use the scrollToDay utility function
+    scrollToDay(targetDay);
+  }, [selectedDay, setSelectedDay, getCurrentDay, scrollToDay]);
   
   // Function to scroll to the current day
   const scrollToNow = useCallback(() => {
-    const now = new Date();
-    const today = now.toLocaleDateString('en-US', { weekday: 'long' });
+    const today = getCurrentDay();
     
     console.log(`Scrolling to now (${today})`);
     
     // Update selected day to today
     setSelectedDay(today);
     
-    // Find today's section
-    const dayElement = document.getElementById(`day-${today}`);
-    if (dayElement) {
-      scrollToDayElement(dayElement);
-      console.log(`Viewing today (${today})`);
-    } else {
-      console.log(`Could not find today's section`);
-    }
-  }, [setSelectedDay, scrollToDayElement]);
+    // Use the scrollToDay utility function
+    scrollToDay(today);
+  }, [setSelectedDay, getCurrentDay, scrollToDay]);
   
   // Function to handle mode switching - preserve selected day when possible
   const handleModeSwitch = (newMode) => {
@@ -303,6 +311,8 @@ const FitnessTimetableInner = () => {
     
     // Set mode
     actions.setMode(newMode);
+    // Ensure virtual classes are included
+    actions.setFilter('includeVirtual', true);
     console.log(`Switching to ${newMode} mode`);
     
     // Give a larger delay for the mode to change before scrolling
@@ -311,15 +321,8 @@ const FitnessTimetableInner = () => {
       if (hasAnyClasses) {
         console.log('Classes are available after mode switch - scrolling to selected day');
         
-        // Find the day section again and scroll to it
-        const targetDay = selectedDay || (new Date()).toLocaleDateString('en-US', { weekday: 'long' });
-        const dayElement = document.getElementById(`day-${targetDay}`);
-        
-        if (dayElement) {
-          scrollToDayElement(dayElement);
-        } else {
-          console.log(`Could not find ${targetDay} section after mode switch`);
-        }
+        // Use the scrollToDay utility function with the selected day or current day
+        scrollToDay(selectedDay);
       } else {
         console.log('No classes available after mode switch - skipping scroll');
       }
@@ -375,8 +378,7 @@ const FitnessTimetableInner = () => {
                 
                 // Check if this day is selected or is today
                 const isSelected = day === selectedDay;
-                const now = new Date();
-                const today = now.toLocaleDateString('en-US', { weekday: 'long' });
+                const today = getCurrentDay();
                 const isToday = day === today;
                 
                 // Determine button styling based on selection status
@@ -395,14 +397,8 @@ const FitnessTimetableInner = () => {
                       onClick={() => {
                         setSelectedDay(day);
                         
-                        // Find the day section and scroll to it
-                        const dayElement = document.getElementById(`day-${day}`);
-                        if (dayElement) {
-                          scrollToDayElement(dayElement);
-                          console.log(`Viewing ${day}`);
-                        } else {
-                          console.log(`Could not find ${day} section`);
-                        }
+                        // Use the scrollToDay utility function
+                        scrollToDay(day);
                       }}
                       className={`rounded-full w-8 h-8 flex items-center justify-center text-sm focus:outline-none ${buttonStyle}`}
                       title={day}
