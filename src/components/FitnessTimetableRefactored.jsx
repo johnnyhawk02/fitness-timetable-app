@@ -214,6 +214,45 @@ const FitnessTimetableInner = () => {
     setPrevHasAnyClasses(hasAnyClasses);
   }, [hasAnyClasses, prevHasAnyClasses, selectedDay]);
   
+  // Utility function to handle scrolling to a day element
+  const scrollToDayElement = useCallback((dayElement) => {
+    if (!dayElement) {
+      console.log('No day element provided for scrolling');
+      return;
+    }
+    
+    // Get the scroll container
+    const scrollContainer = document.querySelector('.h-full.overflow-y-auto');
+    if (scrollContainer) {
+      // Define scroll function for reuse
+      const doScroll = () => {
+        // Get the element's position (needs to be recalculated each time)
+        const rect = dayElement.getBoundingClientRect();
+        const containerRect = scrollContainer.getBoundingClientRect();
+        
+        // Fine-tuned offset to position the header perfectly at the top (ensure header is visible)
+        const scrollPosition = Math.round(scrollContainer.scrollTop + rect.top - containerRect.top + 2);
+        
+        // Scroll to the position
+        scrollContainer.scrollTo({
+          top: scrollPosition,
+          behavior: 'auto'
+        });
+      };
+      
+      // Do the initial scroll
+      doScroll();
+      
+      // Second scroll after a brief delay to adjust for any layout shifts
+      setTimeout(() => {
+        doScroll();
+      }, 120);
+    } else {
+      // Fallback to standard scrollIntoView if container not found
+      dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  }, []);
+  
   // Function to scroll to the currently selected day or default to today if none selected
   const scrollToSelectedDay = useCallback(() => {
     // Determine which day to scroll to (selected day or default to today)
@@ -232,40 +271,11 @@ const FitnessTimetableInner = () => {
     // Find the day section
     const dayElement = document.getElementById(`day-${targetDay}`);
     if (dayElement) {
-      // Get the scroll container
-      const scrollContainer = document.querySelector('.h-full.overflow-y-auto');
-      if (scrollContainer) {
-        // First scroll - initial positioning
-        const doScroll = () => {
-          // Get the element's position (needs to be recalculated each time)
-          const rect = dayElement.getBoundingClientRect();
-          const containerRect = scrollContainer.getBoundingClientRect();
-          
-          // Fine-tuned offset to position the header perfectly at the top (1px reduces chance of header being cut off)
-          const scrollPosition = Math.round(scrollContainer.scrollTop + rect.top - containerRect.top - 1);
-          
-          // Scroll to the position
-          scrollContainer.scrollTo({
-            top: scrollPosition,
-            behavior: 'auto'
-          });
-        };
-        
-        // Do the initial scroll
-        doScroll();
-        
-        // Second scroll after a brief delay to adjust for any layout shifts
-        setTimeout(() => {
-          doScroll();
-        }, 120);
-      } else {
-        // Fallback to standard scrollIntoView if container not found
-        dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-      }
+      scrollToDayElement(dayElement);
     } else {
       console.log(`Could not find ${targetDay} section`);
     }
-  }, [selectedDay, setSelectedDay]);
+  }, [selectedDay, setSelectedDay, scrollToDayElement]);
   
   // Function to scroll to the current day
   const scrollToNow = useCallback(() => {
@@ -280,43 +290,12 @@ const FitnessTimetableInner = () => {
     // Find today's section
     const dayElement = document.getElementById(`day-${today}`);
     if (dayElement) {
-      // Get the scroll container
-      const scrollContainer = document.querySelector('.h-full.overflow-y-auto');
-      if (scrollContainer) {
-        // First scroll - initial positioning
-        const doScroll = () => {
-          // Get the element's position (needs to be recalculated each time)
-          const rect = dayElement.getBoundingClientRect();
-          const containerRect = scrollContainer.getBoundingClientRect();
-          
-          // Fine-tuned offset to position the header perfectly at the top
-          const scrollPosition = Math.round(scrollContainer.scrollTop + rect.top - containerRect.top - 1);
-          
-          // Scroll to the position
-          scrollContainer.scrollTo({
-            top: scrollPosition,
-            behavior: 'auto'
-          });
-        };
-        
-        // Do the initial scroll
-        doScroll();
-        
-        // Second scroll after a brief delay to adjust for any layout shifts
-        setTimeout(() => {
-          doScroll();
-        }, 120);
-        
-        console.log(`Viewing today (${today})`);
-      } else {
-        // Fallback to standard scrollIntoView if container not found
-        dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-        console.log(`Viewing today (${today})`);
-      }
+      scrollToDayElement(dayElement);
+      console.log(`Viewing today (${today})`);
     } else {
       console.log(`Could not find today's section`);
     }
-  }, [setSelectedDay]);
+  }, [setSelectedDay, scrollToDayElement]);
   
   // Function to handle mode switching - preserve selected day when possible
   const handleModeSwitch = (newMode) => {
@@ -337,36 +316,7 @@ const FitnessTimetableInner = () => {
         const dayElement = document.getElementById(`day-${targetDay}`);
         
         if (dayElement) {
-          // Get the scroll container
-          const scrollContainer = document.querySelector('.h-full.overflow-y-auto');
-          if (scrollContainer) {
-            // Define scroll function for reuse
-            const doScroll = () => {
-              // Get the element's position (needs to be recalculated each time)
-              const rect = dayElement.getBoundingClientRect();
-              const containerRect = scrollContainer.getBoundingClientRect();
-              
-              // Fine-tuned offset to position the header perfectly at the top
-              const scrollPosition = Math.round(scrollContainer.scrollTop + rect.top - containerRect.top - 1);
-              
-              // Scroll to the position
-              scrollContainer.scrollTo({
-                top: scrollPosition,
-                behavior: 'auto'
-              });
-            };
-            
-            // Do the initial scroll
-            doScroll();
-            
-            // Second scroll after a brief delay to adjust for any layout shifts
-            setTimeout(() => {
-              doScroll();
-            }, 120);
-          } else {
-            // Fallback to standard scrollIntoView if container not found
-            dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-          }
+          scrollToDayElement(dayElement);
         } else {
           console.log(`Could not find ${targetDay} section after mode switch`);
         }
@@ -448,39 +398,8 @@ const FitnessTimetableInner = () => {
                         // Find the day section and scroll to it
                         const dayElement = document.getElementById(`day-${day}`);
                         if (dayElement) {
-                          // Get the scroll container
-                          const scrollContainer = document.querySelector('.h-full.overflow-y-auto');
-                          if (scrollContainer) {
-                            // Define scroll function for reuse
-                            const doScroll = () => {
-                              // Get the element's position (needs to be recalculated each time)
-                              const rect = dayElement.getBoundingClientRect();
-                              const containerRect = scrollContainer.getBoundingClientRect();
-                              
-                              // Fine-tuned offset to position the header perfectly at the top
-                              const scrollPosition = Math.round(scrollContainer.scrollTop + rect.top - containerRect.top - 1);
-                              
-                              // Scroll to the position
-                              scrollContainer.scrollTo({
-                                top: scrollPosition,
-                                behavior: 'auto'
-                              });
-                            };
-                            
-                            // Do the initial scroll
-                            doScroll();
-                            
-                            // Second scroll after a brief delay to adjust for any layout shifts
-                            setTimeout(() => {
-                              doScroll();
-                            }, 120);
-                            
-                            console.log(`Viewing ${day}`);
-                          } else {
-                            // Fallback to standard scrollIntoView if container not found
-                            dayElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-                            console.log(`Viewing ${day}`);
-                          }
+                          scrollToDayElement(dayElement);
+                          console.log(`Viewing ${day}`);
                         } else {
                           console.log(`Could not find ${day} section`);
                         }
@@ -507,121 +426,70 @@ const FitnessTimetableInner = () => {
       }`}>
         <div className="max-w-5xl mx-auto">
           {/* Just the dropdowns in a stylish row */}
-          <div className="overflow-x-auto py-0.5">
-            <div className="flex gap-3">
-              {isSwimmingMode ? (
-                <>
-                  <div className="flex-1 min-w-[140px]">
-                    <PoolTypeFilter
-                      value={state.filters.poolLocationType}
-                      onChange={(value) => {
-                        actions.setFilter('poolLocationType', value);
-                        
-                        // Scroll to selected day (respecting current selection)
-                        scrollToSelectedDay();
-                      }}
-                      colors={COLORS}
-                      isSwimmingMode={isSwimmingMode}
-                    />
-                  </div>
-                  
-                  <div className="flex-1 min-w-[140px]">
-                    <CentersFilter
-                      centers={centers}
-                      selected={state.filters.centers}
-                      isSwimmingMode={isSwimmingMode}
-                      onChange={(center) => {
-                        // When a center is selected, reset all centers to false
-                        // then set the selected one to true
-                        const newCenters = {};
-                        
-                        if (center === 'All') {
-                          // If 'All' is selected, set all centers to true to show all centers
-                          centers.forEach(c => {
-                            newCenters[c] = true;
-                          });
-                          actions.setFilter('centers', newCenters);
-                          console.log('Showing all centers');
-                        } else {
-                          // Otherwise set just the selected center
-                          centers.forEach(c => {
-                            newCenters[c] = (c === center);
-                          });
-                          actions.setFilter('centers', newCenters);
-                          console.log(`Showing ${center} only`);
-                        }
-                        
-                        // Scroll to selected day (respecting current selection)
-                        scrollToSelectedDay();
-                      }}
-                      colors={COLORS}
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex-1 min-w-[140px]">
-                    <ClassTypeFilter
-                      value={state.filters.category}
-                      onChange={(value) => {
-                        actions.setFilter('category', value);
-                        
-                        // Scroll to selected day (respecting current selection)
-                        scrollToSelectedDay();
-                      }}
-                      colors={COLORS}
-                      isSwimmingMode={isSwimmingMode}
-                    />
-                  </div>
-                  
-                  <div className="flex-1 min-w-[140px]">
-                    <CentersFilter
-                      centers={centers}
-                      selected={state.filters.centers}
-                      isSwimmingMode={isSwimmingMode}
-                      onChange={(center) => {
-                        // When a center is selected, reset all centers to false
-                        // then set the selected one to true
-                        const newCenters = {};
-                        
-                        if (center === 'All') {
-                          // If 'All' is selected, set all centers to true to show all centers
-                          centers.forEach(c => {
-                            newCenters[c] = true;
-                          });
-                          actions.setFilter('centers', newCenters);
-                          console.log('Showing all centers');
-                        } else {
-                          // Otherwise set just the selected center
-                          centers.forEach(c => {
-                            newCenters[c] = (c === center);
-                          });
-                          actions.setFilter('centers', newCenters);
-                          console.log(`Showing ${center} only`);
-                        }
-                        
-                        // Scroll to selected day (respecting current selection)
-                        scrollToSelectedDay();
-                      }}
-                      colors={COLORS}
-                    />
-                  </div>
-                  
-                  <div className="flex-1 min-w-[160px]">
-                    <VirtualClassToggle
-                      value={state.filters.includeVirtual}
-                      onChange={(value) => {
-                        actions.setFilter('includeVirtual', value);
-                        
-                        // Scroll to selected day (respecting current selection)
-                        scrollToSelectedDay();
-                      }}
-                      colors={COLORS}
-                      isSwimmingMode={isSwimmingMode}
-                    />
-                  </div>
-                </>
-              )}
+          <div className="overflow-visible py-0.5">
+            <div className="flex justify-between">
+              {/* Centers filter always on the left for clear hierarchy */}
+              <div className="w-[48%] min-w-[120px]">
+                <CentersFilter
+                  centers={centers}
+                  selected={state.filters.centers}
+                  isSwimmingMode={isSwimmingMode}
+                  onChange={(center) => {
+                    // When a center is selected, reset all centers to false
+                    // then set the selected one to true
+                    const newCenters = {};
+                    
+                    if (center === 'All') {
+                      // If 'All' is selected, set all centers to true to show all centers
+                      centers.forEach(c => {
+                        newCenters[c] = true;
+                      });
+                      actions.setFilter('centers', newCenters);
+                      console.log('Showing all centers');
+                    } else {
+                      // Otherwise set just the selected center
+                      centers.forEach(c => {
+                        newCenters[c] = (c === center);
+                      });
+                      actions.setFilter('centers', newCenters);
+                      console.log(`Showing ${center} only`);
+                    }
+                    
+                    // Scroll to selected day (respecting current selection)
+                    scrollToSelectedDay();
+                  }}
+                  colors={COLORS}
+                />
+              </div>
+              
+              {/* Mode-specific filter on the right */}
+              <div className="w-[48%] min-w-[120px]">
+                {isSwimmingMode ? (
+                  <PoolTypeFilter
+                    value={state.filters.poolLocationType}
+                    onChange={(value) => {
+                      actions.setFilter('poolLocationType', value);
+                      
+                      // Scroll to selected day (respecting current selection)
+                      scrollToSelectedDay();
+                    }}
+                    colors={COLORS}
+                    isSwimmingMode={isSwimmingMode}
+                  />
+                ) : (
+                  <ClassTypeFilter
+                    value={state.filters.category}
+                    onChange={(value) => {
+                      actions.setFilter('category', value);
+                      
+                      // Scroll to selected day (respecting current selection)
+                      scrollToSelectedDay();
+                    }}
+                    colors={COLORS}
+                    isSwimmingMode={isSwimmingMode}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
