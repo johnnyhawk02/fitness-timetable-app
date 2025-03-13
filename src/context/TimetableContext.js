@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import logger from '../utils/logger';
 
 // Helper function to get stored value from localStorage
 const getStoredMode = () => {
@@ -6,7 +7,7 @@ const getStoredMode = () => {
     const storedMode = localStorage.getItem('app_mode');
     return storedMode ? JSON.parse(storedMode) : 'fitness';
   } catch (error) {
-    console.error('Error reading app mode from localStorage:', error);
+    logger.error('Error reading app mode from localStorage:', error);
     return 'fitness';
   }
 };
@@ -43,14 +44,14 @@ const ActionTypes = {
 function timetableReducer(state, action) {
   switch (action.type) {
     case ActionTypes.SET_MODE:
-      console.log('SET_MODE reducer called with payload:', action.payload);
-      console.log('Previous mode:', state.mode);
+      logger.log('SET_MODE reducer called with payload:', action.payload);
+      logger.log('Previous mode:', state.mode);
       
       // Save the new mode to localStorage
       try {
         localStorage.setItem('app_mode', JSON.stringify(action.payload));
       } catch (error) {
-        console.error('Error saving mode to localStorage:', error);
+        logger.error('Error saving mode to localStorage:', error);
       }
       
       return {
@@ -146,7 +147,7 @@ export function TimetableProvider({ children, defaultCenters = {}, defaultDays =
   // Create action creators
   const actions = {
     setMode: (mode) => {
-      console.log('setMode action called with:', mode);
+      logger.log('setMode action called with:', mode);
       dispatch({ type: ActionTypes.SET_MODE, payload: mode });
     },
     setFilter: (filterType, value) => dispatch({ 

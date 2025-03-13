@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import logger from '../utils/logger';
 
 /**
  * Custom hook that provides scrolling utilities
@@ -33,19 +34,19 @@ export const useScrollUtils = (options = {}) => {
     setTimeout(() => {
       const element = document.getElementById(elementId);
       if (!element) {
-        console.warn(`Element with ID '${elementId}' not found for scrolling.`);
+        logger.warn(`Element with ID '${elementId}' not found for scrolling.`);
         return;
       }
       
       // First scroll - initial positioning
       element.scrollIntoView({ behavior, block: 'start' });
-      console.log(`Scrolled to ${elementId}`);
+      logger.log(`Scrolled to ${elementId}`);
       
       // Optional second scroll for fine adjustment
       if (useSecondScroll) {
         setTimeout(() => {
           element.scrollIntoView({ behavior, block: 'start' });
-          console.log(`Second scroll to ${elementId}`);
+          logger.log(`Second scroll to ${elementId}`);
           
           if (onSuccess) {
             onSuccess();

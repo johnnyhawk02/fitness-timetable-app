@@ -144,8 +144,8 @@ const ClassList = ({
                         )}
                       </div>
                       
-                      {/* Activity column */}
-                      <div className="col-span-8 text-left">
+                      {/* Activity column - reduced width on mobile */}
+                      <div className="col-span-7 sm:col-span-8 text-left">
                         <span className="font-medium text-gray-900 text-left block w-full">{cls.activity}</span>
                         
                         <div className="flex items-center text-xs text-gray-500 mt-1">
@@ -189,18 +189,19 @@ const ClassList = ({
                         </div>
                       </div>
                       
-                      {/* Center abbreviation */}
-                      <div className="col-span-2 text-right">
+                      {/* Center name - wider on mobile */}
+                      <div className="col-span-3 sm:col-span-2 text-right">
                         {cls.center && (
                           <span 
-                            className="inline-block px-1.5 py-0.5 text-white text-[10px] rounded uppercase font-medium align-baseline text-center"
+                            className="inline-block px-1.5 sm:px-2 py-0.5 text-white text-[8px] sm:text-[9px] rounded capitalize font-medium align-baseline text-center"
                             style={{ 
                               backgroundColor: COLORS.centerColors[cls.center] || '#6B7280',
-                              fontSize: '0.6rem',
-                              width: '36px'
+                              fontSize: '0.5375rem',
+                              width: '70px',
+                              maxWidth: '100%'
                             }}
                           >
-                            {CENTER_ABBREVIATIONS[cls.center] || cls.center}
+                            {cls.center}
                           </span>
                         )}
                       </div>

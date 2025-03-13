@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { TimetableProvider, useTimetable } from '../context/TimetableContext';
 import useFilteredClasses from '../hooks/useFilteredClasses';
+import logger from '../utils/logger';
 
 // Component imports
 import NowButton from './ui/NowButton';
@@ -105,12 +106,12 @@ const FitnessTimetableInner = () => {
   const { state, actions, isSwimmingMode } = useTimetable();
   
   // Add debug logging
-  console.log('Current mode:', state.mode);
-  console.log('isSwimmingMode:', isSwimmingMode);
+  logger.log('Current mode:', state.mode);
+  logger.log('isSwimmingMode:', isSwimmingMode);
   
   useEffect(() => {
-    console.log('Mode changed:', state.mode);
-    console.log('isSwimmingMode updated:', isSwimmingMode);
+    logger.log('Mode changed:', state.mode);
+    logger.log('isSwimmingMode updated:', isSwimmingMode);
   }, [state.mode, isSwimmingMode]);
   
   // Local state
@@ -134,7 +135,7 @@ const FitnessTimetableInner = () => {
   // Utility function to handle scrolling to a day element - moved up to fix initialization order
   const scrollToDayElement = useCallback((dayElement) => {
     if (!dayElement) {
-      console.log('No day element provided for scrolling');
+      logger.log('No day element provided for scrolling');
       return;
     }
     
@@ -173,15 +174,15 @@ const FitnessTimetableInner = () => {
   // Utility function to find a day element by day name and scroll to it
   const scrollToDay = useCallback((day) => {
     const targetDay = day || getCurrentDay();
-    console.log(`Attempting to scroll to day: ${targetDay}`);
+    logger.log(`Attempting to scroll to day: ${targetDay}`);
     
     const dayElement = document.getElementById(`day-${targetDay}`);
     if (dayElement) {
       scrollToDayElement(dayElement);
-      console.log(`Viewing ${targetDay}`);
+      logger.log(`Viewing ${targetDay}`);
       return true;
     } else {
-      console.log(`Could not find ${targetDay} section`);
+      logger.log(`Could not find ${targetDay} section`);
       return false;
     }
   }, [getCurrentDay, scrollToDayElement]);
@@ -190,13 +191,13 @@ const FitnessTimetableInner = () => {
   useEffect(() => {
     const today = getCurrentDay();
     setSelectedDay(today);
-    console.log('Selected day initialized to today:', today);
+    logger.log('Selected day initialized to today:', today);
   }, [getCurrentDay, setSelectedDay]);
   
   // Ensure virtual classes are included when component mounts
   useEffect(() => {
     actions.setFilter('includeVirtual', true);
-    console.log('Ensuring virtual classes are included');
+    logger.log('Ensuring virtual classes are included');
   }, [actions]);
   
   // Load classes on mount and when mode changes
@@ -207,21 +208,21 @@ const FitnessTimetableInner = () => {
         setLoading(true);
       } else {
         // For mode switches, just show a toast instead of full loading screen
-        console.log('Switching to mode:', isSwimmingMode ? 'Swimming' : 'Fitness');
+        logger.log('Switching to mode:', isSwimmingMode ? 'Swimming' : 'Fitness');
       }
       
       try {
         const data = await classService.getAllClasses();
         setClasses(data);
-        console.log('Classes reloaded, total count:', data.length);
+        logger.log('Classes reloaded, total count:', data.length);
         
         // After first successful load, set initialLoad to false
         if (initialLoad) {
           setInitialLoad(false);
         }
       } catch (error) {
-        console.error('Error loading classes:', error);
-        console.log('Error loading classes');
+        logger.error('Error loading classes:', error);
+        logger.log('Error loading classes');
       } finally {
         setLoading(false);
       }
@@ -258,7 +259,7 @@ const FitnessTimetableInner = () => {
   useEffect(() => {
     // If we previously had no classes but now we do, scroll to selected day
     if (!prevHasAnyClasses && hasAnyClasses) {
-      console.log('Detected transition from no classes to having classes - scrolling to selected day');
+      logger.log('Detected transition from no classes to having classes - scrolling to selected day');
        
       // Small delay to ensure DOM is fully updated
       setTimeout(() => {
@@ -286,7 +287,7 @@ const FitnessTimetableInner = () => {
       setSelectedDay(targetDay);
     }
     
-    console.log(`Scrolling to selected day: ${targetDay}`);
+    logger.log(`Scrolling to selected day: ${targetDay}`);
     
     // Use the scrollToDay utility function
     scrollToDay(targetDay);
@@ -296,7 +297,7 @@ const FitnessTimetableInner = () => {
   const scrollToNow = useCallback(() => {
     const today = getCurrentDay();
     
-    console.log(`Scrolling to now (${today})`);
+    logger.log(`Scrolling to now (${today})`);
     
     // Update selected day to today
     setSelectedDay(today);
@@ -307,24 +308,24 @@ const FitnessTimetableInner = () => {
   
   // Function to handle mode switching - preserve selected day when possible
   const handleModeSwitch = (newMode) => {
-    console.log('Manual mode switch to:', newMode);
+    logger.log('Manual mode switch to:', newMode);
     
     // Set mode
     actions.setMode(newMode);
     // Ensure virtual classes are included
     actions.setFilter('includeVirtual', true);
-    console.log(`Switching to ${newMode} mode`);
+    logger.log(`Switching to ${newMode} mode`);
     
     // Give a larger delay for the mode to change before scrolling
     setTimeout(() => {
       // Use the same check as hasAnyClasses
       if (hasAnyClasses) {
-        console.log('Classes are available after mode switch - scrolling to selected day');
+        logger.log('Classes are available after mode switch - scrolling to selected day');
         
         // Use the scrollToDay utility function with the selected day or current day
         scrollToDay(selectedDay);
       } else {
-        console.log('No classes available after mode switch - skipping scroll');
+        logger.log('No classes available after mode switch - skipping scroll');
       }
     }, 150); // Increased delay to ensure data is fully processed
   };
@@ -441,14 +442,14 @@ const FitnessTimetableInner = () => {
                         newCenters[c] = true;
                       });
                       actions.setFilter('centers', newCenters);
-                      console.log('Showing all centers');
+                      logger.log('Showing all centers');
                     } else {
                       // Otherwise set just the selected center
                       centers.forEach(c => {
                         newCenters[c] = (c === center);
                       });
                       actions.setFilter('centers', newCenters);
-                      console.log(`Showing ${center} only`);
+                      logger.log(`Showing ${center} only`);
                     }
                     
                     // Scroll to selected day (respecting current selection)

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { getClassCategory } from '../services/classService';
+import logger from '../utils/logger';
 
 /**
  * Custom hook to filter classes based on various criteria
@@ -10,8 +11,8 @@ import { getClassCategory } from '../services/classService';
  */
 function useFilteredClasses(allClasses, filters, isSwimmingMode) {
   // Add debug logging
-  console.log('useFilteredClasses called with isSwimmingMode:', isSwimmingMode);
-  console.log('Total classes before filtering:', allClasses.length);
+  logger.log('useFilteredClasses called with isSwimmingMode:', isSwimmingMode);
+  logger.log('Total classes before filtering:', allClasses.length);
   
   // Find pool classes for debugging
   const poolClassesTotal = allClasses.filter(cls => 
@@ -21,13 +22,13 @@ function useFilteredClasses(allClasses, filters, isSwimmingMode) {
       cls.location.includes('Swimming')
     )
   ).length;
-  console.log('Total pool classes in dataset:', poolClassesTotal);
+  logger.log('Total pool classes in dataset:', poolClassesTotal);
   
   // Step 1: Filter by pool/regular classes - force explicit boolean check
   const filteredByMode = useMemo(() => {
-    console.log('Filtering by mode, isSwimmingMode:', isSwimmingMode);
+    logger.log('Filtering by mode, isSwimmingMode:', isSwimmingMode);
     const swimMode = isSwimmingMode === true; // Force boolean evaluation
-    console.log('Evaluated swim mode:', swimMode);
+    logger.log('Evaluated swim mode:', swimMode);
     
     if (swimMode) {
       // In swimming mode, only show pool classes
@@ -44,7 +45,7 @@ function useFilteredClasses(allClasses, filters, isSwimmingMode) {
           ))
         )
       );
-      console.log('Pool classes found:', poolClasses.length);
+      logger.log('Pool classes found:', poolClasses.length);
       return poolClasses;
     } else {
       // In fitness mode, exclude pool classes and swim-related activities
@@ -62,7 +63,7 @@ function useFilteredClasses(allClasses, filters, isSwimmingMode) {
           !cls.activity.toLowerCase().includes('water')
         ))
       );
-      console.log('Non-pool classes found:', nonPoolClasses.length);
+      logger.log('Non-pool classes found:', nonPoolClasses.length);
       return nonPoolClasses;
     }
   }, [allClasses, isSwimmingMode]); // Make sure this recomputes when isSwimmingMode changes
@@ -133,18 +134,18 @@ function convertTimeToHours(timeString) {
   if (!timeString) return 0;
   
   // Add debug logging
-  console.log('Converting time:', timeString);
+  logger.log('Converting time:', timeString);
   
   // Handle time range format (e.g., "09:00 - 10:00" or "06:35-07:05")
   if (timeString.includes('-')) {
     timeString = timeString.split('-')[0].trim();
-    console.log('Extracted start time:', timeString);
+    logger.log('Extracted start time:', timeString);
   }
   
   // Extract hours, minutes and am/pm (if present)
   const match = timeString.match(/(\d+)(?::(\d+))?\s*([aApP][mM])?/);
   if (!match) {
-    console.log('Failed to parse time:', timeString);
+    logger.log('Failed to parse time:', timeString);
     return 0;
   }
   
@@ -152,7 +153,7 @@ function convertTimeToHours(timeString) {
   const minutes = match[2] ? parseInt(match[2], 10) : 0;
   const isPM = match[3] && match[3].toLowerCase() === 'pm';
   
-  console.log('Parsed time components:', { hours, minutes, isPM, hasAmPm: !!match[3] });
+  logger.log('Parsed time components:', { hours, minutes, isPM, hasAmPm: !!match[3] });
   
   // Only apply AM/PM conversion if AM/PM is actually specified
   if (match[3]) {
@@ -165,7 +166,7 @@ function convertTimeToHours(timeString) {
   // This is the case for our data files (e.g., "06:35-07:05")
   
   const result = hours + (minutes / 60);
-  console.log('Converted to decimal hours:', result);
+  logger.log('Converted to decimal hours:', result);
   return result;
 }
 
